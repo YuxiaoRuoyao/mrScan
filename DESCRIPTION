@@ -1,13 +1,19 @@
 Package: MRACS
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Automatically Select Heritable Confounders for Mendelian Randomization
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Ruoyao Shi
+Maintainer: Ruoyao Shi <yuxiaow@umich.edu>
+Description: A tool to automatically do phenome-wide heritable confounders selection
+    for MVMR analysis. You provide the targed traits of the exposure and the outcome.
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/YuxiaoRuoyao/MRACS
 BugReports: https://github.com/YuxiaoRuoyao/MRACS/issues
+Imports:
+    dplyr,
+    mrScan,
+    ieugwasr,
+    TwoSampleMR
+RoxygenNote: 7.2.3
