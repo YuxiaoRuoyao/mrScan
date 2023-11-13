@@ -1,5 +1,6 @@
 #' @title Quality control based on metadata
 #' @param dat metadata for traits, a dataframe contains information of population, nsnp and etc.
+#' If users input metadata by themselves, use make_metadata() to convert data format
 #' @param nsnp_cutoff threshold of minimum number of SNPs. Default = 1e6
 #' @param pop Limit population of traits. Default = "European"
 #' @param sex Gender limitation. Default = "Males and Females"
