@@ -9,7 +9,7 @@
 #' @param kb clumping kb window. Default=10000
 #' @param access_token Google OAuth2 access token. Default=check_access_token()
 #' @param min_snps the number of minimum shared SNPs with IV of X. Default=5
-#' @returns A GWAS ID vector.
+#' @returns A GWAS ID vector and a trait info dataframe
 #'
 #' @import mrScan
 #' @import ieugwasr

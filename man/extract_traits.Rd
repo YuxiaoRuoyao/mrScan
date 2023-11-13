@@ -39,7 +39,7 @@ extract_traits(
 \item{min_snps}{the number of minimum shared SNPs with IV of X. Default=5}
 }
 \value{
-A GWAS ID vector.
+A GWAS ID vector and a trait info dataframe
 }
 \description{
 Initial extract and filtering
