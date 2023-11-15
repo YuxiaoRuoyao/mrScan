@@ -5,6 +5,7 @@
 \title{Quality control based on metadata}
 \usage{
 quality_control(
+  id_exposure,
   dat,
   nsnp_cutoff = 1e+06,
   pop = "European",
@@ -12,7 +13,10 @@ quality_control(
 )
 }
 \arguments{
-\item{dat}{metadata for traits, a dataframe contains information of population, nsnp and etc.}
+\item{id_exposure}{GWAS ID for main exposure.}
+
+\item{dat}{metadata for traits, a dataframe contains information of population, nsnp and etc.
+If users input metadata by themselves, use make_metadata() to convert data format}
 
 \item{nsnp_cutoff}{threshold of minimum number of SNPs. Default = 1e6}
 

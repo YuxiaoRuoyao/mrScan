@@ -6,7 +6,7 @@ Author: Ruoyao Shi
 Maintainer: Ruoyao Shi <yuxiaow@umich.edu>
 Description: A tool to automatically do phenome-wide heritable confounders selection
     for MVMR analysis. You provide the targed traits of the exposure and the outcome.
-License: GPL (>= 3)
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/YuxiaoRuoyao/MRACS
@@ -15,5 +15,11 @@ Imports:
     dplyr,
     mrScan,
     ieugwasr,
-    TwoSampleMR
+    TwoSampleMR,
+    mr.raps,
+    cluster,
+    factoextra,
+    plyr,
+    purrr,
+    data.table
 RoxygenNote: 7.2.3
