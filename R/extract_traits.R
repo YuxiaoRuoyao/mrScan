@@ -21,6 +21,7 @@ extract_traits<-function(id_exposure,id_outcome,batch = c("ieu-a", "ieu-b","ukb-
   phe <- mrScan::retrieve_traits(id_exposure, pval_x,pval_z,pop = pop, batch=batch,
                                  r2 = r2, kb = kb,
                                  access_token = access_token,min_snps =min_snps)
+  # copy retrieve_traits function
   id.list <- unique(phe$phe$id)
   # Delete X
   id.list.initial <- id.list[!id.list %in% id_exposure]

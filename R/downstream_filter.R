@@ -5,7 +5,8 @@
 #' @param df_info Dataframe of trait info from previous steps
 #' @param method Bidirection MR method. Same with TwoSampleMR package.Default = "mr_raps"
 #' @param sig_level One-sided t-test significant level. Default=0.05
-#' @returns A GWAS ID vector and a trait info dataframe
+#' @returns A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
+#' estimate and t-test results
 #'
 #' @import mrScan
 #' @import ieugwasr
@@ -38,14 +39,15 @@ downstream_filter <- function(id_exposure,id_outcome,id.list,df_info,method = "m
     mutate(t_Z_X = (abs(b_ZtoX)-abs(b_XtoZ))/sqrt(se_ZtoX^2+se_XtoZ^2),
            t_Z_Y = (abs(b_ZtoY)-abs(b_YtoZ))/sqrt(se_ZtoY^2+se_YtoZ^2)) %>%
     mutate(p_Z_X = pnorm(t_Z_X),p_Z_Y = pnorm(t_Z_Y))
-  X_downstream<- sub_final %>% filter(p_Z_X < sig_level) %>% pull(id)
-  X_sig<- sub_final %>% filter(p_Z_X > 1 - sig_level) %>% pull(id)
-  Y_downstream<- sub_final %>% filter(p_Z_Y < sig_level) %>% pull(id)
-  Y_sig<- sub_final %>% filter(p_Z_Y > 1 - sig_level) %>% pull(id)
-  sig_traits <- union(X_sig,Y_sig); downstream_traits <- union(X_downstream,Y_downstream)
+  X_downstream<- df_final %>% filter(p_Z_X < sig_level) %>% pull(id)
+  X_sig<- df_final %>% filter(p_Z_X > 1 - sig_level) %>% pull(id)
+  Y_downstream<- df_final %>% filter(p_Z_Y < sig_level) %>% pull(id)
+  Y_sig<- df_final %>% filter(p_Z_Y > 1 - sig_level) %>% pull(id)
+  sig_traits <- union(X_sig,Y_sig);
+  downstream_traits <- union(X_downstream,Y_downstream)
   select_trait <- sig_traits[!sig_traits %in% downstream_traits]
   df_info[df_info$id %in% select_trait,"status"] <- "select after downstream filtering"
   filter.trait <- id.list[!id.list %in% select_trait]
   df_info[df_info$id %in% filter.trait,"status"] <- "delete in downstream filtering"
-  return(list(id.list=select_trait,trait.info=df_info))
+  return(list(id.list=select_trait,trait.info=df_info,df_bidirection = df_final))
 }

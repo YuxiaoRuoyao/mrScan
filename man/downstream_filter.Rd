@@ -27,7 +27,8 @@ downstream_filter(
 \item{sig_level}{One-sided t-test significant level. Default=0.05}
 }
 \value{
-A GWAS ID vector and a trait info dataframe
+A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
+estimate and t-test results
 }
 \description{
 Filter downstream traits

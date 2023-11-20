@@ -24,6 +24,9 @@ unique_traits <- function(id.list,df_info,cor_cutoff=0.9,method,cluster_method="
     diag(df_matrix) <- 1
     df_matrix <- abs(df_matrix)
     clusters <- hclust(dist(df_matrix),method = cluster_method)
+    # how dist() works
+    # write a greedy cluster function
+    # return cluster in metadata
     plot(clusters)
     if(is.null(ncluster)){
       gap_stat <- cluster::clusGap(scale(df_matrix),

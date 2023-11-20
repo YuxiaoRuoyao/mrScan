@@ -29,7 +29,7 @@ quality_control <- function(id_exposure,dat,nsnp_cutoff=1e6,pop="European",sex="
     mutate(status = ifelse(grepl('adjust', trait) == TRUE,
                            "delete in QC",status))
   # delete high correlation traits with X
-  res_cor_X <- mr_pairs_raps(ids1 = id_exposure, ids2 = id.list)
+  res_cor_X <- calculate_cor(ids1 = id_exposure, ids2 = id.list)
   trait_cor_X <- filter(res_cor_X$cor, abs(cor) > 0.9) %>%
     with(., c(id1, id2) ) %>% unique()
   dat <- dat %>%
@@ -38,3 +38,5 @@ quality_control <- function(id_exposure,dat,nsnp_cutoff=1e6,pop="European",sex="
   id.qc <- dat %>% filter(status == "select after QC") %>% pull(id)
   return(list(id.list=id.qc,trait.info=dat))
 }
+# add option to let users filter by themselves
+# cutoff for high correlation

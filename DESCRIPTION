@@ -21,5 +21,7 @@ Imports:
     factoextra,
     plyr,
     purrr,
-    data.table
+    data.table,
+    glmnet,
+    hdme
 RoxygenNote: 7.2.3
