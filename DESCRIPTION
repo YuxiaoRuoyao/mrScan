@@ -1,4 +1,4 @@
-Package: MRACS
+Package: mrScan
 Type: Package
 Title: Automatically Select Heritable Confounders for Mendelian Randomization
 Version: 0.1.0
@@ -9,11 +9,10 @@ Description: A tool to automatically do phenome-wide heritable confounders selec
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/YuxiaoRuoyao/MRACS
-BugReports: https://github.com/YuxiaoRuoyao/MRACS/issues
+URL: https://github.com/YuxiaoRuoyao/mrScan
+BugReports: https://github.com/YuxiaoRuoyao/mrScan/issues
 Imports:
     dplyr,
-    mrScan,
     ieugwasr,
     TwoSampleMR,
     mr.raps,
