@@ -9,7 +9,7 @@
 #' @param find_proxies Whether look for proxies. Default = TRUE
 #' @param harmonise_strictness Data harmonise strictness. See documentation of TwoSample MR
 #' @param pop Super population to use. Default = "EUR"
-#' @param MVMR_method IVW, IVW_instrument_specific, MVMR_median, MRBEE, GRAPPLE, ESMR
+#' @param MVMR_method IVW, IVW_instrument_specific, MRBEE, GRAPPLE, ESMR
 #' @param pleio_p_thresh P-value threshold for determining if a specific IV has
 #' sufficient evidence of horizontal pleiotropy to be removed from causal estimation. Default=0
 #' @param Rcor Correlation matrix for the outcome and all exposures
@@ -36,17 +36,6 @@ MVMR_analysis <- function(id_exposure,id_outcome,id.list,df_info,r2 = 0.001, kb 
   }else if(MVMR_method == "IVW_instrument_specific"){
     res <- TwoSampleMR::mv_multiple(mvdat,instrument_specific = TRUE)$result
     res$method <- "IVW_instrument_specific"
-  }else if(MVMR_method == "MVMR_median"){
-    mvmr_obj <- MendelianRandomization::mr_mvinput(bx = mvdat$exposure_beta,
-                                       bxse = mvdat$exposure_se,
-                                       by = mvdat$outcome_beta,
-                                       byse = mvdat$outcome_se)
-    fit <- MendelianRandomization::mr_mvmedian(mvmr_obj)
-    res <- data.frame(exposure = colnames(mvdat$exposure_beta),
-                      b = fit@Estimate,
-                      se = fit@StdError,
-                      pvalue = fit@Pvalue, method = "MVMR_median")
-
   }else if(MVMR_method == "GRAPPLE"){
     res <- run_grapple(beta.exposure =  mvdat$exposure_beta,
                        beta.outcome = mvdat$outcome_beta,

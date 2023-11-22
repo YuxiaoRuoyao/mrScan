@@ -41,7 +41,7 @@ MVMR_analysis(
 
 \item{harmonise_strictness}{Data harmonise strictness. See documentation of TwoSample MR}
 
-\item{MVMR_method}{IVW, IVW_instrument_specific, MVMR_median, MRBEE, GRAPPLE, ESMR}
+\item{MVMR_method}{IVW, IVW_instrument_specific, MRBEE, GRAPPLE, ESMR}
 
 \item{pleio_p_thresh}{P-value threshold for determining if a specific IV has
 sufficient evidence of horizontal pleiotropy to be removed from causal estimation. Default=0}

@@ -56,6 +56,7 @@ stepwise <- function(id_exposure, id_outcome, id.list,df_info,method = "forward"
     ii <- ii[-1]
     id.select <- stringr::str_replace_all(ii, stringr::fixed("`"), "")
   }
+  id.select <- id.select[!id.select %in% id_exposure]
   df_info[df_info$id %in% id.select,"status"] <- paste0("Select by stepwise ",method)
   return(list(id.list=id.select,trait.info=df_info))
 }

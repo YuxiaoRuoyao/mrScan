@@ -32,7 +32,7 @@ double_corrected_Lasso <- function(id_exposure,id_outcome,id.list,df_info,r2 = 0
                                               harmonise_strictness = harmonise_strictness,find_proxies = find_proxies,
                                               pval_threshold = pval_threshold, pop = pop)
   out_x <- TwoSampleMR::extract_outcome_data(inst_x$SNP, id_exposure)
-  mvdat_x <- mv_harmonise_data(res_inst, out_x)
+  mvdat_x <- mv_harmonise_data(inst_x, out_x)
   ids_x <- colnames(mvdat_x$exposure_beta)
   ss_x <- df_info %>% filter(id %in% ids_x) %>%
     arrange(match(id, ids_x)) %>% pull(sample_size)

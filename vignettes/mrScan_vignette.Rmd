@@ -25,24 +25,25 @@ We'll use C-reactive protein (CRP) level (ieu-b-35) and schizophrenia (ieu-b-42)
 
 ## Step 1: Initially extract trait list
 
-We only search traits in ieu-a and ieu-b batches. You can add more batches according to your needs. 
-You can check list of data batches in IEU GWAS database by ieugwasr::batches(). 
-In this analysis, we get 41 traits having at least 5 shared variants with the CRP-level.
+We only search traits in ieu-a, ieu-b and ukb-b batches in this example. You can 
+add more batches according to your needs. You can check list of data batches in 
+IEU GWAS database by ieugwasr::batches(). In this analysis, we get 103 traits having 
+at least 5 shared variants with the CRP-level.
 
 ```{r}
 res_step1 <- extract_traits(id_exposure = "ieu-b-35", id_outcome = "ieu-b-42",
-                            batch = c("ieu-a","ieu-b"))
-res_step1$id.list[1:10]
+                            batch = c("ieu-a","ieu-b","ukb-b"))
 head(res_step1$trait.info)
 ```
 
 ## Step 2: Quality control 
 
-After initial filtering, we get 31 traits left. We just select traits for both gender, 
+After initial filtering, we get 92 traits left. We just select traits for both gender, 
 European and with the number of SNPs > 1e6. You can change the filtering standard 
 by your need. You can check the info matrix for the status of each trait. 
 ```{r}
-res_step2 <- quality_control(id_exposure = "ieu-b-35",dat = res_step1$trait.info)
+res_step2 <- quality_control(id_exposure = "ieu-b-35",dat = res_step1$trait.info,
+                             R2_cutoff = 0.85)
 length(res_step2$id.list)
 head(res_step2$trait.info)
 ```
@@ -53,26 +54,129 @@ Downstream traits of both main exposure and each outcome should be deleted since
 the precision for estimating direct causal effect of the main exposure to the outcome 
 could be decreased if too many genetic instruments of relationship between the main 
 exposure and downstream traits were included. In this step, we will do bidirection 
-MR estimates between traits and X/Y. The default method is MR-RAPs and you can change 
-it to other methods. We will include all upstream traits and exclude downstream traits. 
+MR estimates between traits and X/Y. The default method is MR-RAPs with over.dispersion=TRUE,
+loss.function="tukey", and you can change it to other methods. We will select 
+all upstream traits and exclude downstream traits in this step.  
+
+After this step, we select 40 traits. The output contains select trait list, 
+updated trait into matrix, and all input traits with bidirection estimates, 
+t-test results. The default t-test cutoff is 0.05 and if you want to include more traits,
+you can loose the cutoff to 0.1 or more. 
 
 ```{r}
 res_step3 <- downstream_filter(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
                                id.list = res_step2$id.list,df_info = res_step2$trait.info)
+length(res_step3$id.list)
+head(res_step3$trait.info)
+head(res_step3$df_bidirection)
+# See selected traits
+res_step3$trait.info %>% filter(id %in% res_step3$id.list)
 ```
 
-## Step 3: Get unique traits
+## Step 4: Get unique traits
 
 By the trait list above, we can see several similar or even duplicated traits are extracted. 
-For example, we get three triglycerides traits but actually only one trait is needed. 
 In this step, we'll calculate genetic correlation for each trait pair and select unique 
 trait in each cluster. The default clustering method is greedy clustering on the pairwise 
 correlation matrix by the $R^2$ cutoff. You can also choose sample_size or nsnps method, 
 which are basically selected traits with higher sample size or the number of SNPs.
 This step may take some time. 
 ```{r}
-res_step3 <- unique_traits(id.list = res_step2$id.list, df_info = res_step2$trait.info,
-                           R2_cutoff = 0.9, method = "cluster")
+test_traits <- c("ieu-b-111","ieu-b-5107","ukb-b-10912",
+                 "ieu-b-105","ukb-b-14057","ukb-b-13352","ukb-b-19953",
+                 "ukb-b-10787","ukb-b-18335","ukb-b-19921")
+#res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
+#                           R2_cutoff = 0.9, method = "cluster")
+res_step4 <- unique_traits(id.list = test_traits, df_info = res_step3$trait.info,
+                           R2_cutoff = 0.85, method = "cluster")
+res_step4$trait.info %>% filter(id %in% test_traits) %>% select(id,trait,cluster)
 ```
 
+## Step 5: Confounder selection
+
+Next, we will use different methods to do confounder selection. The potential options 
+include classic Lasso, double classic Lasso, corrected Lasso, double corrected Lasso, 
+marginal selection and etc. In this example, we will try different methods.
+```{r}
+res_step5_lasso <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                     method = "classic_Lasso", lambda_type = "min")
+```
+
+
+```{r}
+res_step5_double_lasso <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                                               id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                                               method = "double_Lasso", lambda_type = "1se")
+res_step5_double_lasso$id.list 
+```
+
+
+```{r}
+res_step5_marginal <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                                           id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                                           method = "marginal",df_bidirection = res_step3$df_bidirection)
+res_step5_marginal$id.list
+```
+
+
+```{r}
+res_step5_stepwise <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                     method = "stepwise", stepwise_method = "forward")
+res_step5_stepwise$id.list
+```
+
+
+```{r}
+res_step5_correct <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                     method = "corrected_Lasso", radius_type="1se")
+res_step5_correct$id.list
+```
+
+
+```{r}
+res_step5_double_correct <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
+                     method = "double_corrected_Lasso", radius_type="1se")
+res_step5_double_correct$id.list
+```
+
+## Step 6: MVMR analysis to get causal estimates
+
+Finally, after adjusting for selected traits, we will apply different MVMR methods 
+to get causal estimates from the main exposure to the outcome. The function offers 
+multiple MVMR methods including regular MV-IVW, MV-median and more robust methods 
+like GRAPPLE, MRBEE. Here we use traits selected from double corrected Lasso as 
+the example.
+
+```{r}
+res_final_ivw <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+              id.list = res_step5_double_correct$id.list,
+              df_info = res_step5_double_correct$trait.info,
+              MVMR_method = "IVW")
+res_final_ivw_T <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+              id.list = res_step5_double_correct$id.list,
+              df_info = res_step5_double_correct$trait.info,
+              MVMR_method = "IVW_instrument_specific")
+res_final_bee <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+              id.list = res_step5_double_correct$id.list,
+              df_info = res_step5_double_correct$trait.info,
+              MVMR_method = "MRBEE",pleio_p_thresh = 0)
+res_final_grapple <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+              id.list = res_step5_double_correct$id.list,
+              df_info = res_step5_double_correct$trait.info,
+              MVMR_method = "GRAPPLE")
+
+```
+
+
+Get direct causal estimates of CRP-level on schizophrenia by different methods:
+```{r}
+rbind(res_final_ivw,res_final_ivw_T) %>% dplyr::select(id.exposure,b,se,pval,method) %>%
+  rename("exposure" = "id.exposure","pvalue" = "pval") %>%
+  rbind(res_final_bee,res_final_grapple) %>%
+  filter(exposure == "ieu-b-35")
+```
 

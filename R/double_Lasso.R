@@ -29,7 +29,7 @@ double_Lasso <- function(id_exposure, id_outcome, id.list,df_info,r2 = 0.001, kb
                        harmonise_strictness = harmonise_strictness,find_proxies = find_proxies,
                        pval_threshold = pval_threshold, pop = pop)
   out_x <- TwoSampleMR::extract_outcome_data(inst_x$SNP, id_exposure)
-  mvdat_x <- mv_harmonise_data(res_inst, out_x)
+  mvdat_x <- mv_harmonise_data(inst_x, out_x)
   set.seed(seed)
   cv_model_x <- glmnet::cv.glmnet(x=mvdat_x$exposure_beta, y=mvdat_x$outcome_beta,
                                  alpha = 1)

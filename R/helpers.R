@@ -36,63 +36,23 @@ make_metadata <- function(select_id,id,trait,sex,consortium=NA,nsnp,unit=NA,auth
   df <- df %>% filter(id %in% select_id) %>% mutate(status = "Initial List")
   return(df)
 }
-mr_new <- function (dat, parameters = default_parameters(), method_list = subset(mr_method_list(),
-                                                                                 use_by_default)$obj)
-{
-  mr_tab <- plyr::ddply(dat, c("id.exposure", "id.outcome"),
-                        function(x1) {
-                          x <- subset(x1, mr_keep)
-                          if (nrow(x) == 0) {
-                            message("No SNPs available for MR analysis of '",
-                                    x1$id.exposure[1], "' on '", x1$id.outcome[1],
-                                    "'")
-                            return(NULL)
-                          }
-                          else {
-                            message("Analysing '", x1$id.exposure[1], "' on '",
-                                    x1$id.outcome[1], "'")
-                          }
-                          res <- lapply(c("mr_raps"), function(meth) {
-                            get(meth)(x$beta.exposure, x$beta.outcome, x$se.exposure,
-                                      x$se.outcome, parameters)
-                          })
-                          methl <- mr_method_list()
-                          mr_tab <- data.frame(outcome = x$outcome[1], exposure = x$exposure[1],
-                                               method = methl$name[match(method_list, methl$obj)],
-                                               nsnp = sapply(res, function(x) x$nsnp), b = sapply(res,
-                                                                                                  function(x) x$b), se = sapply(res, function(x) x$se),
-                                               pval = sapply(res, function(x) x$pval))
-                          mr_tab <- subset(mr_tab, !(is.na(b) & is.na(se) &
-                                                       is.na(pval)))
-                          return(mr_tab)
-                        })
-  return(mr_tab)
-}
-mr_raps<-function (b_exp, b_out, se_exp, se_out,parameters = default_parameters()) {
-  data <- data.frame(beta.exposure = b_exp, beta.outcome = b_out,
-                     se.exposure = se_exp, se.outcome = se_out)
-  out <- suppressWarnings(mr.raps::mr.raps(b_exp,b_out, se_exp, se_out,
-                                           diagnosis = FALSE,
-                                           over.dispersion = parameters$over.dispersion,
-                                           loss.function = parameters$loss.function))
-  list(b = out$beta.hat, se = out$beta.se,
-       pval = stats::pnorm(-abs(out$beta.hat/out$beta.se)) * 2, nsnp = length(b_exp))
-}
-mr_pairs_raps<-function (ids1, ids2, inst_pval = 5e-08,
-                         over.dispersion=TRUE,loss.function = "tukey"){
+mr_pairs<-function (ids1, ids2, inst_pval = 5e-08,method_list = c("mr_raps"),
+                    over.dispersion=TRUE,loss.function = "tukey",shrinkage=FALSE){
   ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids1, p1 = inst_pval)
   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP,
                                                outcomes = ids2)
   dat_1_2 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
-  m_1_2 <- mr_new(dat_1_2, method_list = c("mr_raps"),
+  m_1_2 <- mr(dat_1_2, method_list = method_list,
               parameters = list(over.dispersion=over.dispersion,
-                                loss.function=loss.function))
+                                loss.function=loss.function,
+                                shrinkage=shrinkage))
   ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids2, p1 = inst_pval)
   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP, outcomes = ids1)
   dat_2_1 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
-  m_2_1 <- mr_new(dat_2_1, method_list = c("mr_raps"),
-                  parameters = list(over.dispersion=over.dispersion,
-                                    loss.function=loss.function))
+  m_2_1 <- mr(dat_2_1, method_list = method_list,
+              parameters = list(over.dispersion=over.dispersion,
+                                loss.function=loss.function,
+                                shrinkage=shrinkage))
   cor_vals <- expand.grid(id1 = ids1, id2 = ids2, stringsAsFactors = FALSE) %>%
     filter(id1 != id2)
   cor_vals$cor <- purrr::map2(cor_vals$id1, cor_vals$id2, function(x, y) {

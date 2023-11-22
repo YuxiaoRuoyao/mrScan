@@ -13,13 +13,9 @@
 #' @import data.table
 #' @importFrom stats pnorm
 #' @export
-downstream_filter <- function(id_exposure,id_outcome,id.list,df_info,method = "mr_raps",
+downstream_filter <- function(id_exposure,id_outcome,id.list,df_info,method = c("mr_raps"),
                               sig_level = 0.05){
-  if(method == "mr_raps"){
-    res <- mr_pairs_raps(ids1 = c(id_exposure,id_outcome),ids2 = id.list)
-  }else{
-    res <- mr_pairs(ids1 = c(id_exposure,id_outcome),ids2 = id.list,method_list = method)
-  }
+  res <- mr_pairs(ids1 = c(id_exposure,id_outcome),ids2 = id.list,method_list = method)
   df_summary<-data.frame(id=id.list) %>% left_join(df_info[,c("id","trait")],by="id")
   df_YtoZ <- left_join(df_summary,res$mr12[,c("id.exposure","id.outcome","method","b","se","pval")],
                        by=c("id"="id.outcome"))

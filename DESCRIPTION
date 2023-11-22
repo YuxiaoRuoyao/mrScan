@@ -24,8 +24,7 @@ Imports:
     glmnet,
     hdme,
     GRAPPLE,
-    MRBEE,
-    MendelianRandomization
+    MRBEE
 RoxygenNote: 7.2.3
 Suggests: 
     knitr,

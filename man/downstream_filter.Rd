@@ -9,7 +9,7 @@ downstream_filter(
   id_outcome,
   id.list,
   df_info,
-  method = "mr_raps",
+  method = c("mr_raps"),
   sig_level = 0.05
 )
 }
