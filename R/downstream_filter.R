@@ -8,7 +8,6 @@
 #' @returns A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
 #' estimate and t-test results
 #'
-#' @import mrScan
 #' @import ieugwasr
 #' @import dplyr
 #' @import data.table

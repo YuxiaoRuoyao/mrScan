@@ -11,23 +11,21 @@
 #' @param min_snps the number of minimum shared SNPs with IV of X. Default=5
 #' @returns A GWAS ID vector and a trait info dataframe
 #'
-#' @import mrScan
 #' @import ieugwasr
 #' @import dplyr
 #' @export
-extract_traits<-function(id_exposure,id_outcome,batch = c("ieu-a", "ieu-b","ukb-b","ebi-a"),
+extract_traits<-function(id_exposure,id_outcome,batch = c("ieu-a","ieu-b","ukb-b"),
                          pop = "EUR",pval_x=5e-8, pval_z=1e-5,r2=0.001,kb = 10000,
                          access_token = ieugwasr::check_access_token(),min_snps=5){
-  phe <- mrScan::retrieve_traits(id_exposure, pval_x,pval_z,pop = pop, batch=batch,
-                                 r2 = r2, kb = kb,
-                                 access_token = access_token,min_snps =min_snps)
-  # copy retrieve_traits function
+  phe <- retrieve_traits(id_exposure, pval_x,pval_z,pop = pop, batch=batch,
+                         r2 = r2, kb = kb,
+                         access_token = access_token,min_snps =min_snps)
   id.list <- unique(phe$phe$id)
   # Delete X
   id.list.initial <- id.list[!id.list %in% id_exposure]
   df_trait <- ieugwasr::gwasinfo(id.list.initial)
   df_trait <- df_trait[,c("id","trait","sex","consortium","nsnp","note","sample_size",
-                          "pmid","population","year")]
+                          "population","year")]
   df_trait['status'] <- 'Initial List'
   return(list(id.list=id.list.initial,trait.info=df_trait))
 }

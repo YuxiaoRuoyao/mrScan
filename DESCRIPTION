@@ -22,5 +22,12 @@ Imports:
     purrr,
     data.table,
     glmnet,
-    hdme
+    hdme,
+    GRAPPLE,
+    MRBEE,
+    MendelianRandomization
 RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

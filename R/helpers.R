@@ -1,9 +1,30 @@
 #' @import dplyr
-#' @importFrom dplyr select filter rename
+#' @importFrom dplyr select filter rename group_by summarize
 #' @import TwoSampleMR
+#' @import ieugwasr
 #' @import mr.raps
 #' @import plyr
 #' @import purrr
+retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
+                             pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
+                             r2 = 0.001, kb = 10000,
+                             access_token = check_access_token(), min_snps = 5) {
+  top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
+                      pop = pop, access_token = access_token)
+  cat("Retrieved", nrow(top_hits), "instruments for", id_x,
+      "\n")
+  phe <- ieugwasr::phewas(variants = top_hits$rsid, pval = pval_z, batch = batch,
+                access_token = access_token)
+  cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
+      "traits", "\n")
+  x <- phe %>% dplyr::group_by(id) %>% dplyr::summarize(n = length(unique(rsid)))
+  cat(sum(x$n >= min_snps), "traits have at least", min_snps,
+      "shared variants with", id_x, "\n")
+  ids <- x$id[x$n >= min_snps]
+  phe <- dplyr::filter(phe, id %in% ids)
+  ret <- list(topx = top_hits, phe = phe)
+  return(ret)
+}
 make_metadata <- function(select_id,id,trait,sex,consortium=NA,nsnp,unit=NA,author=NA,
                           note=NA,sample_size,pmid=NA,population,year=NA,category=NA,
                           doi=NA,sd=NA,ncase=NA,ncontrol=NA){
@@ -97,13 +118,13 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
   cor_vals <- expand.grid(id1 = ids1, id2 = ids2, stringsAsFactors = FALSE) %>%
     filter(id1 != id2)
   cor_vals$cor <- purrr::map2(cor_vals$id1, cor_vals$id2, function(x, y) {
-    X_1_2 <- filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
+    X_1_2 <- dplyr::filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
       rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
       select(SNP, beta1, beta2)
-    X_2_1 <- filter(dat_2_1, id.exposure == y & id.outcome == x) %>%
+    X_2_1 <- dplyr::filter(dat_2_1, id.exposure == y & id.outcome == x) %>%
       rename(beta2 = beta.exposure, beta1 = beta.outcome) %>%
       select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
-    X <- bind_rows(X_1_2, X_2_1)
+    X <- dplyr::bind_rows(X_1_2, X_2_1)
     with(X, cor(beta1, beta2))
   }) %>% unlist()
   return(cor_vals)

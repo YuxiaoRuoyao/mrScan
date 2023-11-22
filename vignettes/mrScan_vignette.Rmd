@@ -1,0 +1,78 @@
+---
+title: "mrScan_vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mrScan_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mrScan)
+library(dplyr)
+library(TwoSampleMR)
+library(mr.raps)
+```
+
+We'll use C-reactive protein (CRP) level (ieu-b-35) and schizophrenia (ieu-b-42) as the example. 
+
+## Step 1: Initially extract trait list
+
+We only search traits in ieu-a and ieu-b batches. You can add more batches according to your needs. 
+You can check list of data batches in IEU GWAS database by ieugwasr::batches(). 
+In this analysis, we get 41 traits having at least 5 shared variants with the CRP-level.
+
+```{r}
+res_step1 <- extract_traits(id_exposure = "ieu-b-35", id_outcome = "ieu-b-42",
+                            batch = c("ieu-a","ieu-b"))
+res_step1$id.list[1:10]
+head(res_step1$trait.info)
+```
+
+## Step 2: Quality control 
+
+After initial filtering, we get 31 traits left. We just select traits for both gender, 
+European and with the number of SNPs > 1e6. You can change the filtering standard 
+by your need. You can check the info matrix for the status of each trait. 
+```{r}
+res_step2 <- quality_control(id_exposure = "ieu-b-35",dat = res_step1$trait.info)
+length(res_step2$id.list)
+head(res_step2$trait.info)
+```
+
+## Step 3: Downstream traits filtering
+
+Downstream traits of both main exposure and each outcome should be deleted since 
+the precision for estimating direct causal effect of the main exposure to the outcome 
+could be decreased if too many genetic instruments of relationship between the main 
+exposure and downstream traits were included. In this step, we will do bidirection 
+MR estimates between traits and X/Y. The default method is MR-RAPs and you can change 
+it to other methods. We will include all upstream traits and exclude downstream traits. 
+
+```{r}
+res_step3 <- downstream_filter(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
+                               id.list = res_step2$id.list,df_info = res_step2$trait.info)
+```
+
+## Step 3: Get unique traits
+
+By the trait list above, we can see several similar or even duplicated traits are extracted. 
+For example, we get three triglycerides traits but actually only one trait is needed. 
+In this step, we'll calculate genetic correlation for each trait pair and select unique 
+trait in each cluster. The default clustering method is greedy clustering on the pairwise 
+correlation matrix by the $R^2$ cutoff. You can also choose sample_size or nsnps method, 
+which are basically selected traits with higher sample size or the number of SNPs.
+This step may take some time. 
+```{r}
+res_step3 <- unique_traits(id.list = res_step2$id.list, df_info = res_step2$trait.info,
+                           R2_cutoff = 0.9, method = "cluster")
+```
+
+

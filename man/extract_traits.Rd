@@ -7,7 +7,7 @@
 extract_traits(
   id_exposure,
   id_outcome,
-  batch = c("ieu-a", "ieu-b", "ukb-b", "ebi-a"),
+  batch = c("ieu-a", "ieu-b", "ukb-b"),
   pop = "EUR",
   pval_x = 5e-08,
   pval_z = 1e-05,
