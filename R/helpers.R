@@ -72,6 +72,7 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP,
                                                outcomes = ids2)
   dat_1_2 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
+  # This step redundant
   ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids2, p1 = inst_pval)
   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP, outcomes = ids1)
   dat_2_1 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
@@ -124,4 +125,11 @@ run_MRBEE <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,
   res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
   res.summary$method <- "MRBEE"
   return(res.summary)
+}
+download_gwas <- function(id_list,position=NULL){
+  f1 <- paste0("wget https://gwas.mrcieu.ac.uk/files/",id_list,"/",id_list,".vcf.gz")
+  f2 <- paste0("wget https://gwas.mrcieu.ac.uk/files/",id_list,"/",id_list,".vcf.gz.tbi")
+  f <- data.frame(c(f1,f2))
+  write.table(f,file = paste0(position,"download.sh"),row.names = FALSE,
+              col.names = FALSE, quote = FALSE)
 }
