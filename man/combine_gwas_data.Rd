@@ -4,14 +4,16 @@
 \alias{combine_gwas_data}
 \title{Combine and harmonize GWAS summary data with multiple traits}
 \usage{
-combine_gwas_data(id_list, dir = NULL, out_dir = NULL)
+combine_gwas_data(id_list, dir = NULL, out_dir = NULL, prefix = NULL)
 }
 \arguments{
-\item{id_list}{GWAS ID list}
+\item{id_list}{GWAS ID list. The first should be the outcome ID.}
 
 \item{dir}{Directory path of formatted GWAS summary data. Default is in the current work directory.}
 
 \item{out_dir}{Output data path. Default is in the current work directory.}
+
+\item{prefix}{Name prefix for the output. Default = NULL}
 }
 \value{
 Save one dataframe per chromosome with columns for SNP info

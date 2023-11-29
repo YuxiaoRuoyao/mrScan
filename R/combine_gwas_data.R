@@ -47,11 +47,11 @@ combine_gwas_data <- function(id_list,dir=NULL,out_dir=NULL,prefix=NULL){
     miss <- rowSums(is.na(miss))
     pmin <- fulldat %>%
       select(ends_with(".p"))
-    pmin <- apply(pmin[,-1], 1, function(x){min(x, na.rm=TRUE)})
+    pmin <- suppressWarnings(apply(pmin[,-1], 1, function(x){min(x, na.rm=TRUE)}))
     df <- data.frame(snp = fulldat$snp, pmin = pmin, miss = miss)
     ix <- which(miss <= 0)
-    saveRDS(fulldat[ix,], file=paste0(out_dir,prefix,"beta.",chrom,".RDS"))
-    saveRDS(df[ix,], file=paste0(out_dir,prefix,"info.",chrom,".RDS"))
+    saveRDS(fulldat[ix,], file=paste0(out_dir,prefix,".beta.",chrom,".RDS"))
+    saveRDS(df[ix,], file=paste0(out_dir,prefix,".info.",chrom,".RDS"))
   }
 }
 

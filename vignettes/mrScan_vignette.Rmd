@@ -236,7 +236,8 @@ format_gwas_data(data_file = "ieu-b-42.vcf.gz",output_file = "ieu-b-42.vcf.bgz")
 
 Then combine and harmonize them together. The first ID in the id list is the outcome
 ```{r eval=FALSE}
+library(rlang)
+library(purrr)
 combine_gwas_data(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
                   out_dir = "data/",prefix = "test")
 ```
-
