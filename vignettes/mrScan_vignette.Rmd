@@ -30,9 +30,14 @@ add more batches according to your needs. You can check list of data batches in
 IEU GWAS database by ieugwasr::batches(). In this analysis, we get 103 traits having 
 at least 5 shared variants with the CRP-level.
 
-```{r}
+```{r eval=FALSE}
 res_step1 <- extract_traits(id_exposure = "ieu-b-35", id_outcome = "ieu-b-42",
                             batch = c("ieu-a","ieu-b","ukb-b"))
+```
+
+```{r}
+load("../data/res_step1.rda")
+length(res_step1$id.list)
 head(res_step1$trait.info)
 ```
 
@@ -41,12 +46,19 @@ head(res_step1$trait.info)
 After initial filtering, we get 92 traits left. We just select traits for both gender, 
 European and with the number of SNPs > 1e6. You can change the filtering standard 
 by your need. You can check the info matrix for the status of each trait. 
-```{r}
+```{r eval=FALSE}
 res_step2 <- quality_control(id_exposure = "ieu-b-35",dat = res_step1$trait.info,
                              R2_cutoff = 0.85)
+```
+
+
+```{r}
+load("../data/res_step2.rda")
 length(res_step2$id.list)
 head(res_step2$trait.info)
 ```
+
+
 
 ## Step 3: Downstream traits filtering
 
@@ -63,15 +75,21 @@ updated trait into matrix, and all input traits with bidirection estimates,
 t-test results. The default t-test cutoff is 0.05 and if you want to include more traits,
 you can loose the cutoff to 0.1 or more. 
 
-```{r}
+```{r eval=FALSE}
 res_step3 <- downstream_filter(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
                                id.list = res_step2$id.list,df_info = res_step2$trait.info)
+```
+
+
+```{r}
+load("../data/res_step3.rda")
 length(res_step3$id.list)
 head(res_step3$trait.info)
 head(res_step3$df_bidirection)
 # See selected traits
 res_step3$trait.info %>% filter(id %in% res_step3$id.list)
 ```
+
 
 ## Step 4: Get unique traits
 
@@ -85,10 +103,8 @@ This step may take some time.
 test_traits <- c("ieu-b-111","ieu-b-5107","ukb-b-10912",
                  "ieu-b-105","ukb-b-14057","ukb-b-13352","ukb-b-19953",
                  "ukb-b-10787","ukb-b-18335","ukb-b-19921")
-#res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
-#                           R2_cutoff = 0.9, method = "cluster")
-res_step4 <- unique_traits(id.list = test_traits, df_info = res_step3$trait.info,
-                           R2_cutoff = 0.85, method = "cluster")
+res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
+                           R2_cutoff = 0.9, method = "cluster")
 res_step4$trait.info %>% filter(id %in% test_traits) %>% select(id,trait,cluster)
 ```
 
@@ -143,13 +159,13 @@ res_step5_double_correct <- confounder_selection(id_exposure = "ieu-b-35",id_out
 res_step5_double_correct$id.list
 ```
 
-## Step 6: MVMR analysis to get causal estimates
+## Step 6: MVMR analysis to get causal estimates without correlation matrix between traits
 
 Finally, after adjusting for selected traits, we will apply different MVMR methods 
 to get causal estimates from the main exposure to the outcome. The function offers 
 multiple MVMR methods including regular MV-IVW, MV-median and more robust methods 
-like GRAPPLE, MRBEE. Here we use traits selected from double corrected Lasso as 
-the example.
+like GRAPPLE, MRBEE. In this step, we assume traits are independent with each other. 
+Here we use traits selected from double corrected Lasso as the example.
 
 ```{r}
 res_final_ivw <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
@@ -178,5 +194,49 @@ rbind(res_final_ivw,res_final_ivw_T) %>% dplyr::select(id.exposure,b,se,pval,met
   rename("exposure" = "id.exposure","pvalue" = "pval") %>%
   rbind(res_final_bee,res_final_grapple) %>%
   filter(exposure == "ieu-b-35")
+```
+
+## Step 7: MVMR analysis to get causal estimates with correlation matrix between traits
+
+In order to take genetic correlation between traits into consideration, we need to 
+estimate it first. You need to download raw GWAS summary statistics to local. You 
+can save files on the server since they could be pretty large. 
+
+### 1. Download GWAS summary statistics
+
+You can use the following code to generate download.sh file and conduct it in the 
+linux command line. The default position to save this file is your current working 
+directory and you can change it by position parameter.
+```{r}
+download_gwas(id_list = c("ieu-b-35","ieu-b-42",
+                          res_step5_double_correct$id.list))
+```
+
+
+```{bash, eval=FALSE, engine="sh"}
+bash download.sh
+```
+
+### 2. Formatting and harmonize data
+
+After downloading data, next step is to format raw GWAS summary data to remove 
+ambiguous SNPs. The following code uses ieu-b-42, ieu-b-35 and ieu-b-104 as the example, and you can 
+format each trait by the same rule. 
+```{r eval=FALSE}
+library(stringr)
+library(readr)
+library(VariantAnnotation)
+library(gwasvcf)
+library(dplyr)
+library(magrittr)
+format_gwas_data(data_file = "ukb-b-19953.vcf.gz",output_file = "ukb-b-19953.vcf.bgz")
+format_gwas_data(data_file = "ieu-b-35.vcf.gz",output_file = "ieu-b-35.vcf.bgz")
+format_gwas_data(data_file = "ieu-b-42.vcf.gz",output_file = "ieu-b-42.vcf.bgz")
+```
+
+Then combine and harmonize them together. The first ID in the id list is the outcome
+```{r eval=FALSE}
+combine_gwas_data(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
+                  out_dir = "data/",prefix = "test")
 ```
 

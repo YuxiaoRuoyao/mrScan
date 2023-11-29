@@ -5,6 +5,7 @@
 #' @import mr.raps
 #' @import plyr
 #' @import purrr
+#' @export
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
@@ -67,18 +68,37 @@ mr_pairs<-function (ids1, ids2, inst_pval = 5e-08,method_list = c("mr_raps"),
   }) %>% unlist()
   return(list(mr12 = m_1_2, mr21 = m_2_1, cor = cor_vals))
 }
-calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
-  ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids1, p1 = inst_pval)
-  out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP,
-                                               outcomes = ids2)
-  dat_1_2 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
-  # This step redundant
-  ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids2, p1 = inst_pval)
-  out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP, outcomes = ids1)
-  dat_2_1 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
-  cor_vals <- expand.grid(id1 = ids1, id2 = ids2, stringsAsFactors = FALSE) %>%
-    filter(id1 != id2)
-  cor_vals$cor <- purrr::map2(cor_vals$id1, cor_vals$id2, function(x, y) {
+# calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
+#   ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids1, p1 = inst_pval)
+#   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP,
+#                                                outcomes = ids2)
+#   dat_1_2 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
+#   # This step redundant
+#   ex_dat <- TwoSampleMR::extract_instruments(outcomes = ids2, p1 = inst_pval)
+#   out_dat <- TwoSampleMR::extract_outcome_data(snps = ex_dat$SNP, outcomes = ids1)
+#   dat_2_1 <- TwoSampleMR::harmonise_data(ex_dat, out_dat)
+#   cor_vals <- expand.grid(id1 = ids1, id2 = ids2, stringsAsFactors = FALSE) %>%
+#     filter(id1 != id2)
+#   cor_vals$cor <- purrr::map2(cor_vals$id1, cor_vals$id2, function(x, y) {
+#     X_1_2 <- dplyr::filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
+#       rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
+#       select(SNP, beta1, beta2)
+#     X_2_1 <- dplyr::filter(dat_2_1, id.exposure == y & id.outcome == x) %>%
+#       rename(beta2 = beta.exposure, beta1 = beta.outcome) %>%
+#       select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
+#     X <- dplyr::bind_rows(X_1_2, X_2_1)
+#     with(X, cor(beta1, beta2))
+#   }) %>% unlist()
+#   return(cor_vals)
+# }
+calculate_cor <- function (df_pairs, inst_pval = 5e-08){
+  df_pairs$cor <- purrr::map2(df_pairs$X1, df_pairs$X2, function(x, y){
+    ex_dat <- extract_instruments(outcomes = x, p1 = inst_pval)
+    out_dat <- extract_outcome_data(snps = ex_dat$SNP,outcomes = y)
+    dat_1_2 <- harmonise_data(ex_dat, out_dat)
+    ex_dat <- extract_instruments(outcomes = y, p1 = inst_pval)
+    out_dat <- extract_outcome_data(snps = ex_dat$SNP, outcomes = x)
+    dat_2_1 <- harmonise_data(ex_dat, out_dat)
     X_1_2 <- dplyr::filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
       rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
       select(SNP, beta1, beta2)
@@ -88,7 +108,7 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
     X <- dplyr::bind_rows(X_1_2, X_2_1)
     with(X, cor(beta1, beta2))
   }) %>% unlist()
-  return(cor_vals)
+  return(df_pairs)
 }
 run_grapple <- function(beta.exposure,beta.outcome,se.exposure,se.outcome){
   grapple.data<-data.frame(cbind(beta.outcome, beta.exposure,
