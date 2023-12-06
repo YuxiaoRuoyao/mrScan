@@ -229,15 +229,37 @@ library(VariantAnnotation)
 library(gwasvcf)
 library(dplyr)
 library(magrittr)
-format_gwas_data(data_file = "ukb-b-19953.vcf.gz",output_file = "ukb-b-19953.vcf.bgz")
-format_gwas_data(data_file = "ieu-b-35.vcf.gz",output_file = "ieu-b-35.vcf.bgz")
-format_gwas_data(data_file = "ieu-b-42.vcf.gz",output_file = "ieu-b-42.vcf.bgz")
-```
-
-Then combine and harmonize them together. The first ID in the id list is the outcome
-```{r eval=FALSE}
 library(rlang)
 library(purrr)
-combine_gwas_data(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
-                  out_dir = "data/",prefix = "test")
+format_combine(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
+               file_list = c("ieu-b-42.vcf.gz","ieu-b-35.vcf.gz","ukb-b-19953.vcf.gz"),
+               out_dir="data/",prefix="test2")
 ```
+
+### 3. LD clumping
+
+You can download the LD reference dataset from here http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz
+This contains an LD reference panel for each of the 5 super-populations in the 1000 genomes reference dataset.
+```{r}
+ld_prune_chrom_plink(zmat_dir = "data/",prefix = "test2",ref_path = "/path/LD_reference/EUR",
+                     out_dir = "/path/ld_prune_output/")
+```
+
+### 4. Calculate R correlation matrix
+```{r}
+ldsc_full(l2_dir,zmat_dir = "data/",prefix = "test2",out_dir = "data/")
+```
+
+
+### 5. Get MVMR estimates with R matrix
+```{r}
+res_grapple_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
+                    prefix = "test2",R = "data/test2.R_est.RDS",
+                    p_thresh = 1e-5,MVMR_method = "GRAPPLE")
+res_bee_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
+                    prefix = "test2",R = "data/test2.R_est.RDS",
+                    p_thresh = 5e-8, pleio_p_thresh = 0,
+                    MVMR_method = "MRBEE")
+```
+
+
