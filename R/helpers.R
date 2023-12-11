@@ -156,7 +156,6 @@ download_gwas <- function(id_list,position=NULL){
 format_ieu_chrom <- function(file, chrom){
   dat <- query_chrompos_file(paste0(chrom, ":1-536870911"), file) %>%
     vcf_to_tibble() %>%
-    #filter(AF > af_thresh & AF < (1-af_thresh)) %>%
     mutate(p_value = 10^{-1*LP})
   dat <- sumstatFactors::gwas_format(dat, "ID", "ES", "SE", "ALT",
                      "REF", "seqnames", "start",

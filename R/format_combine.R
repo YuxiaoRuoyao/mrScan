@@ -17,6 +17,7 @@
 format_combine <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
                            snp = NA, pos = NA, chrom = NA, A1 =  NA, A2 = NA,
                            beta_hat = NA, se = NA, p_value = NA, af = NA, sample_size = NA,
+                           pub_sample_size = NA,
                            effect_is_or = "no"){
   for (c in seq(1:22)) {
     fulldat <- map(seq(length(id_list)), function(i){
@@ -36,15 +37,26 @@ format_combine <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
                                  af[i],
                                  sample_size[i],
                                  as.logical(effect_is_or[i]))
+        if(all(is.na(dat$sample_size))){
+          dat$sample_size <- pub_sample_size[i]
+        }
       }
       n <- id_list[i]
       pos_name <- as_name(paste0(n, ".pos"))
+      beta_name <- as_name(paste0(n, ".beta"))
+      se_name <- as_name(paste0(n, ".se"))
+      p_name <- as_name(paste0(n, ".p"))
       z_name <- as_name(paste0(n, ".z"))
       ss_name <- as_name(paste0(n, ".ss"))
-      dat <-dat %>%  mutate(Z = beta_hat/se) %>%
+
+      dat$sample_size[is.na(dat$sample_size)] <- as.numeric(pub_sample_size)
+      dat <-dat %>% mutate(Z = beta_hat/se) %>%
         rename(REF = A2, ALT = A1) %>%
         select(chrom, snp, REF, ALT,
                !!pos_name := pos,
+               !!beta_name := beta_hat,
+               !!se_name := se,
+               !!p_name := p_value,
                !!z_name := Z,
                !!ss_name := sample_size)
     }) %>%
@@ -55,10 +67,10 @@ format_combine <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
     }
     # Save table of how traits are missing each SNP for LD clumping
     miss <- fulldat %>%
-      select(ends_with(".z")) %>%
+      select(ends_with(".beta")) %>%
       is.na(.) %>%
       rowSums(.)
     ix <- which(miss == 0)
-    saveRDS(fulldat[ix,], file=paste0(out_dir,prefix,".zmat.",c,".RDS"))
+    saveRDS(fulldat[ix,], file=paste0(out_dir,prefix,".beta.",c,".RDS"))
   }
 }

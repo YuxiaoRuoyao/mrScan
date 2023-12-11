@@ -19,6 +19,7 @@ format_combine(
   p_value = NA,
   af = NA,
   sample_size = NA,
+  pub_sample_size = NA,
   effect_is_or = "no"
 )
 }

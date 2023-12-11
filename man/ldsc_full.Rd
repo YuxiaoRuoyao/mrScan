@@ -4,10 +4,10 @@
 \alias{ldsc_full}
 \title{Estimate genetic correlation matrix}
 \usage{
-ldsc_full(l2_dir, zmat_dir = NULL, out_dir = NULL, prefix = NULL)
+ldsc_full(l2_dir, beta_dir = NULL, out_dir = NULL, prefix = NULL)
 }
 \arguments{
-\item{zmat_dir}{Directory path of merged data. Default is the current work directory.}
+\item{beta_dir}{Directory path of merged data. Default is the current work directory.}
 
 \item{out_dir}{Output data path. Default is in the current work directory.}
 

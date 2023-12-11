@@ -7,9 +7,9 @@
 ld_prune_chrom_plink(
   r2_thresh = 0.001,
   clump_kb = 10000,
-  p = "pvalue",
+  type = "pvalue",
   pthresh = 1,
-  zmat_dir = NULL,
+  beta_dir = NULL,
   prefix = NULL,
   ref_path,
   out_dir = NULL
@@ -20,11 +20,11 @@ ld_prune_chrom_plink(
 
 \item{clump_kb}{Clumping distance cut off. Default = 10000}
 
-\item{p}{LD clumping prioritization. Either pvalue or rank. Default = "pvalue"}
+\item{type}{LD clumping prioritization. Either pvalue or rank. Default = "pvalue"}
 
 \item{pthresh}{pvalue threshold. Default = 1}
 
-\item{zmat_dir}{Directory path of merged data. Default is the current work directory.}
+\item{beta_dir}{Directory path of merged data. Default is the current work directory.}
 
 \item{prefix}{Name prefix for the output. Default = NULL}
 

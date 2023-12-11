@@ -221,7 +221,7 @@ bash download.sh
 
 After downloading data, next step is to format raw GWAS summary data to remove 
 ambiguous SNPs. The following code uses ieu-b-42, ieu-b-35 and ieu-b-104 as the example, and you can 
-format each trait by the same rule. 
+format each trait by the same rule. Put the outcome as the first trait.
 ```{r eval=FALSE}
 library(stringr)
 library(readr)
@@ -233,7 +233,7 @@ library(rlang)
 library(purrr)
 format_combine(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
                file_list = c("ieu-b-42.vcf.gz","ieu-b-35.vcf.gz","ukb-b-19953.vcf.gz"),
-               out_dir="data/",prefix="test2")
+               out_dir="data/",prefix="test")
 ```
 
 ### 3. LD clumping
@@ -241,25 +241,34 @@ format_combine(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
 You can download the LD reference dataset from here http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz
 This contains an LD reference panel for each of the 5 super-populations in the 1000 genomes reference dataset.
 ```{r}
-ld_prune_chrom_plink(zmat_dir = "data/",prefix = "test2",ref_path = "/path/LD_reference/EUR",
+ld_prune_chrom_plink(beta_dir = "data/",prefix = "test",ref_path = "/path/LD_reference/EUR",
                      out_dir = "/path/ld_prune_output/")
 ```
 
 ### 4. Calculate R correlation matrix
+```{r eval=FALSE}
+ldsc_full(l2_dir,beta_dir = "data/",prefix = "test",out_dir = "data/")
+```
+
+
 ```{r}
-ldsc_full(l2_dir,zmat_dir = "data/",prefix = "test2",out_dir = "data/")
+test.R_est <- readRDS("data/test.R_est.RDS")
+test.R_est
 ```
 
 
 ### 5. Get MVMR estimates with R matrix
 ```{r}
 res_grapple_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test2",R = "data/test2.R_est.RDS",
+                    prefix = "test",R = test.R_test,
                     p_thresh = 1e-5,MVMR_method = "GRAPPLE")
 res_bee_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test2",R = "data/test2.R_est.RDS",
+                    prefix = "test",R = test.R_test,
                     p_thresh = 5e-8, pleio_p_thresh = 0,
                     MVMR_method = "MRBEE")
+res_ivw <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
+                    prefix = "test",p_thresh = 5e-8,
+                    MVMR_method = "IVW")
 ```
 
 

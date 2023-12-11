@@ -1,5 +1,5 @@
 #' @title Estimate genetic correlation matrix
-#' @param zmat_dir Directory path of merged data. Default is the current work directory.
+#' @param beta_dir Directory path of merged data. Default is the current work directory.
 #' @param ref_path Path for the LD reference panel.
 #' @param out_dir Output data path. Default is in the current work directory.
 #' @param prefix Name prefix for the output. Default = NULL
@@ -12,9 +12,9 @@
 #' @import bigsnpr
 #' @import stringr
 #' @export
-
-ldsc_full <- function(l2_dir,zmat_dir=NULL,out_dir=NULL,prefix=NULL){
-  z_files <- paste0(zmat_dir,prefix,".zmat.",seq(1,22),".RDS")
+# Add a pvalue option for calculate R
+ldsc_full <- function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
+  beta_files <- paste0(beta_dir,prefix,".beta.",seq(1,22),".RDS")
   ld <- purrr::map_dfr(1:22, function(c){
     read_table(paste0(l2_dir, c, ".l2.ldscore.gz"))
   })
@@ -23,7 +23,7 @@ ldsc_full <- function(l2_dir,zmat_dir=NULL,out_dir=NULL,prefix=NULL){
     read_lines(paste0(l2_dir, c, ".l2.M_5_50"))
   }) %>% unlist() %>% as.numeric() %>% sum()
 
-  dat <- map_dfr(z_files, function(x){readRDS(x)})
+  dat <- map_dfr(beta_files, function(x){readRDS(x)})
   dat <- filter(dat, snp %in% ld$SNP)
 
   Z <- dat %>% dplyr::select(ends_with(".z"))
@@ -53,8 +53,6 @@ ldsc_full <- function(l2_dir,zmat_dir=NULL,out_dir=NULL,prefix=NULL){
     cat(ii, " ")
     nn1 <- name_pairs$t1[ii]
     nn2 <- name_pairs$t2[ii]
-    #ss1 <- gwas_info$pub_sample_size[gwas_info$name == nn1]
-    #ss2<- gwas_info$pub_sample_size[gwas_info$name == nn2]
     ss1 <- median(dat[[paste0(nn1,".ss")]])
     ss2 <- median(dat[[paste0(nn2,".ss")]])
     i <- which(!is.na(full_dat[[nn1]]) & !is.na(full_dat[[nn2]]))
@@ -75,11 +73,9 @@ ldsc_full <- function(l2_dir,zmat_dir=NULL,out_dir=NULL,prefix=NULL){
 
   nms <- paste0(as.vector(cov_mat$t1))
   R <- as.matrix(cov_mat[,-1])
-  R <- Matrix::nearPD(R,  posd.tol = 1e-3) %>% with(., as.matrix(mat));
-
-  # o <- match(gwas_info$name, nms)
+  R <- Matrix::nearPD(R,  posd.tol = 1e-3) %>% with(., as.matrix(mat))
   o <- match(n, nms)
   R <- R[o, o]
-
-  saveRDS(R, file=paste0(out_dir,prefix,".R_est.RDS"))
+  Rcor <- cov2cor(R)
+  saveRDS(Rcor, file=paste0(out_dir,prefix,".R_est.RDS"))
 }
