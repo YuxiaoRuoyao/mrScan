@@ -2,7 +2,7 @@
 % Please edit documentation in R/ldsc_full.R
 \name{ldsc_full}
 \alias{ldsc_full}
-\title{Estimate genetic correlation matrix}
+\title{Estimate genetic correlation matrix by LDSC method}
 \usage{
 ldsc_full(l2_dir, beta_dir = NULL, out_dir = NULL, prefix = NULL)
 }
@@ -19,5 +19,5 @@ ldsc_full(l2_dir, beta_dir = NULL, out_dir = NULL, prefix = NULL)
 Save one dataframe per chromosome with columns for SNP info
 }
 \description{
-Estimate genetic correlation matrix
+Estimate genetic correlation matrix by LDSC method
 }

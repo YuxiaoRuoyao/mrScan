@@ -246,24 +246,37 @@ ld_prune_chrom_plink(beta_dir = "data/",prefix = "test",ref_path = "/path/LD_ref
 ```
 
 ### 4. Calculate R correlation matrix
+
+There are two options for this. One is by using pvalue method and the other is LDSC way. 
+pvalue method is quick and easier but the estimated matrix could be biased. If you want to 
+use more accurate LDSC way, you need to download reference LD score first. 
+
 ```{r eval=FALSE}
-ldsc_full(l2_dir,beta_dir = "data/",prefix = "test",out_dir = "data/")
+estimate_R_pval(ld_prune_file_dir = "/path/ld_prune_output/",prefix = "test",
+                out_dir = "data/")
+```
+
+
+```{r eval=FALSE}
+ldsc_full(l2_dir = "/path/l2_dir/",beta_dir = "data/",prefix = "test",out_dir = "data/")
 ```
 
 
 ```{r}
-test.R_est <- readRDS("data/test.R_est.RDS")
-test.R_est
+test.R_est_ldsc <- readRDS("data/test.R_est_ldsc.RDS")
+test.R_est_pval <- readRDS("data/test.R_est_pval.RDS")
+test.R_est_ldsc
+test.R_est_pval
 ```
 
 
 ### 5. Get MVMR estimates with R matrix
 ```{r}
 res_grapple_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test",R = test.R_test,
+                    prefix = "test",R = test.R_est_ldsc,
                     p_thresh = 1e-5,MVMR_method = "GRAPPLE")
 res_bee_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test",R = test.R_test,
+                    prefix = "test",R = test.R_est_ldsc,
                     p_thresh = 5e-8, pleio_p_thresh = 0,
                     MVMR_method = "MRBEE")
 res_ivw <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",

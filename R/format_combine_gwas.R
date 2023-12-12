@@ -14,7 +14,7 @@
 #' @import purrr
 #' @export
 
-format_combine <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
+format_combine_gwas <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
                            snp = NA, pos = NA, chrom = NA, A1 =  NA, A2 = NA,
                            beta_hat = NA, se = NA, p_value = NA, af = NA, sample_size = NA,
                            pub_sample_size = NA,

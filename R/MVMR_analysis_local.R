@@ -1,13 +1,11 @@
-#' @title MVMR analysis
-#' @param id_exposure GWAS ID of the main exposure
-#' @param id_outcome GWAS ID of the outcome
-#' @param id.list GWAS ID list of traits based on previous steps
-#' @param df_info Dataframe of trait info from previous steps
-#' @param pval_threshold Instrument selection cutoff. Default = 5e-8
+#' @title MVMR analysis by local GWAS summary data
+#' @param ld_prune_file_dir Directory path of ld pruned data. Default is the current work directory.
+#' @param prefix Name prefix for the output. Default = NULL
+#' @param R Correlation matrix for the outcome and all exposures
 #' @param MVMR_method IVW, IVW_instrument_specific, MRBEE, GRAPPLE, ESMR
+#' @param pval_threshold Instrument selection cutoff. Default = 5e-8
 #' @param pleio_p_thresh P-value threshold for determining if a specific IV has
 #' sufficient evidence of horizontal pleiotropy to be removed from causal estimation. Default=0
-#' @param R Correlation matrix for the outcome and all exposures
 #' @returns A dataframe with trait estimates for correponding methods
 #'
 #' @import TwoSampleMR
@@ -17,7 +15,7 @@
 #' @import purrr
 #' @export
 MVMR_analysis_local <- function(ld_prune_file_dir=NULL,prefix=NULL,R,MVMR_method,
-                                p_thresh = 5e-8,pleio_p_thresh = 0){
+                                pval_threshold = 5e-8,pleio_p_thresh = 0){
   files <- paste0(ld_prune_file_dir,prefix,".beta.ldpruned.",seq(1,22),".RDS")
   X <- purrr::map_dfr(files, readRDS)
   beta_hat <- X %>% select(ends_with(".beta"))
@@ -26,7 +24,7 @@ MVMR_analysis_local <- function(ld_prune_file_dir=NULL,prefix=NULL,R,MVMR_method
   nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   names(beta_hat)<-names(se)<-names(p)<-nms
   pmin <- apply(p[,-1, drop = F], 1, min)
-  ix <- which(pmin < p_thresh)
+  ix <- which(pmin < pval_threshold)
   i <- ncol(beta_hat)
   if(MVMR_method == "IVW"){
     hdat <-  list(exposure_beta = as.matrix(beta_hat[ix, 2:i]),

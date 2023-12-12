@@ -2,38 +2,34 @@
 % Please edit documentation in R/MVMR_analysis_local.R
 \name{MVMR_analysis_local}
 \alias{MVMR_analysis_local}
-\title{MVMR analysis}
+\title{MVMR analysis by local GWAS summary data}
 \usage{
 MVMR_analysis_local(
   ld_prune_file_dir = NULL,
   prefix = NULL,
   R,
   MVMR_method,
-  p_thresh = 5e-08,
+  pval_threshold = 5e-08,
   pleio_p_thresh = 0
 )
 }
 \arguments{
+\item{ld_prune_file_dir}{Directory path of ld pruned data. Default is the current work directory.}
+
+\item{prefix}{Name prefix for the output. Default = NULL}
+
 \item{R}{Correlation matrix for the outcome and all exposures}
 
 \item{MVMR_method}{IVW, IVW_instrument_specific, MRBEE, GRAPPLE, ESMR}
 
+\item{pval_threshold}{Instrument selection cutoff. Default = 5e-8}
+
 \item{pleio_p_thresh}{P-value threshold for determining if a specific IV has
 sufficient evidence of horizontal pleiotropy to be removed from causal estimation. Default=0}
-
-\item{id_exposure}{GWAS ID of the main exposure}
-
-\item{id_outcome}{GWAS ID of the outcome}
-
-\item{id.list}{GWAS ID list of traits based on previous steps}
-
-\item{df_info}{Dataframe of trait info from previous steps}
-
-\item{pval_threshold}{Instrument selection cutoff. Default = 5e-8}
 }
 \value{
 A dataframe with trait estimates for correponding methods
 }
 \description{
-MVMR analysis
+MVMR analysis by local GWAS summary data
 }
