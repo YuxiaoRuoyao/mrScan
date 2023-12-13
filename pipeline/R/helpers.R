@@ -1,11 +1,9 @@
-#' @import dplyr
-#' @importFrom dplyr select filter rename group_by summarize
-#' @import TwoSampleMR
-#' @import ieugwasr
-#' @import mr.raps
-#' @import plyr
-#' @import purrr
-#' @export
+library(dplyr)
+library(TwoSampleMR)
+library(ieugwasr)
+library(mr.raps)
+library(plyr)
+library(purrr)
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,

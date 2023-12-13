@@ -1,0 +1,48 @@
+# sum_stats is a csv file
+input:
+    # sum_stats: "astle_bloodcell.csv"
+    label: "test"
+    id_exposure: "ieu-b-35"
+    id_outcome: "ieu-b-42"
+
+analysis:
+    pop: "EUR" 
+    pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
+    extract_traits:
+        batch: "c("ieu-a","ieu-b","ukb-b")"
+        pval_traits: 1e-5 # pvalue threshold to retrieve traits
+        min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
+    quality_control:
+        nsnp_cutoff: 1e6
+        pop: "European"
+        sex: "Males and Females"
+        R2_cutoff: 0.9
+    unique_traits:
+        R2_cutoff: 0.9
+        method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
+
+    # LD pruning options:
+    # r2_thresh: threshold for pairwise r^2 between variants
+    # clump_kb Maximum distance for pruning.
+    # ref_path Path to plink format reference data
+    # ld_prioritization: either pvalue or rank
+    ldprune:
+        r2_thresh: 0.001
+        clump_kb: [10000]
+        ld_prioritization: ["pvalue"] # "pvalue" or "rank"
+        ref_path: "/nfs/turbo/sph-jvmorr/ld_reference_files/1kg_plink/EUR"
+    R:
+        type: ["ldsc", "none", "pt"] #, "ldsc_quick"]
+        pthresh: [0.05]
+        l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
+        cor_clust: [0.95]
+
+out:
+    # Output data options:
+    # data_dir: Directory to store reformatted data
+    # formatted_gwas_dir: Where do store formatted gwas data
+    # output_dir: Where to store results
+    data_dir: "data/"
+    formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
+    output_dir: "results/"
+

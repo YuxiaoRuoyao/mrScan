@@ -4,7 +4,7 @@
 #' @param batch GWAS database sub-batches, a vector.
 #' @param pop Super-population to use as reference panel. Default = "EUR". Options are "EUR","SAS","EAS","AFR","AMR"
 #' @param pval_x p-value threshold to extract instruments of the main exposure, default=5e-8
-#' @param pval_z p-value threshold to retreive traits, default=1e-5
+#' @param pval_z p-value threshold to retrieve traits, default=1e-5
 #' @param r2 clumping r2 threshold. Default=0.001
 #' @param kb clumping kb window. Default=10000
 #' @param access_token Google OAuth2 access token. Default=check_access_token()

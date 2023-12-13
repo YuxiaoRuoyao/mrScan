@@ -10,14 +10,10 @@
 #' @importFrom dplyr left_join group_by pull slice_max
 #' @export
 unique_traits <- function(id.list,df_info,R2_cutoff=0.9,method){
-  # df_pairs<-calculate_cor(ids1 = id.list, ids2 = id.list)
-  df_pairs_initial<- data.frame(t(combn(id.list,2)))
-  df_pairs <- calculate_cor(df_pairs = df_pairs_initial)
-  df_pairs2 <- data.frame(X1 = df_pairs$X2, X2 = df_pairs$X1, cor = df_pairs$cor)
-  df_pairs <- rbind(df_pairs,df_pairs2)
+  res <- calculate_cor_pairwise(id.list = id.list)
+  df_matrix <- res$R_matrix
+  df_pairs <- res$df_pair
   if(method=="cluster"){
-    df_matrix <- as.data.frame.matrix(xtabs(cor ~ ., df_pairs))
-    df_matrix <- abs(df_matrix)
     clusters <- greedy_cluster(id.list = names(df_matrix),R = df_matrix,
                                R2_cutoff = R2_cutoff)
     df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
