@@ -14,10 +14,10 @@ dat <- readRDS(res_initial)$trait.info
 
 na.SNP.trait<-filter(dat, is.na(nsnp))$id
 na.sex.trait<-filter(dat,sex=="NA")$id
-new.dat<-filter(new.dat, nsnp > nsnp_cutoff & sex == sex & population == pop)
+new.dat<-filter(dat, nsnp > nsnp_cutoff & sex == sex & population == pop)
 id.list <- new.dat$id
 id.list<-unique(c(id.list,na.SNP.trait,na.sex.trait))
-new.dat<-info %>% filter(id %in% id.list) %>% filter(population == pop)
+new.dat<-dat %>% filter(id %in% id.list) %>% filter(population == pop)
 id.list<-new.dat$id
 dat <- dat %>%
   mutate(status = if_else(id %in% id.list, "select after QC", "delete in QC"))

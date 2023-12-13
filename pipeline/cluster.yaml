@@ -1,30 +1,7 @@
 __default__:
-    mem: "5G"
-    cpus: "1"
+    mem: "50G"
+    cpus: "5"
     name: "{rule}-{wildcards}"
     log: "log/snake-{rule}-{wildcards}"
-    time: "2:00:00"
-
-snp_table_chrom:
-    mem: "20G"
-
-ld_prune_plink:
-    mem: "10G"
-    time:  "1:00:00"
-
-run_gfa:
-    mem: "5G"
-    time: "1-00:00:00"
-
-refit_gfa:
-    mem: "5G"
-    time: "1-00:00:00"
-
-ldsc_rg_pair:
-    mem: "20G"
-    time: "1-00:00:00"
-
-R_ldsc_full:
-    mem: "20G"
-    time: "1-00:00:00"
+    time: "5:00:00"
 

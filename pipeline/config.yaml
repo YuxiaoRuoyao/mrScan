@@ -6,10 +6,10 @@ input:
     id_outcome: "ieu-b-42"
 
 analysis:
-    pop: "EUR" 
+    pop: "EUR"
     pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
     extract_traits:
-        batch: "c("ieu-a","ieu-b","ukb-b")"
+        batch: ["ieu-a","ieu-b","ukb-b"]
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
     quality_control:

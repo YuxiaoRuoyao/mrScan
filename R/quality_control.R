@@ -16,10 +16,10 @@ quality_control <- function(id_exposure,dat,nsnp_cutoff=1e6,pop="European",sex="
                             R2_cutoff = 0.9){
   na.SNP.trait<-dplyr::filter(dat, is.na(nsnp))$id
   na.sex.trait<-dplyr::filter(dat,sex=="NA")$id
-  new.dat<-dplyr::filter(new.dat, nsnp > nsnp_cutoff & sex == sex & population == pop)
+  new.dat<-dplyr::filter(dat, nsnp > nsnp_cutoff & sex == sex & population == pop)
   id.list <- new.dat$id
   id.list<-unique(c(id.list,na.SNP.trait,na.sex.trait))
-  new.dat<-info %>% filter(id %in% id.list) %>% filter(population == pop)
+  new.dat<-dat %>% filter(id %in% id.list) %>% filter(population == pop)
   id.list<-new.dat$id # 140
   dat <- dat %>%
     mutate(status = if_else(id %in% id.list, "select after QC", "delete in QC"))

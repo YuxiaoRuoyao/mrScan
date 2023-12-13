@@ -19,7 +19,7 @@ from snakemake.utils import validate
 ###### Load configuration file
 configfile: "config.yaml"
 
-ss = pd.read_csv(config["input"]["sum_stats"], na_filter=False)
+#ss = pd.read_csv(config["input"]["sum_stats"], na_filter=False)
 
 # output options
 data_dir = config["out"]["data_dir"] #where the data is
@@ -33,7 +33,7 @@ id_outcome = config["input"]["id_outcome"]
 
 
 rule all:
-    input: 
+    input:
         data_dir + prefix + "qc_id_list.csv",
         data_dir + prefix + "qc_trait_info.csv"
 
@@ -51,7 +51,7 @@ rule extract_traits:
     script: 'R/1_extract_traits.R'
 
 rule quality_control:
-    input: data_dir + prefix + "extract_traits.RDS"
+    input: file = data_dir + prefix + "extract_traits.RDS"
     params: id_exposure = id_exposure,
             nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
@@ -61,33 +61,33 @@ rule quality_control:
             trait_info = data_dir + prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
 
-trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
+# trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
 
-rule extract_inst:
-    params: pval_instruments = config["analysis"]["pval_instruments"],
-            trait = {ID} # How to make this ID from trait_id?
-    output: out = temp(data_dir + prefix + "inst.{ID}.RDS")
-    script: "R/3_extract_inst.R"
+#rule extract_inst:
+#    params: pval_instruments = config["analysis"]["pval_instruments"],
+#            trait = {ID} # How to make this ID from trait_id?
+#    output: out = temp(data_dir + prefix + "inst.{ID}.RDS")
+#    script: "R/3_extract_inst.R"
 
-rule extract_associations:
-    input: inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id)
-    params: trait = {ID}
-    output: out = temp(data_dir + prefix + "associations.{ID}.RDS")
-    script: "R/3_extract_associations.R"
+#rule extract_associations:
+#    input: inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id)
+#     params: trait = {ID}
+#    output: out = temp(data_dir + prefix + "associations.{ID}.RDS")
+#    script: "R/3_extract_associations.R"
 
-rule calculate_pairwise_cor:
-    input: association_files = expand(data_dir + prefix + "associations.{ID}.RDS",ID = trait_id),
-           inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id),
-           id_list = data_dir + prefix + "qc_id_list.csv"
-    output: out = data_dir + prefix + "pairwise_cor.RDS"
-    script: "R/3_calculate_pairwise_cor.R"
+#rule calculate_pairwise_cor:
+#    input: association_files = expand(data_dir + prefix + "associations.{ID}.RDS",ID = trait_id),
+#           inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id),
+#           id_list = data_dir + prefix + "qc_id_list.csv"
+#    output: out = data_dir + prefix + "pairwise_cor.RDS"
+#    script: "R/3_calculate_pairwise_cor.R"
 
-rule unique_traits:
-    input: id_list = data_dir + prefix + "qc_id_list.csv",
-           trait_info = data_dir + prefix + "qc_trait_info.csv",
-           pairwise_cor = data_dir + prefix + "pairwise_cor.RDS"
-    params: R2_cutoff = config["analysis"]["unique_traits"]["R2_cutoff"],
-            method = config["analysis"]["unique_traits"]["method"]
-    output: out = data_dir + prefix + "unique_traits.RDS"
-    script: "R/3_unique_traits.R"
+#rule unique_traits:
+#    input: id_list = data_dir + prefix + "qc_id_list.csv",
+#           trait_info = data_dir + prefix + "qc_trait_info.csv",
+#           pairwise_cor = data_dir + prefix + "pairwise_cor.RDS"
+#    params: R2_cutoff = config["analysis"]["unique_traits"]["R2_cutoff"],
+#            method = config["analysis"]["unique_traits"]["method"]
+#    output: out = data_dir + prefix + "unique_traits.RDS"
+#    script: "R/3_unique_traits.R"
 
