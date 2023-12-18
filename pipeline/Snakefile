@@ -14,6 +14,7 @@
 import pandas as pd
 import random
 import string
+import os.path
 from snakemake.utils import validate
 
 ###### Load configuration file
@@ -30,12 +31,14 @@ prefix = config["input"]["label"] + "_"
 id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
 
-
+if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
+    trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
 
 rule all:
     input:
-        data_dir + prefix + "qc_id_list.csv",
-        data_dir + prefix + "qc_trait_info.csv"
+        #data_dir + prefix + "qc_id_list.csv",
+        #data_dir + prefix + "qc_trait_info.csv",
+        data_dir + prefix + "downstream_filter.RDS"
 
 rule extract_traits:
     params: id_exposure = id_exposure,
@@ -55,19 +58,44 @@ rule quality_control:
     params: id_exposure = id_exposure,
             nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
-            sex = config["analysis"]["quality_control"]["sex"],
-            R2_cutoff = config["analysis"]["quality_control"]["R2_cutoff"]
+            sex = config["analysis"]["quality_control"]["sex"]
     output: id_list = data_dir + prefix + "qc_id_list.csv",
             trait_info = data_dir + prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
-
+    
 # trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
+        
+def input_downstream(wcs):
+    if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
+        trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
+        return expand(data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS", ID1 = [id_exposure,id_outcome], ID2 = trait_id)
+    else:
+        return data_dir + prefix + "qc_id_list.csv" # need to ask here. Now it only run first two and downstream_filter step
+        
+rule extract_inst:
+    params: pval_instruments = config["analysis"]["pval_instruments"],
+            trait = "{ID}"
+    output: out = data_dir + prefix + "inst_{ID}.RDS"
+    script: "R/3_extract_inst.R"
 
-#rule extract_inst:
-#    params: pval_instruments = config["analysis"]["pval_instruments"],
-#            trait = {ID} # How to make this ID from trait_id?
-#    output: out = temp(data_dir + prefix + "inst.{ID}.RDS")
-#    script: "R/3_extract_inst.R"
+rule bidirection_mr:
+    input: file1 = data_dir + prefix + "inst_{ID1}.RDS",
+           file2 = data_dir + prefix + "inst_{ID2}.RDS",
+    params: method = config["analysis"]["bidirection_mr"]["method"],
+            over_dispersion = config["analysis"]["bidirection_mr"]["over_dispersion"],
+            loss_function = config["analysis"]["bidirection_mr"]["loss_function"]
+    output: out = data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS"
+    script: "R/3_bidirection_mr.R"
+
+rule downstream_filter:
+    input: id_list = data_dir + prefix + "qc_id_list.csv", 
+           mr_files = input_downstream,
+           trait_info = data_dir + prefix + "qc_trait_info.csv"
+    params: id_exposure = id_exposure,
+            sig_level = config["analysis"]["downstream_filter"]["sig_level"],
+            R2_cutoff = config["analysis"]["quality_control"]["R2_cutoff"]
+    output: out = data_dir + prefix + "downstream_filter.RDS"
+    script:"R/3_downstream_filter.R"
 
 #rule extract_associations:
 #    input: inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id)

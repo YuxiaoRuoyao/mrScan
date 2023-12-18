@@ -1,8 +1,8 @@
+library(plyr)
 library(dplyr)
 library(TwoSampleMR)
 library(ieugwasr)
 library(mr.raps)
-library(plyr)
 library(purrr)
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
@@ -78,11 +78,11 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
     filter(id1 != id2)
   cor_vals$cor <- purrr::map2(cor_vals$id1, cor_vals$id2, function(x, y) {
     X_1_2 <- dplyr::filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
-      rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
-      select(SNP, beta1, beta2)
+      dplyr::rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
+      dplyr::select(SNP, beta1, beta2)
     X_2_1 <- dplyr::filter(dat_2_1, id.exposure == y & id.outcome == x) %>%
-      rename(beta2 = beta.exposure, beta1 = beta.outcome) %>%
-      select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
+      dplyr::rename(beta2 = beta.exposure, beta1 = beta.outcome) %>%
+      dplyr::select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
     X <- dplyr::bind_rows(X_1_2, X_2_1)
     with(X, cor(beta1, beta2))
   }) %>% unlist()

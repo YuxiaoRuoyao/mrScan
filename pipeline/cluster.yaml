@@ -3,5 +3,4 @@ __default__:
     cpus: "5"
     name: "{rule}-{wildcards}"
     log: "log/snake-{rule}-{wildcards}"
-    time: "5:00:00"
-
+    time: "2:00:00"

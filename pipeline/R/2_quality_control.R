@@ -1,12 +1,11 @@
 library(ieugwasr)
 library(dplyr)
 source("R/helpers.R")
-res_initial <- snakemake@input
+res_initial <- snakemake@input[["file"]]
 id_exposure <- snakemake@params[["id_exposure"]]
-nsnp_cutoff <- as.numeric(snakemake@params[["id_exposure"]])
+nsnp_cutoff <- as.numeric(snakemake@params[["nsnp_cutoff"]])
 pop <- snakemake@params[["population"]]
 sex <- snakemake@params[["sex"]]
-R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
 out_id_list <- snakemake@output[["id_list"]]
 out_trait_info <- snakemake@output[["trait_info"]]
 
@@ -29,13 +28,6 @@ dat <- dat %>%
 dat <- dat %>%
   mutate(status = ifelse(grepl('adjust', trait) == TRUE,
                                 "delete in QC",status))
-# delete high correlation traits with X
-res_cor_X <- calculate_cor(ids1 = id_exposure, ids2 = id.list)
-trait_cor_X <- filter(res_cor_X, abs(cor) > R2_cutoff) %>%
-  with(., c(id1, id2) ) %>% unique()
-dat <- dat %>%
-  mutate(status = ifelse(id %in% trait_cor_X,
-                                "delete since high cor with X",status))
 id.qc <- dat %>% filter(status == "select after QC") %>% pull(id)
 
 write.csv(data.frame(id = id.qc),file = out_id_list,row.names = F)

@@ -16,7 +16,13 @@ analysis:
         nsnp_cutoff: 1e6
         pop: "European"
         sex: "Males and Females"
-        R2_cutoff: 0.9
+        R2_cutoff: 0.85 # R2 cutoff for duplicated traits with X or Y
+    bidirection_mr:
+        method: "mr_raps" # MR method for bidirectional MR
+        over_dispersion: TRUE # Over dispersion for MR_raps
+        loss_function: "tukey" # Loss function for MR_raps
+    downstream_filter:
+        sig_level: 0.05 # significant level for t-test
     unique_traits:
         R2_cutoff: 0.9
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
