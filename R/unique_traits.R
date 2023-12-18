@@ -1,7 +1,9 @@
 #' @title Calculate pairwise correlation and select unique traits
 #' @param id.list GWAS ID list of traits based on previous steps
 #' @param df_info Dataframe of trait info from previous steps
-#' @param method filtering duplicate method: sample_size, nsnp, cluster
+#' @param R_matrix Pairwise correlation matrix
+#' @param df_pair A dataframe contain string correlation for each pair
+#' @param method filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"
 #' @param R2_cutoff high correlation cutoff to assign as duplicated traits. Default=.9
 #' @returns A GWAS ID vector and a trait info dataframe
 #'
@@ -9,10 +11,13 @@
 #' @import dplyr
 #' @importFrom dplyr left_join group_by pull slice_max
 #' @export
-unique_traits <- function(id.list,df_info,R2_cutoff=0.9,method){
-  res <- calculate_cor_pairwise(id.list = id.list)
-  df_matrix <- res$R_matrix
-  df_pairs <- res$df_pair
+unique_traits <- function(id.list,df_info,R_matrix,df_pair,R2_cutoff=0.9,
+                          method = "cluster"){
+  # res <- calculate_cor_pairwise(id.list = id.list)
+  #df_matrix <- res$R_matrix
+  #df_pairs <- res$df_pair
+  df_matrix <- R_matrix
+  df_pairs <- df_pair
   if(method=="cluster"){
     clusters <- greedy_cluster(id.list = names(df_matrix),R = df_matrix,
                                R2_cutoff = R2_cutoff)

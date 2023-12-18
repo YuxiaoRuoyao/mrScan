@@ -28,7 +28,7 @@ extract_traits(
 
 \item{pval_x}{p-value threshold to extract instruments of the main exposure, default=5e-8}
 
-\item{pval_z}{p-value threshold to retreive traits, default=1e-5}
+\item{pval_z}{p-value threshold to retrieve traits, default=1e-5}
 
 \item{r2}{clumping r2 threshold. Default=0.001}
 
