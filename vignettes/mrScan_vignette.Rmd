@@ -60,7 +60,7 @@ head(res_step2$trait.info)
 
 
 
-## Step 3: Downstream traits filtering
+## Step 3: Downstream traits filtering (check cor with X and Y meanwile)
 
 Downstream traits of both main exposure and each outcome should be deleted since 
 the precision for estimating direct causal effect of the main exposure to the outcome 
@@ -95,18 +95,37 @@ res_step3$trait.info %>% filter(id %in% res_step3$id.list)
 
 By the trait list above, we can see several similar or even duplicated traits are extracted. 
 In this step, we'll calculate genetic correlation for each trait pair and select unique 
-trait in each cluster. The default clustering method is greedy clustering on the pairwise 
+trait in each cluster.   
+
+There are two ways to get trait correlation: 
+1. Simply calculate string similarity by Jaro???Winkler distance. This way 
+is quick but biased because it only based on provided trait names. If you want 
+to quickly check it by this method, we recommend you to check the df_pair matrix 
+and the cluster result.  
+
+2. Calculate accurate genetic correlation by LDSC method. It will need you to download 
+GWAS summary data locally and we recommend to do it on the server. You can follow 
+the Snakemake pipeline for this step. 
+
+
+The default clustering method is greedy clustering on the pairwise 
 correlation matrix by the $R^2$ cutoff. You can also choose sample_size or nsnps method, 
-which are basically selected traits with higher sample size or the number of SNPs.
-This step may take some time. 
+which are basically selected traits with higher sample size or the number of SNPs. 
+The following code example is for string similarity method.
 ```{r}
-test_traits <- c("ieu-b-111","ieu-b-5107","ukb-b-10912",
-                 "ieu-b-105","ukb-b-14057","ukb-b-13352","ukb-b-19953",
-                 "ukb-b-10787","ukb-b-18335","ukb-b-19921")
+res_cor <- string_sim(id.list = res_step3$id.list, df_info = res_step3$trait.info)
 res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
-                           R2_cutoff = 0.9, method = "cluster")
-res_step4$trait.info %>% filter(id %in% test_traits) %>% select(id,trait,cluster)
+                           R_matrix = res_cor$R_matrix, df_pair = res_cor$df_pair,
+                           R2_cutoff = 0.8, method = "cluster")
 ```
+
+
+```{r}
+length(res_step4$id.list)
+res_step4$trait.info %>% filter(id %in% res_step4$id.list) %>% select(id,trait,cluster)
+```
+
+
 
 ## Step 5: Confounder selection
 
@@ -231,7 +250,7 @@ library(dplyr)
 library(magrittr)
 library(rlang)
 library(purrr)
-format_combine(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
+format_combine_gwas(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
                file_list = c("ieu-b-42.vcf.gz","ieu-b-35.vcf.gz","ukb-b-19953.vcf.gz"),
                out_dir="data/",prefix="test")
 ```

@@ -1,9 +1,10 @@
 library(plyr)
-library(dplyr)
 library(TwoSampleMR)
 library(ieugwasr)
 library(mr.raps)
 library(purrr)
+library(dplyr)
+
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
@@ -263,4 +264,32 @@ format_flat_chrom <- function(file, chrom,
                      sample_size = sample_size_name,
                      compute_pval = TRUE)
   return(dat)
+}
+greedy_cluster <- function(id.list,R,R2_cutoff = 0.9){
+  groups <- list()
+  unsorted <- seq(1,length(id.list))
+  while(length(unsorted)>0){
+    i <- length(groups)+1
+    groups[[i]] <- unsorted[1]
+    groupsize <- length(groups[[i]])
+    done <- FALSE
+    while (!done) {
+      j <- apply(R[groups[[i]], ],2,max)
+      k <- which(j > R2_cutoff)
+      groups[[i]] <- unique(c(groups[[i]],k))
+      groupsize_new <- length(groups[[i]])
+      if(groupsize_new == groupsize){
+        done <- TRUE
+      }
+      groupsize <- groupsize_new
+    }
+    unsorted <- unsorted[!unsorted %in% groups[[i]]]
+  }
+  cluster_info <- data.frame()
+  for (m in 1:length(groups)) {
+    sub <- id.list[groups[[m]]]
+    df_sub <- data.frame(id = sub, cluster = m)
+    cluster_info <- rbind(cluster_info,df_sub)
+  }
+  return(cluster_info)
 }

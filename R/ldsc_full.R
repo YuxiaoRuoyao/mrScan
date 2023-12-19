@@ -33,7 +33,6 @@ ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
     select(ends_with(".ss")) %>%
     as.matrix()
   nmss <- str_replace(colnames(SS), ".ss$", "")
-  nms <- str_replace(colnames(Z_hat), ".z$", "")
   o <- match(nmsz, nmss)
   SS <- SS[, o]
   N <- apply(SS, 2, median)
@@ -42,8 +41,8 @@ ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
               ld_size = M,
               N = N,
               return_gencov = TRUE,
-              return_cor = TRUE, # Ask this
-              make_well_conditioned = FALSE) # this is done in cor_clust
-  colnames(R$Re) <- rownames(R$Re) <- nms
+              return_cor = TRUE,
+              make_well_conditioned = FALSE)
+  colnames(R$Re) <- rownames(R$Re) <- nmsz
   saveRDS(R$Re, file=paste0(out_dir,prefix,".R_est_ldsc.RDS")) # Double check this
 }

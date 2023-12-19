@@ -4,3 +4,11 @@ __default__:
     name: "{rule}-{wildcards}"
     log: "log/snake-{rule}-{wildcards}"
     time: "2:00:00"
+
+combine_gwas:
+    mem: "100G"
+    time: "12:00:00"
+
+calculate_cor:
+    mem: "100G"
+    time: "12:00:00"    

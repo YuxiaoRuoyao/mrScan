@@ -45,10 +45,12 @@ analysis:
 
 out:
     # Output data options:
-    # data_dir: Directory to store reformatted data
+    # data_dir: Directory to store results in the middle steps
+    # gwas_dir: Wherer to store original gwas data
     # formatted_gwas_dir: Where do store formatted gwas data
-    # output_dir: Where to store results
+    # output_dir: Where to store final results
     data_dir: "data/"
+    gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
     formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
     output_dir: "results/"
 

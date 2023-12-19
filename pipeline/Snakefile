@@ -25,11 +25,13 @@ configfile: "config.yaml"
 # output options
 data_dir = config["out"]["data_dir"] #where the data is
 out_dir = config["out"]["output_dir"] #where results will go
+original_gwas_dir = config["out"]["gwas_dir"] # where originally download gwas data lives
 formatted_gwas_dir = config["out"]["formatted_gwas_dir"] # where formatted gwas data lives
 
 prefix = config["input"]["label"] + "_"
 id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
+l2_dir = config["analysis"]["R"]["l2_dir"] # where LD score reference data lives
 
 if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
     trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
@@ -38,7 +40,10 @@ rule all:
     input:
         #data_dir + prefix + "qc_id_list.csv",
         #data_dir + prefix + "qc_trait_info.csv",
-        data_dir + prefix + "downstream_filter.RDS"
+        #data_dir + prefix + "downstream_filter.RDS"
+        #data_dir + prefix + "download.sh",
+        #data_dir + prefix + "pairwise_cor.RDS",
+        data_dir + prefix + "unique_traits.RDS"
 
 rule extract_traits:
     params: id_exposure = id_exposure,
@@ -97,6 +102,40 @@ rule downstream_filter:
     output: out = data_dir + prefix + "downstream_filter.RDS"
     script:"R/3_downstream_filter.R"
 
+rule generate_download_file:
+    input: file =  data_dir + prefix + "downstream_filter.RDS"
+    params: path = original_gwas_dir
+    output: out = data_dir + prefix + "download.sh"
+    script:"R/4_download_data.R"
+
+rule download_gwas:
+    input: data_dir + prefix + "download.sh"
+    output: "log/download.log" # Ask this, how to solve no output problem?
+    shell: "bash {input} > {output}"
+
+rule combine_gwas:
+    input: file = data_dir + prefix + "downstream_filter.RDS"
+    params: path = original_gwas_dir
+    output: out = data_dir + prefix + "all_beta.{chrom}.RDS"
+    wildcard_constraints: chrom = "\d+"
+    script:"R/4_combine_gwas.R"
+
+rule calculate_cor:
+    input: beta = expand(data_dir + prefix + "all_beta.{chrom}.RDS", chrom = range(1, 23)),
+           m = expand(l2_dir + "{chrom}.l2.M_5_50", chrom = range(1, 23)),
+           l2 = expand(l2_dir + "{chrom}.l2.ldscore.gz", chrom = range(1, 23))
+    output: out = data_dir + prefix + "pairwise_cor.RDS"
+    wildcard_constraints: pt = "[\d.]+"
+    script: "R/4_ldsc_full.R"
+
+rule unique_traits:
+    input: file = data_dir + prefix + "downstream_filter.RDS",
+           pairwise_cor = data_dir + prefix + "pairwise_cor.RDS"
+    params: R2_cutoff = config["analysis"]["unique_traits"]["R2_cutoff"],
+            method = config["analysis"]["unique_traits"]["method"]
+    output: out = data_dir + prefix + "unique_traits.RDS"
+    script: "R/4_unique_traits.R"
+
 #rule extract_associations:
 #    input: inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id)
 #     params: trait = {ID}
@@ -110,12 +149,4 @@ rule downstream_filter:
 #    output: out = data_dir + prefix + "pairwise_cor.RDS"
 #    script: "R/3_calculate_pairwise_cor.R"
 
-#rule unique_traits:
-#    input: id_list = data_dir + prefix + "qc_id_list.csv",
-#           trait_info = data_dir + prefix + "qc_trait_info.csv",
-#           pairwise_cor = data_dir + prefix + "pairwise_cor.RDS"
-#    params: R2_cutoff = config["analysis"]["unique_traits"]["R2_cutoff"],
-#            method = config["analysis"]["unique_traits"]["method"]
-#    output: out = data_dir + prefix + "unique_traits.RDS"
-#    script: "R/3_unique_traits.R"
 
