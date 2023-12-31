@@ -24,7 +24,7 @@ analysis:
     downstream_filter:
         sig_level: 0.05 # significant level for t-test
     unique_traits:
-        R2_cutoff: 0.9
+        R2_cutoff: 0.85
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
 
     # LD pruning options:
@@ -53,4 +53,3 @@ out:
     gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
     formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
     output_dir: "results/"
-

@@ -58,7 +58,7 @@ rule extract_traits:
     output: out = data_dir + prefix + "extract_traits.RDS"
     script: 'R/1_extract_traits.R'
 
-rule quality_control:
+checkpoint quality_control:
     input: file = data_dir + prefix + "extract_traits.RDS"
     params: id_exposure = id_exposure,
             nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
@@ -68,15 +68,12 @@ rule quality_control:
             trait_info = data_dir + prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
     
-# trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
-        
+
 def input_downstream(wcs):
-    if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
-        trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
-        return expand(data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS", ID1 = [id_exposure,id_outcome], ID2 = trait_id)
-    else:
-        return data_dir + prefix + "qc_id_list.csv" # need to ask here. Now it only run first two and downstream_filter step
-        
+    myfile = checkpoints.quality_control.get().output[0]
+    trait_id = pd.read_csv(myfile)['id'].tolist()
+    return expand(data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS", ID1 = [id_exposure,id_outcome], ID2 = trait_id)    
+
 rule extract_inst:
     params: pval_instruments = config["analysis"]["pval_instruments"],
             trait = "{ID}"
@@ -104,17 +101,22 @@ rule downstream_filter:
 
 rule generate_download_file:
     input: file =  data_dir + prefix + "downstream_filter.RDS"
-    params: path = original_gwas_dir
+    params: path = original_gwas_dir,
+            checkpoint = data_dir + prefix + "success_download.txt"
     output: out = data_dir + prefix + "download.sh"
     script:"R/4_download_data.R"
 
-rule download_gwas:
+checkpoint download_gwas:
     input: data_dir + prefix + "download.sh"
-    output: "log/download.log" # Ask this, how to solve no output problem?
-    shell: "bash {input} > {output}"
+    output: data_dir + prefix + "success_download.txt"
+    shell: "bash {input}"
 
+def input_combine_gwas(wcs):
+    myfile = checkpoints.download_gwas.get().output[0]
+    return data_dir + prefix + "downstream_filter.RDS"
+                  
 rule combine_gwas:
-    input: file = data_dir + prefix + "downstream_filter.RDS"
+    input: file = input_combine_gwas
     params: path = original_gwas_dir
     output: out = data_dir + prefix + "all_beta.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+"
