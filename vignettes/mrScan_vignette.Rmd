@@ -116,7 +116,7 @@ The following code example is for string similarity method.
 res_cor <- string_sim(id.list = res_step3$id.list, df_info = res_step3$trait.info)
 res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
                            R_matrix = res_cor$R_matrix, df_pair = res_cor$df_pair,
-                           R2_cutoff = 0.8, method = "cluster")
+                           R2_cutoff = 0.9, method = "cluster")
 ```
 
 

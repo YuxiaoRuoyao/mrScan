@@ -1,5 +1,6 @@
 library(ieugwasr)
 library(dplyr)
+library(reshape2)
 
 source("R/helpers.R")
 
@@ -11,11 +12,14 @@ out <- snakemake@output[["out"]]
 
 id.list <- res$id.list
 df_info <- res$trait.info
-df_matrix <- res_cor$R_matrix
-df_pairs <- res_cor$df_pair
+Re <- res_cor$Re
+Rg <- res_cor$Rg
+df_pairs <- melt(Rg, value.name = "cor",varnames = c("id1","id2")) %>%
+  filter(cor != 1)
+df_matrix <- data.frame(Rg,check.names = FALSE)
 
 if(method=="cluster"){
-  clusters <- greedy_cluster(id.list = names(df_matrix),R = df_matrix,
+  clusters <- greedy_cluster(id.list = colnames(df_matrix),R = df_matrix,
                              R2_cutoff = R2_cutoff)
   df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
   df_cluster <- dplyr::left_join(clusters,df_info[,c("id","sample_size")],
