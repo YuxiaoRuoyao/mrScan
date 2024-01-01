@@ -42,7 +42,7 @@ ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
               N = N,
               return_gencov = TRUE,
               return_cor = TRUE,
-              make_well_conditioned = FALSE)
+              make_well_conditioned = TRUE)
   colnames(R$Re) <- rownames(R$Re) <- nmsz
   saveRDS(R$Re, file=paste0(out_dir,prefix,".R_est_ldsc.RDS")) # Double check this
 }

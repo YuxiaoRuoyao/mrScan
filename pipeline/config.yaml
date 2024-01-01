@@ -26,6 +26,19 @@ analysis:
     unique_traits:
         R2_cutoff: 0.85
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
+    confounder_selection:
+        seed: 1
+        method: ["classic_Lasso","double_Lasso","stepwise","marginal","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        r2_thresh: 0.001
+        clump_kb: [10000]
+        pval_threshold: 5e-8
+        find_proxies: TRUE
+        harmonise_strictness: 2
+        lambda_type: ["min","1se"] # min or 1se
+        radius_type: ["min","1se"] # min or 1se
+        stepwise_method: ["forward","backward","both"]
+        marginal_p: 0.05
+        maxits: 1000000
 
     # LD pruning options:
     # r2_thresh: threshold for pairwise r^2 between variants

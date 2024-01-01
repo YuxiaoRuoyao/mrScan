@@ -33,6 +33,41 @@ id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
 l2_dir = config["analysis"]["R"]["l2_dir"] # where LD score reference data lives
 
+selection_type = []
+if "classic_Lasso" in config["analysis"]["confounder_selection"]["method"]:
+    classic_Lasso_string = expand("classic_Lasso_{lambda_type}_seed{seed}",
+                              lambda_type = config["analysis"]["confounder_selection"]["lambda_type"],
+                              seed = config["analysis"]["confounder_selection"]["seed"])
+    selection_type.extend(classic_Lasso_string)
+
+if "double_Lasso" in config["analysis"]["confounder_selection"]["method"]:
+    double_Lasso_string = expand("double_Lasso_{lambda_type}_seed{seed}",
+                              lambda_type = config["analysis"]["confounder_selection"]["lambda_type"],
+                              seed = config["analysis"]["confounder_selection"]["seed"])
+    selection_type.extend(double_Lasso_string)
+
+if "stepwise" in config["analysis"]["confounder_selection"]["method"]:
+    stepwise_string =  expand("stepwise_{stepwise_method}",
+                              stepwise_method = config["analysis"]["confounder_selection"]["stepwise_method"])
+    selection_type.extend(stepwise_string)
+
+if "marginal" in config["analysis"]["confounder_selection"]["method"]:
+    marginal_string = expand("marginal_p_{marginal_p}",
+                              marginal_p = config["analysis"]["confounder_selection"]["marginal_p"])
+    selection_type.extend(marginal_string)
+
+if "corrected_Lasso" in config["analysis"]["confounder_selection"]["method"]:
+    corrected_Lasso_string = expand("corrected_Lasso_{radius_type}_seed{seed}",
+                                    radius_type = config["analysis"]["confounder_selection"]["radius_type"],
+                                    seed = config["analysis"]["confounder_selection"]["seed"])
+    selection_type.extend(corrected_Lasso_string)
+
+if "double_corrected_Lasso" in config["analysis"]["confounder_selection"]["method"]:
+    double_corrected_Lasso_string = expand("double_corrected_Lasso_{radius_type}_seed{seed}",
+                                           radius_type = config["analysis"]["confounder_selection"]["radius_type"],
+                                           seed = config["analysis"]["confounder_selection"]["seed"])
+    selection_type.extend(double_corrected_Lasso_string)
+
 if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
     trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
 
@@ -43,7 +78,8 @@ rule all:
         #data_dir + prefix + "downstream_filter.RDS"
         #data_dir + prefix + "download.sh",
         #data_dir + prefix + "pairwise_cor.RDS",
-        data_dir + prefix + "unique_traits.RDS"
+        #data_dir + prefix + "unique_traits.RDS"
+        expand(data_dir + prefix + "selection_{type}.RDS",type = selection_type)
 
 rule extract_traits:
     params: id_exposure = id_exposure,
@@ -138,17 +174,85 @@ rule unique_traits:
     output: out = data_dir + prefix + "unique_traits.RDS"
     script: "R/4_unique_traits.R"
 
-#rule extract_associations:
-#    input: inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id)
-#     params: trait = {ID}
-#    output: out = temp(data_dir + prefix + "associations.{ID}.RDS")
-#    script: "R/3_extract_associations.R"
+rule classic_Lasso:
+    input: file = data_dir + prefix + "unique_traits.RDS"
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
+            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
+            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
+            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
+            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
+            population = config["analysis"]["pop"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            lambda_type = lambda wc: wc.get("lambda_type"),
+            seed = config["analysis"]["confounder_selection"]["seed"]
+    output: out = data_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
+    script: "R/5_classic_Lasso.R"
 
-#rule calculate_pairwise_cor:
-#    input: association_files = expand(data_dir + prefix + "associations.{ID}.RDS",ID = trait_id),
-#           inst_files = expand(data_dir + prefix + "inst.{ID}.RDS", ID = trait_id),
-#           id_list = data_dir + prefix + "qc_id_list.csv"
-#    output: out = data_dir + prefix + "pairwise_cor.RDS"
-#    script: "R/3_calculate_pairwise_cor.R"
+rule double_Lasso:
+    input: file = data_dir + prefix + "unique_traits.RDS"
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
+            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
+            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
+            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
+            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
+            population = config["analysis"]["pop"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            lambda_type = lambda wc: wc.get("lambda_type"),
+            seed = config["analysis"]["confounder_selection"]["seed"]
+    output: out = data_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
+    script: "R/5_double_Lasso.R"
 
+rule stepwise:
+    input: file = data_dir + prefix + "unique_traits.RDS"
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
+            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
+            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
+            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
+            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
+            population = config["analysis"]["pop"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            method = lambda wc: wc.get("stepwise_method")
+    output: out = data_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
+    script: "R/5_stepwise.R"
 
+rule marginal:
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           file_bidirection = data_dir + prefix + "downstream_filter.RDS"
+    params: p_cutoff = lambda wc: wc.get("marginal_p")
+    output: out = data_dir + prefix + "selection_marginal_p_{marginal_p}.RDS"
+    script: "R/5_marginal.R"
+
+rule corrected_Lasso:
+    input: file = data_dir + prefix + "unique_traits.RDS"
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
+            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
+            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
+            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
+            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
+            population = config["analysis"]["pop"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            radius_type = lambda wc: wc.get("radius_type"),
+            seed = config["analysis"]["confounder_selection"]["seed"],
+            maxits = config["analysis"]["confounder_selection"]["maxits"]
+    output: out = data_dir + prefix + "selection_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    script: "R/5_corrected_Lasso.R"
+
+rule double_corrected_Lasso:
+    input: file = data_dir + prefix + "unique_traits.RDS"
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
+            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
+            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
+            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
+            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
+            population = config["analysis"]["pop"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            radius_type = lambda wc: wc.get("radius_type"),
+            seed = config["analysis"]["confounder_selection"]["seed"],
+            maxits = config["analysis"]["confounder_selection"]["maxits"]
+    output: out = data_dir + prefix + "selection_double_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    script: "R/5_double_corrected_Lasso.R"
