@@ -28,7 +28,8 @@ analysis:
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
     confounder_selection:
         seed: 1
-        method: ["classic_Lasso","double_Lasso","stepwise","marginal","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        method: ["classic_Lasso","double_Lasso","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        #method: ["marginal"]
         r2_thresh: 0.001
         clump_kb: [10000]
         pval_threshold: 5e-8
@@ -36,25 +37,29 @@ analysis:
         harmonise_strictness: 2
         lambda_type: ["min","1se"] # min or 1se
         radius_type: ["min","1se"] # min or 1se
-        stepwise_method: ["forward","backward","both"]
+        stepwise_method: ["forward"] # forward, backward or both
         marginal_p: 0.05
         maxits: 1000000
 
-    # LD pruning options:
-    # r2_thresh: threshold for pairwise r^2 between variants
-    # clump_kb Maximum distance for pruning.
-    # ref_path Path to plink format reference data
-    # ld_prioritization: either pvalue or rank
     ldprune:
-        r2_thresh: 0.001
-        clump_kb: [10000]
-        ld_prioritization: ["pvalue"] # "pvalue" or "rank"
-        ref_path: "/nfs/turbo/sph-jvmorr/ld_reference_files/1kg_plink/EUR"
-    R:
-        type: ["ldsc", "none", "pt"] #, "ldsc_quick"]
-        pthresh: [0.05]
+        r2_thresh: 0.001 # threshold for pairwise r^2 between variants
+        clump_kb: [10000] # Maximum distance for pruning.
+        ld_prioritization: "pvalue" # "pvalue" or "rank"
+        ref_path: "/nfs/turbo/sph-jvmorr/ld_reference_files/1kg_plink/EUR" # Path to plink format reference data
+        pthresh: 1
+
+    estimate_R:
+        type: ["ldsc","pval"] # ldsc or pval
+        p_thresh: 0.05
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
-        cor_clust: [0.95]
+    
+    MVMR_analysis:
+        method: ["IVW","GRAPPLE","MRBEE"]
+        p_thresh_IVW: [5e-8]
+        p_thresh_GRAPPLE: [1e-5,5e-8]
+        p_thresh_MRBEE: [5e-8]
+        pleio_p_thresh: [0,0.05] # pleiotropy threshold of MRBEE
+        R_type: "ldsc" # either ldsc or pval
 
 out:
     # Output data options:
@@ -66,3 +71,4 @@ out:
     gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
     formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
     output_dir: "results/"
+

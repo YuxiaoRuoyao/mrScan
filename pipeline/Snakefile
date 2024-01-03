@@ -31,7 +31,7 @@ formatted_gwas_dir = config["out"]["formatted_gwas_dir"] # where formatted gwas 
 prefix = config["input"]["label"] + "_"
 id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
-l2_dir = config["analysis"]["R"]["l2_dir"] # where LD score reference data lives
+l2_dir = config["analysis"]["estimate_R"]["l2_dir"] # where LD score reference data lives
 
 selection_type = []
 if "classic_Lasso" in config["analysis"]["confounder_selection"]["method"]:
@@ -68,9 +68,30 @@ if "double_corrected_Lasso" in config["analysis"]["confounder_selection"]["metho
                                            seed = config["analysis"]["confounder_selection"]["seed"])
     selection_type.extend(double_corrected_Lasso_string)
 
+MVMR_list = expand("selection_{type}",type = selection_type)
+MVMR_list.append("unique_traits")
+
+R_type = []
+if "pval" in config["analysis"]["estimate_R"]["type"]:
+    R_type.append("pval")
+if "ldsc" in config["analysis"]["estimate_R"]["type"]:
+    R_type.append("ldsc")
+
+MVMR_method = []
+if "IVW" in config["analysis"]["MVMR_analysis"]["method"]:
+    IVW_string = expand("IVW_{IVW_pt}",IVW_pt = config["analysis"]["MVMR_analysis"]["p_thresh_IVW"])
+    MVMR_method.extend(IVW_string)
+if "GRAPPLE" in config["analysis"]["MVMR_analysis"]["method"]:
+    GRAPPLE_string = expand("GRAPPLE_{GRAPPLE_pt}",GRAPPLE_pt = config["analysis"]["MVMR_analysis"]["p_thresh_GRAPPLE"])
+    MVMR_method.extend(GRAPPLE_string)
+if "MRBEE" in config["analysis"]["MVMR_analysis"]["method"]:
+    MRBEE_string = expand("MRBEE_{MRBEE_pt}_pleio_{pleio_pt}",MRBEE_pt = config["analysis"]["MVMR_analysis"]["p_thresh_MRBEE"],
+                           pleio_pt = config["analysis"]["MVMR_analysis"]["pleio_p_thresh"])
+    MVMR_method.extend(MRBEE_string)
+
 if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
     trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
-
+    
 rule all:
     input:
         #data_dir + prefix + "qc_id_list.csv",
@@ -79,7 +100,12 @@ rule all:
         #data_dir + prefix + "download.sh",
         #data_dir + prefix + "pairwise_cor.RDS",
         #data_dir + prefix + "unique_traits.RDS"
-        expand(data_dir + prefix + "selection_{type}.RDS",type = selection_type)
+        #expand(data_dir + prefix + "selection_{type}.RDS",type = selection_type)
+        #expand(data_dir + prefix + "{MVMR_id}_beta_ldpruned.{chrom}.RDS",MVMR_id = MVMR_list,chrom = range(1,23)),
+        #expand(data_dir + prefix + "{MVMR_id}_R_{type}.RDS",type = R_type, MVMR_id = MVMR_list)
+        #expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method)
+        out_dir + prefix + "summary.csv",
+        out_dir + prefix + "summary.png"
 
 rule extract_traits:
     params: id_exposure = id_exposure,
@@ -187,6 +213,7 @@ rule classic_Lasso:
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = data_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
+    wildcard_constraints: seed = "\d+"
     script: "R/5_classic_Lasso.R"
 
 rule double_Lasso:
@@ -202,6 +229,7 @@ rule double_Lasso:
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = data_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
+    wildcard_constraints: seed = "\d+"
     script: "R/5_double_Lasso.R"
 
 rule stepwise:
@@ -215,14 +243,17 @@ rule stepwise:
             population = config["analysis"]["pop"],
             harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
             method = lambda wc: wc.get("stepwise_method")
+    wildcard_constraints: stepwise_method = '[a-z]+'
     output: out = data_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
     script: "R/5_stepwise.R"
 
+# marginal has error. Not so sure why
 rule marginal:
     input: file = data_dir + prefix + "unique_traits.RDS",
            file_bidirection = data_dir + prefix + "downstream_filter.RDS"
     params: p_cutoff = lambda wc: wc.get("marginal_p")
     output: out = data_dir + prefix + "selection_marginal_p_{marginal_p}.RDS"
+    wildcard_constraints: marginal_p = "\d+"
     script: "R/5_marginal.R"
 
 rule corrected_Lasso:
@@ -239,6 +270,7 @@ rule corrected_Lasso:
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
     output: out = data_dir + prefix + "selection_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    wildcard_constraints: seed = "\d+"
     script: "R/5_corrected_Lasso.R"
 
 rule double_corrected_Lasso:
@@ -255,4 +287,71 @@ rule double_corrected_Lasso:
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
     output: out = data_dir + prefix + "selection_double_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    wildcard_constraints: seed = "\d+"
     script: "R/5_double_corrected_Lasso.R"
+
+rule MVMR_combine_gwas:
+    input: file = data_dir + prefix + "{MVMR_id}.RDS"
+    params: path = original_gwas_dir,
+            id_exposure = id_exposure,
+            id_outcome = id_outcome
+    output: out = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
+    wildcard_constraints: chrom = "\d+"
+    script:"R/6_MVMR_combine_gwas.R"
+
+rule MVMR_LD_clumping:
+    input: beta = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
+    params: r2_thresh = config["analysis"]["ldprune"]["r2_thresh"],
+            clump_kb = config["analysis"]["ldprune"]["clump_kb"],
+            ref_path = config["analysis"]["ldprune"]["ref_path"],
+            ld_prioritization = config["analysis"]["ldprune"]["ld_prioritization"],
+            pthresh = config["analysis"]["ldprune"]["pthresh"]
+    output: out = data_dir + prefix + "{MVMR_id}_beta_ldpruned.{chrom}.RDS"
+    wildcard_constraints: chrom = "\d+"
+    script:"R/6_ld_prune_plink.R"
+
+rule MVMR_R_ldsc:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta.{chrom}.RDS", chrom = range(1, 23)),
+           m = expand(l2_dir + "{chrom}.l2.M_5_50", chrom = range(1, 23)),
+           l2 = expand(l2_dir + "{chrom}.l2.ldscore.gz", chrom = range(1, 23))
+    output: out = data_dir + prefix + "{MVMR_id}_R_ldsc.RDS"
+    script: "R/4_ldsc_full.R"
+
+rule MVMR_R_pval:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta.{chrom}.RDS", chrom = range(1, 23))
+    params: p_thresh = config["analysis"]["estimate_R"]["p_thresh"]
+    output: out = data_dir + prefix + "{MVMR_id}_R_pval.RDS"
+    script: "R/6_estimate_R_pval.R"
+
+rule MVMR_IVW:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23))
+    params: pval_threshold = lambda wc: wc.get("IVW_pt"),
+    output: out = out_dir + prefix + "{MVMR_id}_MVMR_IVW_{IVW_pt}.RDS"
+    script: "R/7_MVMR_IVW.R"
+
+MVMR_R_type = config["analysis"]["MVMR_analysis"]["R_type"]
+
+rule MVMR_GRAPPLE:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23)),
+           R = data_dir + prefix + "{MVMR_id}_R_" + MVMR_R_type + ".RDS"
+    params: pval_threshold = lambda wc: wc.get("GRAPPLE_pt"),
+            R_type = MVMR_R_type
+    output: out = out_dir + prefix + "{MVMR_id}_MVMR_GRAPPLE_{GRAPPLE_pt}.RDS"
+    script: "R/7_MVMR_GRAPPLE.R"
+
+rule MVMR_MRBEE:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23)),
+           R = data_dir + prefix + "{MVMR_id}_R_" + MVMR_R_type + ".RDS"
+    params: pval_threshold = lambda wc: wc.get("MRBEE_pt"),
+            pleio_p_thresh = lambda wc: wc.get("pleio_pt"),
+            R_type = MVMR_R_type
+    output: out = out_dir + prefix + "{MVMR_id}_MVMR_MRBEE_{MRBEE_pt}_pleio_{pleio_pt}.RDS"
+    script: "R/7_MVMR_MRBEE.R"
+
+rule summary_result:
+    input: file = expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method)
+    params: prefix = prefix,
+            id_exposure = id_exposure
+    output: out1 = out_dir + prefix + "summary.csv",
+            out2 = out_dir + prefix + "summary.png"
+    script: "R/8_summary_result.R"

@@ -1,0 +1,50 @@
+library(ggplot2)
+library(dplyr)
+library(purrr)
+library(gridExtra)
+
+res <- unlist(snakemake@input[["file"]])
+prefix <- snakemake@params[["prefix"]]
+id_exposure <- snakemake@params[["id_exposure"]]
+out1 <- snakemake@output[["out1"]]
+out2 <- snakemake@output[["out2"]]
+
+selection_methods <- res %>% strsplit(prefix) %>% sapply(tail, 1) %>%
+  strsplit("_MVMR_") %>% sapply(head, 1)
+selection_methods <- gsub('selection_', '', selection_methods) %>%
+  strsplit("_seed") %>% sapply(head,1)
+selection_methods[selection_methods=="unique_traits"] <- "all"
+
+all_res <- data.frame()
+for (i in 1:length(res)) {
+  sub_res <- readRDS(res[i])
+  sub_res$selection_method <- selection_methods[i]
+  all_res <- rbind(all_res,sub_res)
+}
+
+#restot$method<-factor(restot$method,levels=c("UVMR", "all","Classic Lasso", "Adaptive Lasso", "forward", "marginal", "literature"))
+
+all_res <- all_res %>% mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.975)*se) %>%
+           mutate(odds=exp(b),CI_lower=exp(CI_lower),CI_higher=exp(CI_higher))
+
+# plot by odds
+plt<- all_res %>% filter(exposure==id_exposure) %>%
+       ggplot() +
+       geom_vline(xintercept = 1) +
+       geom_point(aes(y = selection_method, x = odds, color = method,  group = method),
+                  position=position_dodge(width = 0.9), size = 3) +
+       geom_errorbar(aes(y = selection_method, xmin =CI_lower, xmax = CI_higher, color = method),
+                     position=position_dodge(width = 0.9)) +
+       xlab("Odds Ratio (95% CI)") + coord_flip() +
+       theme_bw() +
+       #scale_color_discrete(name="MVMR Methods",labels = c("MRBEE", "ESMR", "GRAPPLE","MV-IVW","MV-IVW with exposure-specific IVs"))+
+       theme(axis.text.y = element_text(size = 20),
+             axis.text.x = element_text(size = 10, angle = 0),
+        strip.text = element_text(size = 20),
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 20),
+        legend.position = "bottom")
+ggsave(out2, plot = plt)
+write.csv(all_res,file = out1,row.names=FALSE)
