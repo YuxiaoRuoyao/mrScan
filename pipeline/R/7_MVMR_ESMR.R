@@ -1,10 +1,10 @@
 library(dplyr)
-library(MRBEE)
 library(purrr)
+library(ebnm)
+library(esmr)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
-pleio_p_thresh <- as.numeric(snakemake@params[["pleio_p_thresh"]])
 R <- readRDS(snakemake@input[["R"]])
 R_type <- snakemake@params[["R_type"]]
 out <- snakemake@output[["out"]]
@@ -16,26 +16,30 @@ if(R_type == "pval"){
 }
 
 X <- purrr::map_dfr(beta_files, readRDS)
-beta_hat <- X %>% select(ends_with(".beta"))
-se <- X %>% select(ends_with(".se"))
-p <- X %>% select(ends_with(".p"))
+beta_hat <- X %>% dplyr::select(ends_with(".beta"))
+se <- X %>% dplyr::select(ends_with(".se"))
+p <- X %>% dplyr::select(ends_with(".p"))
 nms <- stringr::str_replace(names(beta_hat), ".beta", "")
 names(beta_hat)<-names(se)<-names(p)<-nms
 o <- match(colnames(R_matrix), nms)
 beta_hat <- data.frame(beta_hat[, o],check.names = F)
 se <- data.frame(se[, o],check.names = F)
 i <- ncol(beta_hat)
-pmin <- apply(p[,-1, drop = F], 1, min)
-ix <- which(pmin < pval_threshold)
-bT <- list(R = R_matrix, Ncor = Inf,
-           EstHarm = beta_hat[ix,],
-           SEHarm =  se[ix,])
-pD <- prepData(bT,verbose =FALSE)
-fit <- MRBEE.IMRP(pD, PleioPThreshold = pleio_p_thresh)
+fit <- esmr(beta_hat_Y <- beta_hat[,1],
+            se_Y <- se[,1],
+            beta_hat_X <- beta_hat[,2:i],
+            se_X <- se[, 2:i],
+            R = R_matrix,
+            augment_G = TRUE,
+            g_type = "gfa",
+            ix1 = "pval-5e-8",
+            ix0 = FALSE,
+            lfsr_thresh = 1)
+
 res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
-                          b = fit$CausalEstimates[-1],
-                          se = sqrt(diag(fit$VCovCausalEstimates))[-1])
+                          b = fit$beta$beta_m,
+                          se = fit$beta$beta_s)
 res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
-res.summary$method <- paste0("MRBEE_",pval_threshold,"_pleio_",pleio_p_thresh)
+res.summary$method <- paste0("ESMR_",pval_threshold)
 
 saveRDS(res.summary,file = out)

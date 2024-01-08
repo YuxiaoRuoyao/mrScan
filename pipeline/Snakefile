@@ -88,6 +88,9 @@ if "MRBEE" in config["analysis"]["MVMR_analysis"]["method"]:
     MRBEE_string = expand("MRBEE_{MRBEE_pt}_pleio_{pleio_pt}",MRBEE_pt = config["analysis"]["MVMR_analysis"]["p_thresh_MRBEE"],
                            pleio_pt = config["analysis"]["MVMR_analysis"]["pleio_p_thresh"])
     MVMR_method.extend(MRBEE_string)
+if "ESMR" in config["analysis"]["MVMR_analysis"]["method"]:
+    ESMR_string = expand("ESMR_{ESMR_pt}",ESMR_pt = config["analysis"]["MVMR_analysis"]["p_thresh_ESMR"])
+    MVMR_method.extend(ESMR_string)
 
 if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
     trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
@@ -200,7 +203,7 @@ rule unique_traits:
     output: out = data_dir + prefix + "unique_traits.RDS"
     script: "R/4_unique_traits.R"
 
-rule classic_Lasso:
+rule selection_instruments_api:
     input: file = data_dir + prefix + "unique_traits.RDS"
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
@@ -209,7 +212,23 @@ rule classic_Lasso:
             pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
             find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
             population = config["analysis"]["pop"],
-            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
+            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"]
+    output: out = data_dir + prefix + "selection_instruments_API.RDS"
+    script: "R/5_selection_instruments_api.R"
+
+rule selection_instruments_local:
+    input: beta = expand(data_dir + prefix + "unique_traits_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23))
+    params: pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"]
+    output: out = data_dir + prefix + "selection_instruments_Local.RDS"
+    script: "R/5_selection_instruments_local.R"
+
+instrument_file =  data_dir + prefix + "selection_instruments_" + config["analysis"]["confounder_selection"]["method_instruments"] + ".RDS"
+
+rule classic_Lasso:
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           instruments = instrument_file
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome,
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = data_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
@@ -217,15 +236,10 @@ rule classic_Lasso:
     script: "R/5_classic_Lasso.R"
 
 rule double_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS"
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
-            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
-            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
-            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
-            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
-            population = config["analysis"]["pop"],
-            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = data_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
@@ -233,39 +247,28 @@ rule double_Lasso:
     script: "R/5_double_Lasso.R"
 
 rule stepwise:
-    input: file = data_dir + prefix + "unique_traits.RDS"
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
-            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
-            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
-            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
-            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
-            population = config["analysis"]["pop"],
-            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
             method = lambda wc: wc.get("stepwise_method")
     wildcard_constraints: stepwise_method = '[a-z]+'
     output: out = data_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
     script: "R/5_stepwise.R"
 
-# marginal has error. Not so sure why
 rule marginal:
     input: file = data_dir + prefix + "unique_traits.RDS",
            file_bidirection = data_dir + prefix + "downstream_filter.RDS"
     params: p_cutoff = lambda wc: wc.get("marginal_p")
     output: out = data_dir + prefix + "selection_marginal_p_{marginal_p}.RDS"
-    wildcard_constraints: marginal_p = "\d+"
+    wildcard_constraints: marginal_p = "\d+(\.\d+)?"
     script: "R/5_marginal.R"
 
 rule corrected_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS"
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
-            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
-            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
-            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
-            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
-            population = config["analysis"]["pop"],
-            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
@@ -274,15 +277,10 @@ rule corrected_Lasso:
     script: "R/5_corrected_Lasso.R"
 
 rule double_corrected_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS"
+    input: file = data_dir + prefix + "unique_traits.RDS",
+           instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
-            r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
-            clump_kb = config["analysis"]["confounder_selection"]["clump_kb"],
-            pval_threshold = config["analysis"]["confounder_selection"]["pval_threshold"],
-            find_proxies = config["analysis"]["confounder_selection"]["find_proxies"],
-            population = config["analysis"]["pop"],
-            harmonise_strictness = config["analysis"]["confounder_selection"]["harmonise_strictness"],
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
@@ -348,6 +346,14 @@ rule MVMR_MRBEE:
     output: out = out_dir + prefix + "{MVMR_id}_MVMR_MRBEE_{MRBEE_pt}_pleio_{pleio_pt}.RDS"
     script: "R/7_MVMR_MRBEE.R"
 
+rule MVMR_ESMR:
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23)),
+           R = data_dir + prefix + "{MVMR_id}_R_" + MVMR_R_type + ".RDS"
+    params: pval_threshold = lambda wc: wc.get("ESMR_pt"),
+            R_type = MVMR_R_type
+    output: out = out_dir + prefix + "{MVMR_id}_MVMR_ESMR_{ESMR_pt}.RDS"
+    script: "R/7_MVMR_ESMR.R"
+
 rule summary_result:
     input: file = expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method)
     params: prefix = prefix,
@@ -355,3 +361,6 @@ rule summary_result:
     output: out1 = out_dir + prefix + "summary.csv",
             out2 = out_dir + prefix + "summary.png"
     script: "R/8_summary_result.R"
+
+
+

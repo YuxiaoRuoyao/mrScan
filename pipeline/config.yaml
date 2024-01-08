@@ -28,8 +28,9 @@ analysis:
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
     confounder_selection:
         seed: 1
-        method: ["classic_Lasso","double_Lasso","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
-        #method: ["marginal"]
+        method: ["double_Lasso","marginal","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        # Methods for extracting instruments. If api fails, you can download and use local data.
+        method_instruments: "Local" # "Local" or "API"
         r2_thresh: 0.001
         clump_kb: [10000]
         pval_threshold: 5e-8
@@ -54,10 +55,12 @@ analysis:
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
     
     MVMR_analysis:
+        #method: ["IVW","GRAPPLE","MRBEE","ESMR"]
         method: ["IVW","GRAPPLE","MRBEE"]
         p_thresh_IVW: [5e-8]
         p_thresh_GRAPPLE: [1e-5,5e-8]
         p_thresh_MRBEE: [5e-8]
+        p_thresh_ESMR: [5e-8]
         pleio_p_thresh: [0,0.05] # pleiotropy threshold of MRBEE
         R_type: "ldsc" # either ldsc or pval
 

@@ -4,6 +4,7 @@ library(readr)
 library(sumstatFactors)
 library(stringr)
 
+
 beta_files <- unlist(snakemake@input[["beta"]])
 ld_files <- unlist(snakemake@input[["l2"]])
 m_files <- unlist(snakemake@input[["m"]])

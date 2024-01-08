@@ -28,7 +28,8 @@ all_res <- all_res %>% mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.
            mutate(odds=exp(b),CI_lower=exp(CI_lower),CI_higher=exp(CI_higher))
 
 # plot by odds
-plt<- all_res %>% filter(exposure==id_exposure) %>%
+plt<- all_res %>% filter(exposure==id_exposure) %>% filter(!(selection_method == "all" & method == "GRAPPLE_1e-05")) %>% 
+       filter(!(selection_method == "all" & method == "GRAPPLE_5e-08")) %>% 
        ggplot() +
        geom_vline(xintercept = 1) +
        geom_point(aes(y = selection_method, x = odds, color = method,  group = method),
@@ -46,5 +47,5 @@ plt<- all_res %>% filter(exposure==id_exposure) %>%
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 20),
         legend.position = "bottom")
-ggsave(out2, plot = plt)
+ggsave(out2, plot = plt,width = 20, height = 10)
 write.csv(all_res,file = out1,row.names=FALSE)

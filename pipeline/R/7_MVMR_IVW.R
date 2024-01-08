@@ -21,11 +21,13 @@ hdat <-  list(exposure_beta = as.matrix(beta_hat[ix, 2:i]),
               outcome_beta = data.frame(beta_hat)[ix,1],
               outcome_pval = data.frame(p)[ix,1],
               outcome_se = data.frame(se)[ix,1],
-              expname = data.frame(id.exposure = nms, exposure = nms),
+              expname = data.frame(id.exposure = nms[-1], exposure = nms[-1]),
               outname = data.frame(id.outcome = nms[1], outcome = nms[1]))
 res_F <- mv_multiple(hdat)$result
 res_T <- mv_multiple(hdat,instrument_specific = TRUE)$result
-res_F$method <- "IVW"
-res_T$method <- "IVW_instrument_specific"
+res_F$method <- paste0("IVW_",pval_threshold)
+res_T$method <- paste0("IVW_T_",pval_threshold)
+res <- rbind(res_F,res_T) %>% select(exposure,b,se,pval,method) %>%
+  rename("pvalue" = "pval")
 
-saveRDS(list(IVW_F = res_F, IVW_T = res_T), file = out)
+saveRDS(res, file = out)

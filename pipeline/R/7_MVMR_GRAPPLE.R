@@ -45,6 +45,6 @@ res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
                           b=res$beta.hat,
                           se=sqrt(diag(res$beta.var)),
                           pvalue=res$beta.p.value,
-                          method = "GRAPPLE")
+                          method = paste0("GRAPPLE_",pval_threshold))
 saveRDS(res.summary,file = out)
 
