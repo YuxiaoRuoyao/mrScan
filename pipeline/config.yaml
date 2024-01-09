@@ -18,6 +18,8 @@ analysis:
         sex: "Males and Females"
         R2_cutoff: 0.85 # R2 cutoff for duplicated traits with X or Y
     bidirection_mr:
+        # Whether to adjust for extra traits in bidirection MR. If you want to do only UVMR, just set None
+        extra_trait: "ukb-b-19953" # None
         method: "mr_raps" # MR method for bidirectional MR
         over_dispersion: TRUE # Over dispersion for MR_raps
         loss_function: "tukey" # Loss function for MR_raps
