@@ -1,8 +1,9 @@
 # sum_stats is a csv file
 input:
     # sum_stats: "astle_bloodcell.csv"
-    label: "test"
-    id_exposure: "ieu-b-35"
+    label: "CRP"
+    #id_exposure: "ieu-b-35"
+    id_exposure: "ebi-a-GCST90029070"
     id_outcome: "ieu-b-42"
 
 analysis:
@@ -30,7 +31,7 @@ analysis:
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
     confounder_selection:
         seed: 1
-        method: ["double_Lasso","marginal","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        method: ["classic_Lasso","double_Lasso","marginal","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
         # Methods for extracting instruments. If api fails, you can download and use local data.
         method_instruments: "Local" # "Local" or "API"
         r2_thresh: 0.001

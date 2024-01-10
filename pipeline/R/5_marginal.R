@@ -3,6 +3,7 @@ library(dplyr)
 res <- readRDS(snakemake@input[["file"]])
 res_bidirection <- readRDS(snakemake@input[["file_bidirection"]])
 p_cutoff <- as.numeric(snakemake@params[["p_cutoff"]])
+extra_traits <- snakemake@params[["extra_traits"]]
 out <- snakemake@output[["out"]]
 
 id.list <- res$id.list
@@ -14,6 +15,8 @@ df_bidirection <- df_bidirection %>%
          p_ZtoY = 2*(1-pnorm(abs(b_ZtoY/se_ZtoY))))
 id.select <- df_bidirection %>% filter(id %in% id.list) %>%
   filter(p_ZtoX < p_cutoff & p_ZtoY < p_cutoff) %>% pull(id)
+if(extra_traits != "None"){
+    id.select <- c(id.select,extra_traits)
+}
 df_info[df_info$id %in% id.select,"status"] <- "Select by marginal selection"
-
 saveRDS(list(id.list=id.select,trait.info=df_info),file = out)

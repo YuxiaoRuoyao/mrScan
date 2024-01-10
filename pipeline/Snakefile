@@ -92,17 +92,17 @@ if "ESMR" in config["analysis"]["MVMR_analysis"]["method"]:
     ESMR_string = expand("ESMR_{ESMR_pt}",ESMR_pt = config["analysis"]["MVMR_analysis"]["p_thresh_ESMR"])
     MVMR_method.extend(ESMR_string)
 
-if os.path.exists(data_dir + prefix + "qc_id_list.csv"):
-    trait_id = pd.read_csv(data_dir + prefix + "qc_id_list.csv")['id'].tolist()
+if os.path.exists(out_dir + prefix + "qc_id_list.csv"):
+    trait_id = pd.read_csv(out_dir + prefix + "qc_id_list.csv")['id'].tolist()
     
 rule all:
     input:
-        #data_dir + prefix + "qc_id_list.csv",
-        #data_dir + prefix + "qc_trait_info.csv",
-        data_dir + prefix + "downstream_filter.RDS"
+        #out_dir + prefix + "qc_id_list.csv",
+        #out_dir + prefix + "qc_trait_info.csv",
+        #out_dir + prefix + "downstream_filter.RDS"
         #data_dir + prefix + "download.sh",
         #data_dir + prefix + "pairwise_cor.RDS",
-        #data_dir + prefix + "unique_traits.RDS"
+        #out_dir + prefix + "unique_traits.RDS"
         #expand(data_dir + prefix + "selection_{type}.RDS",type = selection_type)
         #expand(data_dir + prefix + "{MVMR_id}_beta_ldpruned.{chrom}.RDS",MVMR_id = MVMR_list,chrom = range(1,23)),
         #expand(data_dir + prefix + "{MVMR_id}_R_{type}.RDS",type = R_type, MVMR_id = MVMR_list)
@@ -129,8 +129,8 @@ checkpoint quality_control:
             nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
             sex = config["analysis"]["quality_control"]["sex"]
-    output: id_list = data_dir + prefix + "qc_id_list.csv",
-            trait_info = data_dir + prefix + "qc_trait_info.csv",
+    output: id_list = out_dir + prefix + "qc_id_list.csv",
+            trait_info = out_dir + prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
     
 
@@ -148,7 +148,7 @@ def input_downstream(wcs):
 rule extract_inst:
     params: pval_instruments = config["analysis"]["pval_instruments"],
             trait = "{ID}"
-    output: out = data_dir + prefix + "inst_{ID}.RDS"
+    output: out = data_dir + "inst_{ID}.RDS"
     wildcard_constraints: ID = "[^_]+"
     script: "R/3_extract_inst.R"
 
@@ -156,12 +156,12 @@ rule extract_inst_mvmr:
     params: pval_instruments = config["analysis"]["pval_instruments"],
             trait1 = "{ID1}",
             trait2 = "{ID2}"
-    output: out = data_dir + prefix + "inst_{ID1}_{ID2}.RDS"
+    output: out = data_dir + "inst_{ID1}_{ID2}.RDS"
     script: "R/3_extract_inst_mvmr.R"
 
 rule bidirection_mr:
-    input: file1 = data_dir + prefix + "inst_{ID1}.RDS",
-           file2 = data_dir + prefix + "inst_{ID2}.RDS"
+    input: file1 = data_dir + "inst_{ID1}.RDS",
+           file2 = data_dir + "inst_{ID2}.RDS"
     params: method = config["analysis"]["bidirection_mr"]["method"],
             over_dispersion = config["analysis"]["bidirection_mr"]["over_dispersion"],
             loss_function = config["analysis"]["bidirection_mr"]["loss_function"]
@@ -171,26 +171,26 @@ rule bidirection_mr:
     script: "R/3_bidirection_mr.R"
 
 rule bidirection_mvmr:
-    input: file1 = data_dir + prefix + "inst_{ID1}_{ID3}.RDS", # X/Y + M
-           file2 = data_dir + prefix + "inst_{ID2}.RDS", # Z
-           file3 = data_dir + prefix + "inst_{ID2}_{ID3}.RDS", # Z + M
-           file4 = data_dir + prefix + "inst_{ID1}.RDS" # X/Y
+    input: file1 = data_dir + "inst_{ID1}_{ID3}.RDS", # X/Y + M
+           file2 = data_dir + "inst_{ID2}.RDS", # Z
+           file3 = data_dir + "inst_{ID2}_{ID3}.RDS", # Z + M
+           file4 = data_dir + "inst_{ID1}.RDS" # X/Y
     output: out = data_dir + prefix + "bidirection_{ID1}_{ID3}_{ID2}.RDS"
     script: "R/3_bidirection_mvmr.R"
 
 rule downstream_filter:
-    input: id_list = data_dir + prefix + "qc_id_list.csv", 
+    input: id_list = out_dir + prefix + "qc_id_list.csv", 
            mr_files = input_downstream,
-           trait_info = data_dir + prefix + "qc_trait_info.csv"
+           trait_info = out_dir + prefix + "qc_trait_info.csv"
     params: id_exposure = id_exposure,
             sig_level = config["analysis"]["downstream_filter"]["sig_level"],
             R2_cutoff = config["analysis"]["quality_control"]["R2_cutoff"],
             extra_trait = config["analysis"]["bidirection_mr"]["extra_trait"]
-    output: out = data_dir + prefix + "downstream_filter.RDS"
+    output: out = out_dir + prefix + "downstream_filter.RDS"
     script:"R/3_downstream_filter.R"
 
 rule generate_download_file:
-    input: file =  data_dir + prefix + "downstream_filter.RDS"
+    input: file =  out_dir + prefix + "downstream_filter.RDS"
     params: path = original_gwas_dir,
             checkpoint = data_dir + prefix + "success_download.txt"
     output: out = data_dir + prefix + "download.sh"
@@ -203,7 +203,7 @@ checkpoint download_gwas:
 
 def input_combine_gwas(wcs):
     myfile = checkpoints.download_gwas.get().output[0]
-    return data_dir + prefix + "downstream_filter.RDS"
+    return out_dir + prefix + "downstream_filter.RDS"
                   
 rule combine_gwas:
     input: file = input_combine_gwas
@@ -221,15 +221,16 @@ rule calculate_cor:
     script: "R/4_ldsc_full.R"
 
 rule unique_traits:
-    input: file = data_dir + prefix + "downstream_filter.RDS",
+    input: file = out_dir + prefix + "downstream_filter.RDS",
            pairwise_cor = data_dir + prefix + "pairwise_cor.RDS"
     params: R2_cutoff = config["analysis"]["unique_traits"]["R2_cutoff"],
-            method = config["analysis"]["unique_traits"]["method"]
-    output: out = data_dir + prefix + "unique_traits.RDS"
+            method = config["analysis"]["unique_traits"]["method"],
+            extra_traits =  config["analysis"]["bidirection_mr"]["extra_trait"]
+    output: out = out_dir + prefix + "unique_traits.RDS"
     script: "R/4_unique_traits.R"
 
 rule selection_instruments_api:
-    input: file = data_dir + prefix + "unique_traits.RDS"
+    input: file = out_dir + prefix + "unique_traits.RDS"
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             r2_thresh = config["analysis"]["confounder_selection"]["r2_thresh"],
@@ -250,76 +251,78 @@ rule selection_instruments_local:
 instrument_file =  data_dir + prefix + "selection_instruments_" + config["analysis"]["confounder_selection"]["method_instruments"] + ".RDS"
 
 rule classic_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS",
+    input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
-    output: out = data_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
+    output: out = out_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
     wildcard_constraints: seed = "\d+"
     script: "R/5_classic_Lasso.R"
 
 rule double_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS",
+    input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
-    output: out = data_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
+    output: out = out_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
     wildcard_constraints: seed = "\d+"
     script: "R/5_double_Lasso.R"
 
 rule stepwise:
-    input: file = data_dir + prefix + "unique_traits.RDS",
+    input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             method = lambda wc: wc.get("stepwise_method")
     wildcard_constraints: stepwise_method = '[a-z]+'
-    output: out = data_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
+    output: out = out_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
     script: "R/5_stepwise.R"
 
 rule marginal:
-    input: file = data_dir + prefix + "unique_traits.RDS",
-           file_bidirection = data_dir + prefix + "downstream_filter.RDS"
-    params: p_cutoff = lambda wc: wc.get("marginal_p")
-    output: out = data_dir + prefix + "selection_marginal_p_{marginal_p}.RDS"
+    input: file = out_dir + prefix + "unique_traits.RDS",
+           file_bidirection = out_dir + prefix + "downstream_filter.RDS"
+    params: p_cutoff = lambda wc: wc.get("marginal_p"),
+            extra_traits =  config["analysis"]["bidirection_mr"]["extra_trait"]
+    output: out = out_dir + prefix + "selection_marginal_p_{marginal_p}.RDS"
     wildcard_constraints: marginal_p = "\d+(\.\d+)?"
     script: "R/5_marginal.R"
 
 rule corrected_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS",
+    input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
-    output: out = data_dir + prefix + "selection_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    output: out = out_dir + prefix + "selection_corrected_Lasso_{radius_type}_seed{seed}.RDS"
     wildcard_constraints: seed = "\d+"
     script: "R/5_corrected_Lasso.R"
 
 rule double_corrected_Lasso:
-    input: file = data_dir + prefix + "unique_traits.RDS",
+    input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
             id_outcome = id_outcome,
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
-    output: out = data_dir + prefix + "selection_double_corrected_Lasso_{radius_type}_seed{seed}.RDS"
+    output: out = out_dir + prefix + "selection_double_corrected_Lasso_{radius_type}_seed{seed}.RDS"
     wildcard_constraints: seed = "\d+"
     script: "R/5_double_corrected_Lasso.R"
 
 rule MVMR_combine_gwas:
-    input: file = data_dir + prefix + "{MVMR_id}.RDS"
+    input: file = out_dir + prefix + "{MVMR_id}.RDS"
     params: path = original_gwas_dir,
             id_exposure = id_exposure,
             id_outcome = id_outcome
     output: out = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
-    wildcard_constraints: chrom = "\d+"
+    wildcard_constraints: chrom = "\d+",
+                          MVMR_id = "(?!.*all).*"
     script:"R/6_MVMR_combine_gwas.R"
 
 rule MVMR_LD_clumping:

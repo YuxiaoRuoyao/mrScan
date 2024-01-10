@@ -16,7 +16,7 @@ ID3 <- unique(ex_dat1$id.exposure)[-1] # M
 # Calculate cor between X/Y and Z
 out_dat1 <- extract_outcome_data(snps = ex_dat4$SNP,outcomes = ID2)
 out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1)
-dat_1_2 <- harmonise_data(ex_dat1, out_dat1)
+dat_1_2 <- harmonise_data(ex_dat4, out_dat1)
 dat_2_1 <- harmonise_data(ex_dat2, out_dat2)
 X_1_2 <- dat_1_2 %>%
   rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%

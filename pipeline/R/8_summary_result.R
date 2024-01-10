@@ -40,7 +40,7 @@ plt<- all_res %>% filter(exposure==id_exposure) %>% filter(!(selection_method ==
        theme_bw() +
        #scale_color_discrete(name="MVMR Methods",labels = c("MRBEE", "ESMR", "GRAPPLE","MV-IVW","MV-IVW with exposure-specific IVs"))+
        theme(axis.text.y = element_text(size = 20),
-             axis.text.x = element_text(size = 10, angle = 0),
+             axis.text.x = element_text(size = 10, angle = 30),
         strip.text = element_text(size = 20),
         legend.text = element_text(size = 10),
         legend.title = element_blank(),

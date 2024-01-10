@@ -8,6 +8,7 @@ res <- readRDS(snakemake@input[["file"]])
 R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
 method <- snakemake@params[["method"]]
 res_cor <- readRDS(snakemake@input[["pairwise_cor"]])
+extra_traits <- snakemake@params[["extra_traits"]]
 out <- snakemake@output[["out"]]
 
 id.list <- res$id.list
@@ -24,9 +25,14 @@ if(method=="cluster"){
   df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
   df_cluster <- dplyr::left_join(clusters,df_info[,c("id","sample_size")],
                                  by=c("id" = "id")) %>% dplyr::arrange(cluster)
-  ids.final <- df_cluster %>% dplyr::group_by(cluster) %>%
-    dplyr::slice_max(sample_size, with_ties = FALSE) %>% dplyr::ungroup() %>%
-    dplyr::pull(id)
+  df_select <- df_cluster %>% dplyr::group_by(cluster) %>%
+    dplyr::slice_max(sample_size, with_ties = FALSE) %>% dplyr::ungroup()
+  if(extra_traits != "None"){
+    ids.final <- df_cluster %>% filter(id %in% extra_traits) %>% bind_rows(df_select) %>% 
+        distinct(cluster, .keep_all = T) %>% arrange(cluster) %>% dplyr::pull(id)
+  }else{
+    ids.final <- df_select %>% dplyr::pull(id)
+  }
   filter.trait <- df_cluster$id[!df_cluster$id %in% ids.final]
 }
 if(method=="nsnp"){
