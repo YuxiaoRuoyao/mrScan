@@ -10,7 +10,8 @@ analysis:
     pop: "EUR"
     pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
     extract_traits:
-        batch: ["ieu-a","ieu-b","ukb-b"]
+        batch: ["ieu-a","ieu-b","ukb-b","ebi-a"]
+        #batch: ["ieu-a","ieu-b","ukb-b"]
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
     quality_control:
@@ -31,7 +32,8 @@ analysis:
         method: "cluster" # filtering duplicate methods: sample_size, nsnp, cluster
     confounder_selection:
         seed: 1
-        method: ["classic_Lasso","double_Lasso","marginal","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
+        # If you add UVMR, only the main exposure will be included
+        method: ["UVMR","classic_Lasso","double_Lasso","marginal","stepwise","corrected_Lasso","double_corrected_Lasso"] # confounder selection method
         # Methods for extracting instruments. If api fails, you can download and use local data.
         method_instruments: "Local" # "Local" or "API"
         r2_thresh: 0.001
@@ -58,8 +60,8 @@ analysis:
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
     
     MVMR_analysis:
-        #method: ["IVW","GRAPPLE","MRBEE","ESMR"]
-        method: ["IVW","GRAPPLE","MRBEE"]
+        method: ["IVW","GRAPPLE","MRBEE","ESMR"]
+        #method: ["IVW","GRAPPLE","MRBEE"]
         p_thresh_IVW: [5e-8]
         p_thresh_GRAPPLE: [1e-5,5e-8]
         p_thresh_MRBEE: [5e-8]

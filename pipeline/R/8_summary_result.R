@@ -30,6 +30,12 @@ all_res <- all_res %>% mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.
 # plot by odds
 plt<- all_res %>% filter(exposure==id_exposure) %>% filter(!(selection_method == "all" & method == "GRAPPLE_1e-05")) %>% 
        filter(!(selection_method == "all" & method == "GRAPPLE_5e-08")) %>% 
+       filter(!(selection_method == "double_Lasso_min" & method == "GRAPPLE_1e-05")) %>% 
+       filter(!(selection_method == "double_Lasso_min" & method == "GRAPPLE_5e-08")) %>% 
+       filter(!(selection_method == "double_corrected_Lasso_min" & method == "GRAPPLE_1e-05")) %>% 
+       filter(!(selection_method == "double_corrected_Lasso_min" & method == "GRAPPLE_5e-08")) %>%
+       filter(!(selection_method == "stepwise_forward" & method == "GRAPPLE_1e-05")) %>% 
+       filter(!(selection_method == "stepwise_forward" & method == "GRAPPLE_5e-08")) %>%
        ggplot() +
        geom_vline(xintercept = 1) +
        geom_point(aes(y = selection_method, x = odds, color = method,  group = method),
@@ -40,7 +46,7 @@ plt<- all_res %>% filter(exposure==id_exposure) %>% filter(!(selection_method ==
        theme_bw() +
        #scale_color_discrete(name="MVMR Methods",labels = c("MRBEE", "ESMR", "GRAPPLE","MV-IVW","MV-IVW with exposure-specific IVs"))+
        theme(axis.text.y = element_text(size = 20),
-             axis.text.x = element_text(size = 10, angle = 30),
+             axis.text.x = element_text(size = 10, angle = 10),
         strip.text = element_text(size = 20),
         legend.text = element_text(size = 10),
         legend.title = element_blank(),

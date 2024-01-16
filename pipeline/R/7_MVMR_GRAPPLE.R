@@ -41,10 +41,19 @@ res <- grappleRobustEst(data = grapple_dat,
                         p.thres = pval_threshold,
                         cor.mat = R_matrix,
                         niter = 100000)
-res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
-                          b=res$beta.hat,
-                          se=sqrt(diag(res$beta.var)),
-                          pvalue=res$beta.p.value,
-                          method = paste0("GRAPPLE_",pval_threshold))
+
+if(i > 2){
+  res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
+                            b=res$beta.hat,
+                            se=sqrt(diag(res$beta.var)),
+                            pvalue=res$beta.p.value,
+                            method = paste0("GRAPPLE_",pval_threshold))
+}else{
+  res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
+                            b=res$beta.hat,
+                            se=sqrt(res$beta.var),
+                            pvalue=res$beta.p.value,
+                            method = paste0("GRAPPLE_",pval_threshold))
+}
 saveRDS(res.summary,file = out)
 

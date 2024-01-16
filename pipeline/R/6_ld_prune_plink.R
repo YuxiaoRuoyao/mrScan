@@ -24,7 +24,7 @@ Z_hat <- X %>%
   select(ends_with(".z")) %>%
   as.matrix()
 if(type == "pvalue"){
-  myp <- suppressWarnings(apply(pmat[,-1], 1, function(x){min(x, na.rm=TRUE)}))
+  myp <- suppressWarnings(apply(as.matrix(pmat[,-1]), 1, function(x){min(x, na.rm=TRUE)}))
 }else if(type == "rank"){
   Z_rank <- apply(Z_hat,2,function(x){rank(x,na.last = "keep")})
   min_rank <- apply(Z_rank, 1, function(x){min(x, na.rm = T)})

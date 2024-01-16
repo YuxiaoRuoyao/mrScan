@@ -4,6 +4,7 @@ library(ieugwasr)
 library(mr.raps)
 library(purrr)
 library(dplyr)
+library(sumstatFactors)
 
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
@@ -248,11 +249,6 @@ format_flat_chrom <- function(file, chrom,
     awk_cmd <- paste0("awk '{if ($", n, " == \"", chrom, "\") print $0}' ", file)
   }
   X <- read_table(pipe(awk_cmd), col_types = eval(parse(text = col_string)), col_names = names(h))
-
-  if(!is.na(af_name)){
-    ix <- which(X[[af_name]] > af_thresh & X[[af_name]] < (1-af_thresh))
-    X <- X[ix,]
-  }
 
   if(effect_is_or){
     X$beta <- log(X[[beta_hat_name]])

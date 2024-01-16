@@ -30,11 +30,7 @@ fit <- esmr(beta_hat_Y <- beta_hat[,1],
             beta_hat_X <- beta_hat[,2:i],
             se_X <- se[, 2:i],
             R = R_matrix,
-            augment_G = TRUE,
-            g_type = "gfa",
-            ix1 = "pval-5e-8",
-            ix0 = FALSE,
-            lfsr_thresh = 1)
+            pval_thresh = pval_threshold)
 
 res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
                           b = fit$beta$beta_m,

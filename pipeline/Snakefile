@@ -67,6 +67,9 @@ if "double_corrected_Lasso" in config["analysis"]["confounder_selection"]["metho
                                            radius_type = config["analysis"]["confounder_selection"]["radius_type"],
                                            seed = config["analysis"]["confounder_selection"]["seed"])
     selection_type.extend(double_corrected_Lasso_string)
+    
+if "UVMR" in config["analysis"]["confounder_selection"]["method"]:
+    selection_type.append("UVMR")
 
 MVMR_list = expand("selection_{type}",type = selection_type)
 MVMR_list.append("unique_traits")
@@ -101,14 +104,15 @@ rule all:
         #out_dir + prefix + "qc_trait_info.csv",
         #out_dir + prefix + "downstream_filter.RDS"
         #data_dir + prefix + "download.sh",
+        #data_dir + prefix + "success_download.txt"
         #data_dir + prefix + "pairwise_cor.RDS",
         #out_dir + prefix + "unique_traits.RDS"
-        #expand(data_dir + prefix + "selection_{type}.RDS",type = selection_type)
-        #expand(data_dir + prefix + "{MVMR_id}_beta_ldpruned.{chrom}.RDS",MVMR_id = MVMR_list,chrom = range(1,23)),
+        #expand(data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS",MVMR_id = MVMR_list,chrom = range(1,23)),
         #expand(data_dir + prefix + "{MVMR_id}_R_{type}.RDS",type = R_type, MVMR_id = MVMR_list)
-        #expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method)
-        #out_dir + prefix + "summary.csv",
-        #out_dir + prefix + "summary.png"
+        #expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method),
+        #data_dir + prefix + "selection_instruments_Local.RDS"
+        out_dir + prefix + "summary.csv",
+        out_dir + prefix + "summary.png"
 
 rule extract_traits:
     params: id_exposure = id_exposure,
@@ -190,9 +194,12 @@ rule downstream_filter:
     script:"R/3_downstream_filter.R"
 
 rule generate_download_file:
-    input: file =  out_dir + prefix + "downstream_filter.RDS"
+    input: file =  out_dir + prefix + "downstream_filter.RDS",
+           df_harmonise = "harmonised_list.txt"
     params: path = original_gwas_dir,
-            checkpoint = data_dir + prefix + "success_download.txt"
+            checkpoint = data_dir + prefix + "success_download.txt",
+            id_exposure = id_exposure,
+            id_outcome = id_outcome
     output: out = data_dir + prefix + "download.sh"
     script:"R/4_download_data.R"
 
@@ -206,7 +213,8 @@ def input_combine_gwas(wcs):
     return out_dir + prefix + "downstream_filter.RDS"
                   
 rule combine_gwas:
-    input: file = input_combine_gwas
+    input: file = input_combine_gwas,
+           download = data_dir + prefix + "download.sh"
     params: path = original_gwas_dir
     output: out = data_dir + prefix + "all_beta.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+"
@@ -315,11 +323,23 @@ rule double_corrected_Lasso:
     wildcard_constraints: seed = "\d+"
     script: "R/5_double_corrected_Lasso.R"
 
+rule UVMR:
+    output: temp(out_dir + prefix + 'UVMR.RDS')
+    shell: "touch {output}"
+    
+def input_MVMR_combine_gwas(wildcards):
+    MVMR_id = wildcards.MVMR_id
+    if MVMR_id == 'selection_UVMR':
+        return out_dir + prefix + 'UVMR.RDS'
+    else:
+        return out_dir + prefix + f"{MVMR_id}.RDS"
+
 rule MVMR_combine_gwas:
-    input: file = out_dir + prefix + "{MVMR_id}.RDS"
+    input: file = input_MVMR_combine_gwas,
+           download = data_dir + prefix + "download.sh"
     params: path = original_gwas_dir,
             id_exposure = id_exposure,
-            id_outcome = id_outcome
+            id_outcome = id_outcome,
     output: out = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+",
                           MVMR_id = "(?!.*all).*"
