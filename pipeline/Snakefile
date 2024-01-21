@@ -405,7 +405,8 @@ rule MVMR_ESMR:
 rule summary_result:
     input: file = expand(out_dir + prefix + "{MVMR_id}_MVMR_{type}.RDS",MVMR_id = MVMR_list, type=MVMR_method)
     params: prefix = prefix,
-            id_exposure = id_exposure
+            id_exposure = id_exposure,
+            id_outcome = id_outcome
     output: out1 = out_dir + prefix + "summary.csv",
             out2 = out_dir + prefix + "summary.png"
     script: "R/8_summary_result.R"

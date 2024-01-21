@@ -1,6 +1,7 @@
 library(dplyr)
 library(GRAPPLE)
 library(purrr)
+library(stringr)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
@@ -39,21 +40,26 @@ if(length(ix) > 5000){
 res <- grappleRobustEst(data = grapple_dat,
                         plot.it =FALSE,
                         p.thres = pval_threshold,
-                        cor.mat = R_matrix,
-                        niter = 100000)
-
+                        cor.mat = R_matrix)
+if(is.null(names(warnings()))){
+  notConverge <- FALSE
+}else{
+  notConverge <- names(warnings()) %>% str_detect("Did not converge")
+}
 if(i > 2){
   res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
                             b=res$beta.hat,
                             se=sqrt(diag(res$beta.var)),
                             pvalue=res$beta.p.value,
-                            method = paste0("GRAPPLE_",pval_threshold))
+                            method = paste0("GRAPPLE_",pval_threshold),
+                            converge = !notConverge)
 }else{
   res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
                             b=res$beta.hat,
                             se=sqrt(res$beta.var),
                             pvalue=res$beta.p.value,
-                            method = paste0("GRAPPLE_",pval_threshold))
+                            method = paste0("GRAPPLE_",pval_threshold),
+                            converge = !notConverge)
 }
 saveRDS(res.summary,file = out)
 
