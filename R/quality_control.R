@@ -12,7 +12,7 @@
 #' @import dplyr
 #' @importFrom dplyr filter mutate
 #' @export
-quality_control <- function(id_exposure,dat,nsnp_cutoff=1e6,pop="European",sex="Males and Females",
+quality_control <- function(dat,nsnp_cutoff=1e6,pop="European",sex="Males and Females",
                             R2_cutoff = 0.9){
   na.SNP.trait<-dplyr::filter(dat, is.na(nsnp))$id
   na.sex.trait<-dplyr::filter(dat,sex=="NA")$id
@@ -31,14 +31,6 @@ quality_control <- function(id_exposure,dat,nsnp_cutoff=1e6,pop="European",sex="
   dat <- dat %>%
     dplyr::mutate(status = ifelse(grepl('adjust', trait) == TRUE,
                            "delete in QC",status))
-  # delete high correlation traits with X
-  res_cor_X <- calculate_cor(ids1 = id_exposure, ids2 = id.list)
-  trait_cor_X <- dplyr::filter(res_cor_X, abs(cor) > R2_cutoff) %>%
-    with(., c(id1, id2) ) %>% unique()
-  dat <- dat %>%
-    dplyr::mutate(status = ifelse(id %in% trait_cor_X,
-                           "delete since high cor with X",status))
   id.qc <- dat %>% dplyr::filter(status == "select after QC") %>% pull(id)
   return(list(id.list=id.qc,trait.info=dat))
 }
-# add option to let users filter by themselves

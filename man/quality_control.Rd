@@ -5,7 +5,6 @@
 \title{Quality control based on metadata}
 \usage{
 quality_control(
-  id_exposure,
   dat,
   nsnp_cutoff = 1e+06,
   pop = "European",
@@ -14,8 +13,6 @@ quality_control(
 )
 }
 \arguments{
-\item{id_exposure}{GWAS ID for main exposure.}
-
 \item{dat}{metadata for traits, a dataframe contains information of population, nsnp and etc.
 If users input metadata by themselves, use make_metadata() to convert data format}
 
@@ -26,6 +23,8 @@ If users input metadata by themselves, use make_metadata() to convert data forma
 \item{sex}{Gender limitation. Default = "Males and Females"}
 
 \item{R2_cutoff}{cutoff for duplicated traits of the exposure. Default = 0.9}
+
+\item{id_exposure}{GWAS ID for main exposure.}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

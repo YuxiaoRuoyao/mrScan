@@ -1,9 +1,8 @@
 #' @title Filter downstream traits
 #' @param id_exposure GWAS ID of the main exposure
-#' @param id_outcome GWAS ID of the outcome
 #' @param id.list GWAS ID list of traits based on previous steps
 #' @param df_info Dataframe of trait info from previous steps
-#' @param method Bidirection MR method. Same with TwoSampleMR package.Default = "mr_raps"
+#' @param res Bidirection MR results for selected traits
 #' @param sig_level One-sided t-test significant level. Default=0.05
 #' @returns A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
 #' estimate and t-test results
@@ -13,21 +12,21 @@
 #' @import data.table
 #' @importFrom stats pnorm
 #' @export
-downstream_filter <- function(id_exposure,id_outcome,id.list,df_info,method = c("mr_raps"),
-                              sig_level = 0.05){
-  res <- mr_pairs(ids1 = c(id_exposure,id_outcome),ids2 = id.list,method_list = method)
+downstream_filter <- function(id_exposure,id.list,df_info,res,sig_level = 0.05){
   df_summary<-data.frame(id=id.list) %>% left_join(df_info[,c("id","trait")],by="id")
-  df_YtoZ <- left_join(df_summary,res$mr12[,c("id.exposure","id.outcome","method","b","se","pval")],
+  df_YtoZ <- left_join(df_summary,res$mr12[,c("id.exposure","id.outcome","b","se","pval")],
                        by=c("id"="id.outcome"))
   df_YtoZ <- df_YtoZ %>% mutate(exposure = if_else(id.exposure == id_exposure, "X", "Y"))
   setDT(df_YtoZ)
-  data_wide1 <- dcast(df_YtoZ,id ~ exposure, value.var=c("b","se"))
+  data_wide1 <- dcast(df_YtoZ,id ~ exposure, value.var=c("b","se")) %>%
+    select_if(~sum(!is.na(.)) > 0)
   colnames(data_wide1)<-c("id","b_XtoZ","b_YtoZ","se_XtoZ","se_YtoZ")
-  df_ZtoY <- left_join(df_summary,res$mr21[,c("id.exposure","id.outcome","method","b","se","pval")],
+  df_ZtoY <- left_join(df_summary,res$mr21[,c("id.exposure","id.outcome","b","se","pval")],
                        by=c("id"="id.exposure"))
   df_ZtoY <- df_ZtoY %>% mutate(outcome = if_else(id.outcome == id_exposure, "X", "Y"))
   setDT(df_ZtoY)
-  data_wide2 <- dcast(df_ZtoY,id ~ outcome, value.var=c("b","se"))
+  data_wide2 <- dcast(df_ZtoY,id ~ outcome, value.var=c("b","se")) %>%
+    select_if(~sum(!is.na(.)) > 0)
   colnames(data_wide2)<-c("id","b_ZtoX","b_ZtoY","se_ZtoX","se_ZtoY")
   df_final<-left_join(data_wide1,data_wide2,by="id")
   df_final<- df_final %>%
@@ -38,7 +37,7 @@ downstream_filter <- function(id_exposure,id_outcome,id.list,df_info,method = c(
   X_sig<- df_final %>% filter(p_Z_X > 1 - sig_level) %>% pull(id)
   Y_downstream<- df_final %>% filter(p_Z_Y < sig_level) %>% pull(id)
   Y_sig<- df_final %>% filter(p_Z_Y > 1 - sig_level) %>% pull(id)
-  sig_traits <- union(X_sig,Y_sig);
+  sig_traits <- union(X_sig,Y_sig)
   downstream_traits <- union(X_downstream,Y_downstream)
   select_trait <- sig_traits[!sig_traits %in% downstream_traits]
   df_info[df_info$id %in% select_trait,"status"] <- "select after downstream filtering"

@@ -129,8 +129,7 @@ rule extract_traits:
 
 checkpoint quality_control:
     input: file = data_dir + prefix + "extract_traits.RDS"
-    params: id_exposure = id_exposure,
-            nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
+    params: nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
             sex = config["analysis"]["quality_control"]["sex"]
     output: id_list = out_dir + prefix + "qc_id_list.csv",
@@ -181,7 +180,8 @@ rule bidirection_mvmr:
            file4 = data_dir + "inst_{ID1}.RDS" # X/Y
     output: out = data_dir + prefix + "bidirection_{ID1}_{ID3}_{ID2}.RDS"
     script: "R/3_bidirection_mvmr.R"
-
+    
+# Do both downstream filtering and delete high correlation traits with either X and Y
 rule downstream_filter:
     input: id_list = out_dir + prefix + "qc_id_list.csv", 
            mr_files = input_downstream,
@@ -262,7 +262,6 @@ rule classic_Lasso:
     input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
-            id_outcome = id_outcome,
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = out_dir + prefix + "selection_classic_Lasso_{lambda_type}_seed{seed}.RDS"
@@ -273,7 +272,6 @@ rule double_Lasso:
     input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
-            id_outcome = id_outcome,
             lambda_type = lambda wc: wc.get("lambda_type"),
             seed = config["analysis"]["confounder_selection"]["seed"]
     output: out = out_dir + prefix + "selection_double_Lasso_{lambda_type}_seed{seed}.RDS"
@@ -284,7 +282,6 @@ rule stepwise:
     input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
-            id_outcome = id_outcome,
             method = lambda wc: wc.get("stepwise_method")
     wildcard_constraints: stepwise_method = '[a-z]+'
     output: out = out_dir + prefix + "selection_stepwise_{stepwise_method}.RDS"
@@ -303,7 +300,6 @@ rule corrected_Lasso:
     input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
-            id_outcome = id_outcome,
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
@@ -315,7 +311,6 @@ rule double_corrected_Lasso:
     input: file = out_dir + prefix + "unique_traits.RDS",
            instruments = instrument_file
     params: id_exposure = id_exposure,
-            id_outcome = id_outcome,
             radius_type = lambda wc: wc.get("radius_type"),
             seed = config["analysis"]["confounder_selection"]["seed"],
             maxits = config["analysis"]["confounder_selection"]["maxits"]
@@ -364,7 +359,7 @@ rule MVMR_R_ldsc:
     script: "R/4_ldsc_full.R"
 
 rule MVMR_R_pval:
-    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta.{chrom}.RDS", chrom = range(1, 23))
+    input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta_ldpruned.{chrom}.RDS", chrom = range(1, 23))
     params: p_thresh = config["analysis"]["estimate_R"]["p_thresh"]
     output: out = data_dir + prefix + "{MVMR_id}_R_pval.RDS"
     script: "R/6_estimate_R_pval.R"

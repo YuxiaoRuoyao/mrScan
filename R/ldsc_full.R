@@ -1,9 +1,8 @@
 #' @title Estimate genetic correlation matrix by LDSC method
-#' @param beta_dir Directory path of merged data. Default is the current work directory.
-#' @param ref_path Path for the LD reference panel.
-#' @param out_dir Output data path. Default is in the current work directory.
-#' @param prefix Name prefix for the output. Default = NULL
-#' @returns Save one dataframe per chromosome with columns for SNP info
+#' @param beta_files Paths of combined GWAS data without LD pruning
+#' @param ld_files Paths of reference LD score files
+#' @param m_files Paths of reference M files
+#' @returns A list contain sample overlap matrix (Re) and genetic correlation matrix (Rg)
 #'
 #' @import ieugwasr
 #' @import dplyr
@@ -13,13 +12,12 @@
 #' @import stringr
 #' @import sumstatFactors
 #' @export
-ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
-  beta_files <- paste0(beta_dir,prefix,".beta.",seq(1,22),".RDS")
+ldsc_full<-function(beta_files, ld_files, m_files){
   ld <- purrr::map_dfr(1:22, function(c){
-    read_table(paste0(l2_dir, c, ".l2.ldscore.gz"))
+    read_table(ld_files[c])
   })
   M <- purrr:::map(1:22, function(c){
-    read_lines(paste0(l2_dir, c, ".l2.M_5_50"))
+    read_lines(m_files[c])
   }) %>% unlist() %>% as.numeric() %>% sum()
   X <- map_dfr(beta_files, function(f){
     readRDS(f) %>%
@@ -28,14 +26,12 @@ ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
   Z_hat <- X %>%
     select(ends_with(".z")) %>%
     as.matrix()
-  nmsz <- str_replace(colnames(Z_hat), ".z$", "")
+  nms <- str_replace(colnames(Z_hat), ".z$", "")
   SS <- X %>%
     select(ends_with(".ss")) %>%
     as.matrix()
-  nmss <- str_replace(colnames(SS), ".ss$", "")
-  o <- match(nmsz, nmss)
-  SS <- SS[, o]
-  N <- apply(SS, 2, median)
+  N <- apply(SS, 2, median, na.rm=TRUE)
+
   R <- R_ldsc(Z_hat = Z_hat,
               ldscores = X$L2,
               ld_size = M,
@@ -43,6 +39,8 @@ ldsc_full<-function(l2_dir,beta_dir=NULL,out_dir=NULL,prefix=NULL){
               return_gencov = TRUE,
               return_cor = TRUE,
               make_well_conditioned = TRUE)
-  colnames(R$Re) <- rownames(R$Re) <- nmsz
-  saveRDS(R$Re, file=paste0(out_dir,prefix,".R_est_ldsc.RDS")) # Double check this
+  Re <- abs(R$Re)
+  Rg <- abs(R$Rg)
+  colnames(Re) <- rownames(Re) <- colnames(Rg) <- rownames(Rg) <- nms
+  return(list(Re = Re, Rg = Rg))
 }

@@ -4,25 +4,16 @@
 \alias{downstream_filter}
 \title{Filter downstream traits}
 \usage{
-downstream_filter(
-  id_exposure,
-  id_outcome,
-  id.list,
-  df_info,
-  method = c("mr_raps"),
-  sig_level = 0.05
-)
+downstream_filter(id_exposure, id.list, df_info, res, sig_level = 0.05)
 }
 \arguments{
 \item{id_exposure}{GWAS ID of the main exposure}
-
-\item{id_outcome}{GWAS ID of the outcome}
 
 \item{id.list}{GWAS ID list of traits based on previous steps}
 
 \item{df_info}{Dataframe of trait info from previous steps}
 
-\item{method}{Bidirection MR method. Same with TwoSampleMR package.Default = "mr_raps"}
+\item{res}{Bidirection MR results for selected traits}
 
 \item{sig_level}{One-sided t-test significant level. Default=0.05}
 }

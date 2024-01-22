@@ -4,24 +4,15 @@
 \alias{estimate_R_pval}
 \title{Estimate genetic correlation matrix by pvalue}
 \usage{
-estimate_R_pval(
-  ld_prune_file_dir = NULL,
-  prefix = NULL,
-  p_thresh = 0.05,
-  out_dir = NULL
-)
+estimate_R_pval(beta_files, p_thresh = 0.05)
 }
 \arguments{
-\item{prefix}{Name prefix for the output. Default = NULL}
+\item{beta_files}{Paths of merged GWAS summary data after LD pruning}
 
-\item{out_dir}{Output data path. Default is in the current work directory.}
-
-\item{beta_dir}{Directory path of merged data. Default is the current work directory.}
-
-\item{ref_path}{Path for the LD reference panel.}
+\item{p_thresh}{pvalue cutoff for filtering data}
 }
 \value{
-Save one dataframe per chromosome with columns for SNP info
+A matrix with pairwise sample overlapping correlation between traits
 }
 \description{
 Estimate genetic correlation matrix by pvalue

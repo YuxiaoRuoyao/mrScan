@@ -1,8 +1,7 @@
 #' @title Combine and harmonize local GWAS summary data with multiple traits
-#' @param id_list GWAS ID list. The first should be the outcome ID.
-#' @param file_list Directory path of formatted GWAS summary data. Default is in the current work directory.
-#' @param out_dir Output data path. Default is in the current work directory.
-#' @param prefix Name prefix for the output. Default = NULL
+#' @param df_file A dataframe contain "id" (trait id) and "location" (GWAS summary data location) columns.
+#' @param c Numeric chromosome number
+#' @param df_info Dataframe of trait info from previous steps containing sample size
 #' @returns Save one dataframe per chromosome with columns for SNP info
 #'
 #' @import stringr
@@ -13,64 +12,58 @@
 #' @import rlang
 #' @import purrr
 #' @export
-
-format_combine_gwas <- function(id_list,file_list,out_dir=NULL,prefix=NULL,
-                           snp = NA, pos = NA, chrom = NA, A1 =  NA, A2 = NA,
-                           beta_hat = NA, se = NA, p_value = NA, af = NA, sample_size = NA,
-                           pub_sample_size = NA,
-                           effect_is_or = "no"){
-  for (c in seq(1:22)) {
-    fulldat <- map(seq(length(id_list)), function(i){
-      f <- file_list[i]
-      if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
-        dat <- format_ieu_chrom(f, c)
-      }else{
-        dat <- format_flat_chrom(f, c,
-                                 snp[i],
-                                 pos[i],
-                                 chrom[i],
-                                 A1[i],
-                                 A2[i],
-                                 beta_hat[i],
-                                 se[i],
-                                 p_value[i],
-                                 af[i],
-                                 sample_size[i],
-                                 as.logical(effect_is_or[i]))
-        if(all(is.na(dat$sample_size))){
-          dat$sample_size <- pub_sample_size[i]
+format_combine_gwas <- function(df_file,c,df_info){
+  fulldat <- map(seq(nrow(df_file)), function(i){
+    f <- df_file$location[i]
+    if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
+      dat <- format_ieu_chrom(f, c)
+    }else if(str_ends(f, "h.tsv.gz")){
+      dat <- format_flat_chrom(f, c,
+                               snp_name = "hm_rsid",
+                               pos_name = "hm_pos",
+                               chrom_name = "hm_chrom",
+                               A1_name = "hm_effect_allele",
+                               A2_name = "hm_other_allele",
+                               beta_hat_name = "hm_beta",
+                               se_name = "standard_error",
+                               p_value_name = "p_value",
+                               af_name = "hm_effect_allele_frequency",
+                               sample_size_name = NA,
+                               effect_is_or = FALSE)
+      if(all(is.na(dat$sample_size))){
+        #if(df_file$id[i] == "ebi-a-GCST90029070"){
+        #  dat$sample_size <- 575531
+        #} # need to delete it later
+        if(df_file$id[i] %in% df_info$id){
+          dat$sample_size <- df_info %>% filter(id == df_file$id[i]) %>% pull(sample_size)
+        }else{
+          dat$sample_size <- gwasinfo(df_file$id[i])$sample_size
         }
       }
-      n <- id_list[i]
-      pos_name <- as_name(paste0(n, ".pos"))
-      beta_name <- as_name(paste0(n, ".beta"))
-      se_name <- as_name(paste0(n, ".se"))
-      p_name <- as_name(paste0(n, ".p"))
-      z_name <- as_name(paste0(n, ".z"))
-      ss_name <- as_name(paste0(n, ".ss"))
-
-      dat$sample_size[is.na(dat$sample_size)] <- as.numeric(pub_sample_size)
-      dat <-dat %>% mutate(Z = beta_hat/se) %>%
-        rename(REF = A2, ALT = A1) %>%
-        select(chrom, snp, REF, ALT,
-               !!pos_name := pos,
-               !!beta_name := beta_hat,
-               !!se_name := se,
-               !!p_name := p_value,
-               !!z_name := Z,
-               !!ss_name := sample_size)
-    }) %>%
-      purrr::reduce(full_join, by = c("chrom", "snp", "REF", "ALT"))
-    dup_snps <- fulldat$snp[duplicated(fulldat$snp)]
-    if(length(dup_snps) > 0){
-      fulldat <- filter(fulldat, !snp %in% dup_snps)
     }
-    # Save table of how traits are missing each SNP for LD clumping
-    miss <- fulldat %>%
-      select(ends_with(".beta")) %>%
-      is.na(.) %>%
-      rowSums(.)
-    ix <- which(miss == 0)
-    saveRDS(fulldat[ix,], file=paste0(out_dir,prefix,".beta.",c,".RDS"))
+    n <- df_file$id[i]
+    pos_name <- as_name(paste0(n, ".pos"))
+    beta_name <- as_name(paste0(n, ".beta"))
+    se_name <- as_name(paste0(n, ".se"))
+    p_name <- as_name(paste0(n, ".p"))
+    z_name <- as_name(paste0(n, ".z"))
+    ss_name <- as_name(paste0(n, ".ss"))
+
+    dat$sample_size[is.na(dat$sample_size)] <- df_info[df_info$id == n,"sample_size"]
+    dat <-dat %>% dplyr::mutate(Z = beta_hat/se) %>%
+      dplyr::rename(REF = A2, ALT = A1) %>%
+      dplyr::select(chrom, snp, REF, ALT,
+                    !!pos_name := pos,
+                    !!beta_name := beta_hat,
+                    !!se_name := se,
+                    !!p_name := p_value,
+                    !!z_name := Z,
+                    !!ss_name := sample_size)
+  }) %>%
+    purrr::reduce(full_join, by = c("chrom", "snp", "REF", "ALT"))
+  dup_snps <- fulldat$snp[duplicated(fulldat$snp)]
+  if(length(dup_snps) > 0){
+    fulldat <- filter(fulldat, !snp %in% dup_snps)
   }
+  return(fulldat)
 }

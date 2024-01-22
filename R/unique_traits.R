@@ -1,32 +1,33 @@
 #' @title Calculate pairwise correlation and select unique traits
 #' @param id.list GWAS ID list of traits based on previous steps
 #' @param df_info Dataframe of trait info from previous steps
-#' @param R_matrix Pairwise correlation matrix
-#' @param df_pair A dataframe contain string correlation for each pair
-#' @param method filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"
+#' @param R_matrix Pairwise genetic correlation matrix. Colnames are trait names
+#' @param df_pairs A dataframe contain string correlation for each pair
 #' @param R2_cutoff high correlation cutoff to assign as duplicated traits. Default=.9
+#' @param method filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"
+#' @param extra_traits trait ID which is adjusted for in bidirection MR. Default = "None"
 #' @returns A GWAS ID vector and a trait info dataframe
 #'
 #' @import ieugwasr
 #' @import dplyr
 #' @importFrom dplyr left_join group_by pull slice_max
 #' @export
-unique_traits <- function(id.list,df_info,R_matrix,df_pair,R2_cutoff=0.9,
-                          method = "cluster"){
-  # res <- calculate_cor_pairwise(id.list = id.list)
-  #df_matrix <- res$R_matrix
-  #df_pairs <- res$df_pair
-  df_matrix <- R_matrix
-  df_pairs <- df_pair
+unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
+                          method = "cluster",extra_traits = "None"){
   if(method=="cluster"){
-    clusters <- greedy_cluster(id.list = names(df_matrix),R = df_matrix,
+    clusters <- greedy_cluster(id.list = colnames(R_matrix),R = R_matrix,
                                R2_cutoff = R2_cutoff)
     df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
     df_cluster <- dplyr::left_join(clusters,df_info[,c("id","sample_size")],
-                            by=c("id" = "id")) %>% dplyr::arrange(cluster)
-    ids.final <- df_cluster %>% dplyr::group_by(cluster) %>%
-      dplyr::slice_max(sample_size, with_ties = FALSE) %>% dplyr::ungroup() %>%
-      dplyr::pull(id)
+                                   by=c("id" = "id")) %>% dplyr::arrange(cluster)
+    df_select <- df_cluster %>% dplyr::group_by(cluster) %>%
+      dplyr::slice_max(sample_size, with_ties = FALSE) %>% dplyr::ungroup()
+    if(extra_traits != "None"){
+      ids.final <- df_cluster %>% filter(id %in% extra_traits) %>% bind_rows(df_select) %>%
+        distinct(cluster, .keep_all = T) %>% arrange(cluster) %>% dplyr::pull(id)
+    }else{
+      ids.final <- df_select %>% dplyr::pull(id)
+    }
     filter.trait <- df_cluster$id[!df_cluster$id %in% ids.final]
   }
   if(method=="nsnp"){

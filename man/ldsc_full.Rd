@@ -4,19 +4,17 @@
 \alias{ldsc_full}
 \title{Estimate genetic correlation matrix by LDSC method}
 \usage{
-ldsc_full(l2_dir, beta_dir = NULL, out_dir = NULL, prefix = NULL)
+ldsc_full(beta_files, ld_files, m_files)
 }
 \arguments{
-\item{beta_dir}{Directory path of merged data. Default is the current work directory.}
+\item{beta_files}{Paths of combined GWAS data without LD pruning}
 
-\item{out_dir}{Output data path. Default is in the current work directory.}
+\item{ld_files}{Paths of reference LD score files}
 
-\item{prefix}{Name prefix for the output. Default = NULL}
-
-\item{ref_path}{Path for the LD reference panel.}
+\item{m_files}{Paths of reference M files}
 }
 \value{
-Save one dataframe per chromosome with columns for SNP info
+A list contain sample overlap matrix (Re) and genetic correlation matrix (Rg)
 }
 \description{
 Estimate genetic correlation matrix by LDSC method

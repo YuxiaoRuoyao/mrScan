@@ -8,9 +8,10 @@ unique_traits(
   id.list,
   df_info,
   R_matrix,
-  df_pair,
+  df_pairs,
   R2_cutoff = 0.9,
-  method = "cluster"
+  method = "cluster",
+  extra_traits = "None"
 )
 }
 \arguments{
@@ -18,13 +19,15 @@ unique_traits(
 
 \item{df_info}{Dataframe of trait info from previous steps}
 
-\item{R_matrix}{Pairwise correlation matrix}
+\item{R_matrix}{Pairwise genetic correlation matrix. Colnames are trait names}
 
-\item{df_pair}{A dataframe contain string correlation for each pair}
+\item{df_pairs}{A dataframe contain string correlation for each pair}
 
 \item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
 
 \item{method}{filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"}
+
+\item{extra_traits}{trait ID which is adjusted for in bidirection MR. Default = "None"}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

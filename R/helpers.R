@@ -5,11 +5,14 @@
 #' @import mr.raps
 #' @import plyr
 #' @import purrr
+#' @import stringr
+#' @import sumstatFactors
 #' @export
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
-                             access_token = check_access_token(), min_snps = 5) {
+                             access_token = check_access_token(), min_snps = 5,
+                             min_instruments = 3) {
   top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
                       pop = pop, access_token = access_token)
   cat("Retrieved", nrow(top_hits), "instruments for", id_x,
@@ -22,7 +25,11 @@ retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
   cat(sum(x$n >= min_snps), "traits have at least", min_snps,
       "shared variants with", id_x, "\n")
   ids <- x$id[x$n >= min_snps]
-  phe <- dplyr::filter(phe, id %in% ids)
+  num_instruments <- lapply(ids, tophits) %>% sapply(nrow)
+  cat("Delete",sum(num_instruments < min_instruments),"traits with less than",min_instruments,
+      "instruments","\n")
+  final_id <- ids[num_instruments >= min_instruments]
+  phe <- dplyr::filter(phe, id %in% final_id)
   ret <- list(topx = top_hits, phe = phe)
   return(ret)
 }
@@ -109,39 +116,6 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
 #   }) %>% unlist()
 #   return(df_pairs)
 # }
-calculate_cor_pairwise <- function(id.list,inst_pval = 5e-8){
-  my_inst <- purrr::map(id.list, function(x){
-    df_inst <- extract_instruments(outcomes = x, p1 = inst_pval)
-    print(paste0("Finish ",x," !"))
-    return(df_inst$SNP)
-  })
-  all_inst <- unique(unlist(my_inst))
-  chunk_inst <- split(all_inst, ceiling(seq_along(all_inst)/20))
-  beta_matrix <- purrr::map_dfc(id.list,function(t){
-    f <- purrr::map_dfr(chunk_inst, function(x) ieugwasr::associations(x,t) %>%
-             distinct(rsid, .keep_all = TRUE)) # Ask this: how to deal with duplicated items?
-    new_f <- data.frame(SNP = all_inst) %>%
-      left_join(f[,c("rsid","beta")],by=c("SNP" = "rsid")) %>%
-      select(beta)
-    colnames(new_f) <- t
-    print(paste0("Finish ",t," !"))
-    return(new_f)
-  })
-  beta_matrix <- cbind(data.frame(SNP=all_inst),beta_matrix)
-  names(my_inst) <- id.list
-  res <- data.frame(t(combn(id.list,2)))
-  res$cor <- map2(res$X1, res$X2, function(i, j) {
-    sub_inst <- my_inst[c(i, j)]
-    inst <- unique(unlist(sub_inst))
-    sub_matrix <- beta_matrix %>% filter(SNP %in% inst)
-    cor(sub_matrix[[i]],sub_matrix[[j]],use = "complete.obs")
-  }) %>% unlist()
-  res2 <- data.frame(X1 = res$X2, X2 = res$X1, cor = res$cor)
-  res_all <- rbind(res,res2)
-  df_matrix <- as.data.frame.matrix(xtabs(cor ~ ., res_all))
-  df_matrix <- abs(df_matrix)
-  return(list(df_pair = res, R_matrix = df_matrix))
-}
 run_grapple <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,R=NULL){
   grapple.data<-data.frame(cbind(beta.outcome, beta.exposure,
                                  se.outcome, se.exposure))
@@ -178,22 +152,34 @@ run_MRBEE <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,
   res.summary$method <- "MRBEE"
   return(res.summary)
 }
-download_gwas <- function(id_list,position=NULL){
-  f1 <- paste0("wget https://gwas.mrcieu.ac.uk/files/",id_list,"/",id_list,".vcf.gz")
-  f2 <- paste0("wget https://gwas.mrcieu.ac.uk/files/",id_list,"/",id_list,".vcf.gz.tbi")
-  f <- data.frame(c(f1,f2))
-  write.table(f,file = paste0(position,"download.sh"),row.names = FALSE,
-              col.names = FALSE, quote = FALSE)
+download_gwas <- function(id_list,df_harmonise){
+  ebi_list <- id_list[grep("GCST",id_list)]
+  regular_list <- id_list[!id_list %in% ebi_list]
+
+  GCST_list <- ebi_list %>% strsplit("-") %>% sapply(tail,1)
+  df_harmonise$V2 <- df_harmonise$V1 %>% strsplit("-") %>% sapply( "[", 3)
+  GCST_file <- df_harmonise %>% filter(str_detect(V2,paste0(GCST_list,collapse = '|'))) %>%
+    pull(V1) %>% str_split("/",n=2) %>% sapply(tail,1)
+  nf_list <- ebi_list[!GCST_list %in% df_harmonise$V2]
+  if(length(nf_list) > 0){
+    cat(paste0("Cannot find correct download link of ",nf_list,". Please input manually!"))
+  }
+  f1 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz")
+  f2 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz.tbi")
+  f3 <- paste0("wget -N -P ",data_path," https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/",GCST_file)
+  checkpoint <- paste0("echo 'all done!' > ",path_checkpoint)
+  f <- data.frame(c(f1,f2,f3,checkpoint))
+  return(f)
 }
 format_ieu_chrom <- function(file, chrom){
   dat <- query_chrompos_file(paste0(chrom, ":1-536870911"), file) %>%
     vcf_to_tibble() %>%
     mutate(p_value = 10^{-1*LP})
   dat <- sumstatFactors::gwas_format(dat, "ID", "ES", "SE", "ALT",
-                     "REF", "seqnames", "start",
-                     p_value = "p_value",
-                     sample_size = "SS",
-                     compute_pval = TRUE)
+                                     "REF", "seqnames", "start",
+                                     p_value = "p_value",
+                                     sample_size = "SS",
+                                     compute_pval = TRUE)
   return(dat)
 }
 format_flat_chrom <- function(file, chrom,
@@ -250,11 +236,6 @@ format_flat_chrom <- function(file, chrom,
   }
   X <- read_table(pipe(awk_cmd), col_types = eval(parse(text = col_string)), col_names = names(h))
 
-  if(!is.na(af_name)){
-    ix <- which(X[[af_name]] > af_thresh & X[[af_name]] < (1-af_thresh))
-    X <- X[ix,]
-  }
-
   if(effect_is_or){
     X$beta <- log(X[[beta_hat_name]])
     beta_hat <- "beta"
@@ -265,4 +246,16 @@ format_flat_chrom <- function(file, chrom,
                      sample_size = sample_size_name,
                      compute_pval = TRUE)
   return(dat)
+}
+filter_high_cor_XY <- function(id_list,df_info,res_cor,id_exposure,R2_cutoff){
+  trait_cor_X <- res_cor %>% filter(id1 == id_exposure) %>%
+    filter(abs(cor) > R2_cutoff) %>%
+    pull(id2)
+  trait_cor_Y <- res_cor %>% filter(id1 != id_exposure) %>%
+    filter(abs(cor) > R2_cutoff) %>%
+    pull(id2)
+  df_info[df_info$id %in% trait_cor_X,"status"] <- "delete since high cor with X"
+  df_info[df_info$id %in% trait_cor_Y,"status"] <- "delete since high cor with Y"
+  select_trait <- id_list[!id_list %in% c(trait_cor_X,trait_cor_Y)]
+  return(list(id.list = select_trait, trait.info = df_info))
 }

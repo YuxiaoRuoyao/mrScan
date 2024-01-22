@@ -1,6 +1,7 @@
 library(dplyr)
 library(MRBEE)
 library(purrr)
+library(mrScan)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
@@ -15,27 +16,7 @@ if(R_type == "pval"){
   R_matrix <- as.matrix(R$Re)
 }
 
-X <- purrr::map_dfr(beta_files, readRDS)
-beta_hat <- X %>% select(ends_with(".beta"))
-se <- X %>% select(ends_with(".se"))
-p <- X %>% select(ends_with(".p"))
-nms <- stringr::str_replace(names(beta_hat), ".beta", "")
-names(beta_hat)<-names(se)<-names(p)<-nms
-o <- match(colnames(R_matrix), nms)
-beta_hat <- data.frame(beta_hat[, o],check.names = F)
-se <- data.frame(se[, o],check.names = F)
-i <- ncol(beta_hat)
-pmin <- apply(p[,-1, drop = F], 1, min)
-ix <- which(pmin < pval_threshold)
-bT <- list(R = R_matrix, Ncor = Inf,
-           EstHarm = beta_hat[ix,],
-           SEHarm =  se[ix,])
-pD <- prepData(bT,verbose =FALSE)
-fit <- MRBEE.IMRP(pD, PleioPThreshold = pleio_p_thresh)
-res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
-                          b = fit$CausalEstimates[-1],
-                          se = sqrt(diag(fit$VCovCausalEstimates))[-1])
-res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
-res.summary$method <- paste0("MRBEE_",pval_threshold,"_pleio_",pleio_p_thresh)
+res <- MVMR_MRBEE(beta_files = beta_files, R_matrix =  R_matrix,
+           pval_threshold = pval_threshold,pleio_p_thresh = pleio_p_thresh)
 
-saveRDS(res.summary,file = out)
+saveRDS(res,file = out)
