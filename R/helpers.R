@@ -11,8 +11,8 @@
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
-                             access_token = check_access_token(), min_snps = 5,
-                             min_instruments = 3) {
+                             access_token = ieugwasr::check_access_token(),
+                             min_snps = 5,min_instruments = 3) {
   top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
                       pop = pop, access_token = access_token)
   cat("Retrieved", nrow(top_hits), "instruments for", id_x,
