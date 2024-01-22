@@ -29,7 +29,7 @@ extract_traits<-function(id_exposure,id_outcome,batch = c("ieu-a","ieu-b","ukb-b
     phe2 <- retrieve_traits(id_exposure, pval_x,pval_z,pop = pop, batch=batch2,
                             r2 = r2, kb = kb,
                             access_token = access_token,
-                            min_snps =min_snps,min_instruments = min_instruments)
+                            min_snps = min_snps,min_instruments = min_instruments)
     id.list <- unique(c(phe1$phe$id,phe2$phe$id))
   }else{
     id.list <- unique(phe1$phe$id)
