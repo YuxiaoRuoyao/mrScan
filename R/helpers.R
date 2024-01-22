@@ -33,6 +33,7 @@ retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
   ret <- list(topx = top_hits, phe = phe)
   return(ret)
 }
+#' @export
 make_metadata <- function(select_id,id,trait,sex,consortium=NA,nsnp,unit=NA,author=NA,
                           note=NA,sample_size,pmid=NA,population,year=NA,category=NA,
                           doi=NA,sd=NA,ncase=NA,ncontrol=NA){
@@ -152,6 +153,7 @@ run_MRBEE <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,
   res.summary$method <- "MRBEE"
   return(res.summary)
 }
+#' @export
 download_gwas <- function(id_list,df_harmonise){
   ebi_list <- id_list[grep("GCST",id_list)]
   regular_list <- id_list[!id_list %in% ebi_list]
@@ -171,6 +173,7 @@ download_gwas <- function(id_list,df_harmonise){
   f <- data.frame(c(f1,f2,f3,checkpoint))
   return(f)
 }
+#' @export
 format_ieu_chrom <- function(file, chrom){
   dat <- query_chrompos_file(paste0(chrom, ":1-536870911"), file) %>%
     vcf_to_tibble() %>%
@@ -182,6 +185,7 @@ format_ieu_chrom <- function(file, chrom){
                                      compute_pval = TRUE)
   return(dat)
 }
+#' @export
 format_flat_chrom <- function(file, chrom,
                               snp_name,
                               pos_name,
@@ -247,6 +251,7 @@ format_flat_chrom <- function(file, chrom,
                      compute_pval = TRUE)
   return(dat)
 }
+#' @export
 filter_high_cor_XY <- function(id_list,df_info,res_cor,id_exposure,R2_cutoff){
   trait_cor_X <- res_cor %>% filter(id1 == id_exposure) %>%
     filter(abs(cor) > R2_cutoff) %>%
