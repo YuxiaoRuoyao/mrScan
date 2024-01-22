@@ -123,7 +123,8 @@ rule extract_traits:
             pval_traits = config["analysis"]["extract_traits"]["pval_traits"],
             r2_thresh = config["analysis"]["ldprune"]["r2_thresh"],
             clump_kb = config["analysis"]["ldprune"]["clump_kb"],
-            min_snps = config["analysis"]["extract_traits"]["min_snps"]
+            min_snps = config["analysis"]["extract_traits"]["min_snps"],
+            min_instruments = config["analysis"]["extract_traits"]["min_instruments"]
     output: out = data_dir + prefix + "extract_traits.RDS"
     script: 'R/1_extract_traits.R'
 

@@ -14,7 +14,8 @@ extract_traits(
   r2 = 0.001,
   kb = 10000,
   access_token = ieugwasr::check_access_token(),
-  min_snps = 5
+  min_snps = 5,
+  min_instruments = 3
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ extract_traits(
 \item{access_token}{Google OAuth2 access token. Default=check_access_token()}
 
 \item{min_snps}{the number of minimum shared SNPs with IV of X. Default=5}
+
+\item{min_instruments}{the number of minimum instruments for each selected traits. Default=3}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

@@ -14,6 +14,7 @@ analysis:
         #batch: ["ieu-a","ieu-b","ukb-b"]
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
+        min_instruments: 3 # The number of minimum instruments of each selected traits
     quality_control:
         nsnp_cutoff: 1e6
         pop: "European"
@@ -79,4 +80,3 @@ out:
     gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
     formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
     output_dir: "results/"
-
