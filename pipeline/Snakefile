@@ -29,6 +29,7 @@ original_gwas_dir = config["out"]["gwas_dir"] # where originally download gwas d
 formatted_gwas_dir = config["out"]["formatted_gwas_dir"] # where formatted gwas data lives
 
 prefix = config["input"]["label"] + "_"
+exposure_prefix = config["input"]["exposure_label"] + "_"
 id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
 l2_dir = config["analysis"]["estimate_R"]["l2_dir"] # where LD score reference data lives
@@ -100,8 +101,8 @@ if os.path.exists(out_dir + prefix + "qc_id_list.csv"):
     
 rule all:
     input:
-        #out_dir + prefix + "qc_id_list.csv",
-        #out_dir + prefix + "qc_trait_info.csv",
+        #out_dir + exposure_prefix + "qc_id_list.csv",
+        #out_dir + exposure_prefix + "qc_trait_info.csv",
         #out_dir + prefix + "downstream_filter.RDS"
         #data_dir + prefix + "download.sh",
         #data_dir + prefix + "success_download.txt"
@@ -125,16 +126,16 @@ rule extract_traits:
             clump_kb = config["analysis"]["ldprune"]["clump_kb"],
             min_snps = config["analysis"]["extract_traits"]["min_snps"],
             min_instruments = config["analysis"]["extract_traits"]["min_instruments"]
-    output: out = data_dir + prefix + "extract_traits.RDS"
+    output: out = data_dir + exposure_prefix + "extract_traits.RDS"
     script: 'R/1_extract_traits.R'
 
 checkpoint quality_control:
-    input: file = data_dir + prefix + "extract_traits.RDS"
+    input: file = data_dir + exposure_prefix + "extract_traits.RDS"
     params: nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
             sex = config["analysis"]["quality_control"]["sex"]
-    output: id_list = out_dir + prefix + "qc_id_list.csv",
-            trait_info = out_dir + prefix + "qc_trait_info.csv",
+    output: id_list = out_dir + exposure_prefix + "qc_id_list.csv",
+            trait_info = out_dir + exposure_prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
     
 
@@ -143,11 +144,11 @@ def input_downstream(wcs):
     trait_id = pd.read_csv(myfile)['id'].tolist()
     extra_traits =  config["analysis"]["bidirection_mr"]["extra_trait"]
     if extra_traits is None:
-        return expand(data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS", ID1 = [id_exposure,id_outcome], ID2 = trait_id)
+        return expand(data_dir + "bidirection_{ID1}_{ID2}.RDS", ID1 = [id_exposure,id_outcome], ID2 = trait_id)
     else:
         if extra_traits in trait_id:
             trait_id.remove(extra_traits)
-    return expand(data_dir + prefix + "bidirection_{ID1}_{ID3}_{ID2}.RDS",ID1 = [id_exposure,id_outcome], ID2 = trait_id, ID3 = extra_traits)
+    return expand(data_dir + "bidirection_{ID1}_{ID3}_{ID2}.RDS",ID1 = [id_exposure,id_outcome], ID2 = trait_id, ID3 = extra_traits)
 
 rule extract_inst:
     params: pval_instruments = config["analysis"]["pval_instruments"],
@@ -169,7 +170,7 @@ rule bidirection_mr:
     params: method = config["analysis"]["bidirection_mr"]["method"],
             over_dispersion = config["analysis"]["bidirection_mr"]["over_dispersion"],
             loss_function = config["analysis"]["bidirection_mr"]["loss_function"]
-    output: out = data_dir + prefix + "bidirection_{ID1}_{ID2}.RDS"
+    output: out = data_dir + "bidirection_{ID1}_{ID2}.RDS"
     wildcard_constraints: ID1 = "[^_]+",
                           ID2 = "[^_]+"
     script: "R/3_bidirection_mr.R"
@@ -179,14 +180,14 @@ rule bidirection_mvmr:
            file2 = data_dir + "inst_{ID2}.RDS", # Z
            file3 = data_dir + "inst_{ID2}_{ID3}.RDS", # Z + M
            file4 = data_dir + "inst_{ID1}.RDS" # X/Y
-    output: out = data_dir + prefix + "bidirection_{ID1}_{ID3}_{ID2}.RDS"
+    output: out = data_dir + "bidirection_{ID1}_{ID3}_{ID2}.RDS"
     script: "R/3_bidirection_mvmr.R"
     
 # Do both downstream filtering and delete high correlation traits with either X and Y
 rule downstream_filter:
-    input: id_list = out_dir + prefix + "qc_id_list.csv", 
+    input: id_list = out_dir + exposure_prefix + "qc_id_list.csv", 
            mr_files = input_downstream,
-           trait_info = out_dir + prefix + "qc_trait_info.csv"
+           trait_info = out_dir + exposure_prefix + "qc_trait_info.csv"
     params: id_exposure = id_exposure,
             sig_level = config["analysis"]["downstream_filter"]["sig_level"],
             R2_cutoff = config["analysis"]["quality_control"]["R2_cutoff"],
@@ -196,7 +197,7 @@ rule downstream_filter:
 
 rule generate_download_file:
     input: file =  out_dir + prefix + "downstream_filter.RDS",
-           df_harmonise = "harmonised_list.txt"
+           df_harmonise = "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/harmonised_list.txt"
     params: path = original_gwas_dir,
             checkpoint = data_dir + prefix + "success_download.txt",
             id_exposure = id_exposure,

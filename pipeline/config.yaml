@@ -1,8 +1,6 @@
-# sum_stats is a csv file
 input:
-    # sum_stats: "astle_bloodcell.csv"
-    label: "CRP"
-    #id_exposure: "ieu-b-35"
+    label: "SCZ"
+    exposure_label: "CRP"
     id_exposure: "ebi-a-GCST90029070"
     id_outcome: "ieu-b-42"
 
@@ -80,3 +78,4 @@ out:
     gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
     formatted_gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_formatted_data/"
     output_dir: "results/"
+
