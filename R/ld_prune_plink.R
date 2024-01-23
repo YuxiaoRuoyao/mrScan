@@ -26,7 +26,11 @@ ld_prune_plink<-function(X,r2_thresh=0.001,clump_kb=10000,type="pvalue",pthresh=
     select(ends_with(".z")) %>%
     as.matrix()
   if(type == "pvalue"){
-    myp <- suppressWarnings(apply(as.matrix(pmat[,-1]), 1, function(x){min(x, na.rm=TRUE)}))
+    if(ncol(pmat) >1){
+      myp <- suppressWarnings(apply(as.matrix(pmat[,-1]), 1, function(x){min(x, na.rm=TRUE)}))
+    }else{
+      myp <- pmat[,1]
+    }
   }else if(type == "rank"){
     Z_rank <- apply(Z_hat,2,function(x){rank(x,na.last = "keep")})
     min_rank <- apply(Z_rank, 1, function(x){min(x, na.rm = T)})

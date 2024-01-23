@@ -7,16 +7,80 @@
 #' @import purrr
 #' @import stringr
 #' @import sumstatFactors
+#' @import gwasrapidd
+#' @import gwasvcf
+#' @import rlang
 #' @export
+get_inst_IEU <- function(id_x,pval_x = 5e-8,r2 = 0.001, kb = 10000, pop = "EUR",
+                         access_token = ieugwasr::check_access_token()){
+  top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
+                      pop = pop, access_token = access_token)
+  cat("Retrieved", nrow(top_hits), "instruments for", id_x,
+      "\n")
+  return(top_hits)
+}
+get_inst_EBI <- function(id_x, pval_x = 5e-8){
+  df_associations <- gwasrapidd::get_associations(study_id = id_x,warnings = FALSE)
+  tbl01 <- dplyr::select(df_associations@risk_alleles, association_id, variant_id, risk_allele)
+  tbl02 <- dplyr::select(df_associations@associations, association_id, pvalue, beta_number, beta_unit, beta_direction)
+  df_variants <- dplyr::left_join(tbl01, tbl02, by = 'association_id') %>%
+    tidyr::drop_na() %>%
+    dplyr::arrange(variant_id, risk_allele) %>%
+    dplyr::filter(pvalue < pval_x)
+  cat("Retrieved", nrow(df_variants), "instruments for", id_x,
+      "\n")
+  return(df_variants)
+}
+get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x=5e-8){
+  fulldat <- purrr::map(seq(1:2), function(c){
+    if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
+      dat <- format_ieu_chrom(file_path, c)
+    }else if(str_ends(file_path, "h.tsv.gz")){
+      dat <- format_flat_chrom(file_path, c,
+                               snp_name = "hm_rsid",
+                               pos_name = "hm_pos",
+                               chrom_name = "hm_chrom",
+                               A1_name = "hm_effect_allele",
+                               A2_name = "hm_other_allele",
+                               beta_hat_name = "hm_beta",
+                               se_name = "standard_error",
+                               p_value_name = "p_value",
+                               af_name = "hm_effect_allele_frequency",
+                               sample_size_name = NA,
+                               effect_is_or = FALSE)
+    }
+    pos_name <- as_name(paste0(id_x, ".pos"))
+    beta_name <- as_name(paste0(id_x, ".beta"))
+    se_name <- as_name(paste0(id_x, ".se"))
+    p_name <- as_name(paste0(id_x, ".p"))
+    z_name <- as_name(paste0(id_x, ".z"))
+    dat <- dat %>% dplyr::mutate(Z = beta_hat/se) %>%
+      dplyr::rename(REF = A2, ALT = A1) %>%
+      dplyr::select(chrom, snp, REF, ALT,
+                    !!pos_name := pos,
+                    !!beta_name := beta_hat,
+                    !!se_name := se,
+                    !!p_name := p_value,
+                    !!z_name := Z)
+    dup_snps <- dat$snp[duplicated(dat$snp)]
+    if(length(dup_snps) > 0){
+      dat <- filter(dat, !snp %in% dup_snps)
+    }
+    ld_prune_plink(X = dat,r2_thresh = r2,clump_kb = kb,ref_path = ref_path)
+  })
+  p <- fulldat %>% select(ends_with(".p"))
+  pmin <- apply(p[,-1, drop = F], 1, min)
+  ix <- which(pmin < pval_x)
+  df_inst <- fulldat[ix,]
+  cat("Retrieved", nrow(df_inst), "instruments for", id_x,
+      "\n")
+}
+
 retrieve_traits <- function (id_x, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
                              access_token = ieugwasr::check_access_token(),
                              min_snps = 5,min_instruments = 3) {
-  top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
-                      pop = pop, access_token = access_token)
-  cat("Retrieved", nrow(top_hits), "instruments for", id_x,
-      "\n")
   phe <- ieugwasr::phewas(variants = top_hits$rsid, pval = pval_z, batch = batch,
                 access_token = access_token)
   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
