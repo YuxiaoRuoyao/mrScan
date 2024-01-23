@@ -28,10 +28,15 @@ MVMR_GRAPPLE <- function(beta_files,R_matrix,pval_threshold = 1e-5){
                           plot.it =FALSE,
                           p.thres = pval_threshold,
                           cor.mat = R_matrix)
-  if(is.null(names(warnings()))){
-    notConverge <- FALSE
+  res_warning <- tryCatch(grappleRobustEst(data = grapple_dat,
+                          plot.it =FALSE,
+                          p.thres = pval_threshold,
+                          cor.mat = R_matrix),
+                  warning = function(w) w)
+  if(inherits(res_warning,"warning")){
+    notConverge <- res_warning$message %>% str_detect("Did not converge")
   }else{
-    notConverge <- names(warnings()) %>% str_detect("Did not converge")
+    notConverge <- FALSE
   }
   if(i > 2){
     res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
