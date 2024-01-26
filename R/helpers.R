@@ -10,6 +10,7 @@
 #' @import gwasrapidd
 #' @import gwasvcf
 #' @import rlang
+#' @import readr
 #' @export
 get_inst_IEU <- function(id_x,pval_x = 5e-8,r2 = 0.001, kb = 10000, pop = "EUR",
                          access_token = ieugwasr::check_access_token()){
@@ -19,6 +20,7 @@ get_inst_IEU <- function(id_x,pval_x = 5e-8,r2 = 0.001, kb = 10000, pop = "EUR",
       "\n")
   return(top_hits)
 }
+# EBI function is not correct now.
 get_inst_EBI <- function(id_x, pval_x = 5e-8){
   df_associations <- gwasrapidd::get_associations(study_id = id_x,warnings = FALSE)
   tbl01 <- dplyr::select(df_associations@risk_alleles, association_id, variant_id, risk_allele)
@@ -32,11 +34,15 @@ get_inst_EBI <- function(id_x, pval_x = 5e-8){
       "\n")
   return(df_variants)
 }
-get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x=5e-8){
+#' @export
+get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x=5e-8,
+                           snp_name = NA, pos_name = NA, chrom_name = NA, A1_name = NA,
+                           A2_name = NA, beta_hat_name = NA, se_name = NA, p_value_name = NA,
+                           af_name = NA, sample_size_name = NA, effect_is_or = NA){
   fulldat <- purrr::map_dfr(seq(1:22), function(c){
     if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
       dat <- format_ieu_chrom(file_path, c)
-    }else if(str_ends(file_path, "h.tsv.gz")){
+    }else if(str_ends(file_path, ".h.tsv.gz")){
       dat <- format_flat_chrom(file_path, c,
                                snp_name = "hm_rsid",
                                pos_name = "hm_pos",
@@ -49,6 +55,22 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
                                af_name = "hm_effect_allele_frequency",
                                sample_size_name = NA,
                                effect_is_or = FALSE)
+    }else{
+      if(is.na(beta_hat_name)|is.na(snp_name)|is.na(chrom_name)|is.na(se_name)|is.na(A1_name)|is.na(A2_name)){
+        stop("SNP, Beta_hat, SE, A1 and A2 column names are required.\n")
+      }
+      dat <- format_flat_chrom(file_path, c,
+                               snp_name = snp_name,
+                               pos_name = pos_name,
+                               chrom_name = chrom_name,
+                               A1_name = A1_name,
+                               A2_name = A2_name,
+                               beta_hat_name = beta_hat_name,
+                               se_name = se_name,
+                               p_value_name = p_value_name,
+                               af_name = af_name,
+                               sample_size_name = sample_size_name,
+                               effect_is_or = effect_is_or)
     }
     pos_name <- as_name(paste0(id_x, ".pos"))
     beta_name <- as_name(paste0(id_x, ".beta"))
@@ -56,26 +78,27 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
     p_name <- as_name(paste0(id_x, ".p"))
     z_name <- as_name(paste0(id_x, ".z"))
     dat <- dat %>% dplyr::mutate(Z = beta_hat/se) %>%
-      dplyr::rename(REF = A2, ALT = A1, rsid = snp) %>%
-      dplyr::select(chrom, rsid, REF, ALT,
+      dplyr::rename(REF = A2, ALT = A1) %>%
+      dplyr::select(chrom, snp, REF, ALT,
                     !!pos_name := pos,
                     !!beta_name := beta_hat,
                     !!se_name := se,
                     !!p_name := p_value,
                     !!z_name := Z)
-    dup_snps <- dat$rsid[duplicated(dat$rsid)]
+    dup_snps <- dat$snp[duplicated(dat$snp)]
     if(length(dup_snps) > 0){
-      dat <- filter(dat, !rsid %in% dup_snps)
+      dat <- filter(dat, !snp %in% dup_snps)
     }
     ld_prune_plink(X = dat,r2_thresh = r2,clump_kb = kb,ref_path = ref_path)
   })
   p <- fulldat %>% select(ends_with(".p"))
   ix <- which(p < pval_x)
-  df_inst <- fulldat[ix,]
+  df_inst <- fulldat[ix,] %>% dplyr::rename(chr = chrom, rsid = snp, position = pos_name)
   cat("Retrieved", nrow(df_inst), "instruments for", id_x,
       "\n")
   return(df_inst)
 }
+#' @export
 get_exposure_inst <- function(id_x,type,file_path = NULL,pval_x = 5e-8,r2 = 0.001,
                               kb = 10000, pop = "EUR",
                               access_token = ieugwasr::check_access_token(),
@@ -83,8 +106,6 @@ get_exposure_inst <- function(id_x,type,file_path = NULL,pval_x = 5e-8,r2 = 0.00
   if(type == "IEU"){
     df_inst <- get_inst_IEU(id_x = id_x,pval_x = pval_x,r2 = r2,kb = kb,pop = pop,
                  access_token = access_token)
-  }else if(type == "EBI"){
-    df_inst <- get_inst_EBI(id_x = id_x,pval_x = pval_x)
   }else if(type == "local"){
     if(is.null(file_path)){
       print("Please provide local file path!")
@@ -96,93 +117,98 @@ get_exposure_inst <- function(id_x,type,file_path = NULL,pval_x = 5e-8,r2 = 0.00
   }
   return(df_inst)
 }
-get_association_IEU <- function(df_inst,pval_z,batch = c("ieu-a", "ieu-b","ukb-b"),
+#' @export
+get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
                                 access_token = ieugwasr::check_access_token()){
-  phe <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch,
+  batch1 <- c("ieu-a","ieu-b","ukb-b")
+  batch2 <- batch[!batch %in% batch1]
+  phe1 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch1,
                           access_token = access_token)
+  if(length(batch2) != 0){
+    phe2 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch2,
+                             access_token = access_token)
+    phe <- rbind(phe1,phe2)
+  }else{
+    phe <- phe1
+  }
   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
       "traits", "\n")
   return(phe)
 }
-get_association_local <- function(file_path,df_inst,pval_z){
-  fulldat <- purrr::map_dfr(seq(1:22), function(c){
-    if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
-      dat <- format_ieu_chrom(file_path, c)
-    }else if(str_ends(file_path, "h.tsv.gz")){
-      dat <- format_flat_chrom(file_path, c,
-                               snp_name = "hm_rsid",
-                               pos_name = "hm_pos",
-                               chrom_name = "hm_chrom",
-                               A1_name = "hm_effect_allele",
-                               A2_name = "hm_other_allele",
-                               beta_hat_name = "hm_beta",
-                               se_name = "standard_error",
-                               p_value_name = "p_value",
-                               af_name = "hm_effect_allele_frequency",
-                               sample_size_name = NA,
-                               effect_is_or = FALSE)
+#' @export
+get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NULL,
+                                  beta_hat_name = NULL, se_name = NULL,
+                                  p_value_name = NULL){
+  rs_list <- paste(df_inst$rsid,collapse = " ")
+  if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
+    dat_filter <- query_chrompos_file(chrompos = paste0(df_inst$chr,":",df_inst$position,"-",df_inst$position),
+                                      vcffile = file_path) %>%
+      vcf_to_tibble() %>%
+      mutate(p_value = 10^{-1*LP}) %>%
+      filter(p_value < pval_z)
+  }else if(str_ends(file_path, ".h.tsv.gz")){
+    h <- readr::read_table(pipe(paste0("gzip -cd ", file_path, " | head -2")))
+    n <- which(names(h) == "hm_rsid")
+    awk_cmd <- paste0("gzip -cd ", file_path, " | awk -v rsid_list='", rs_list,
+                      "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($", n, " == arr[i]) print $0}'")
+    dat_filter <- read_table(pipe(awk_cmd), col_names = names(h)) %>%
+      dplyr::rename(rsid = hm_rsid) %>%
+      filter(p_value < pval_z)
+  }else{
+    if(is.null(snp_name) | is.null(beta_hat_name) | is.null(se_name)){
+      stop("Please input the column names of SNP, Beta hat and SE!")
     }
-    pos_name <- as_name(paste0(id_x, ".pos"))
-    beta_name <- as_name(paste0(id_x, ".beta"))
-    se_name <- as_name(paste0(id_x, ".se"))
-    p_name <- as_name(paste0(id_x, ".p"))
-    dat <- dat %>% dplyr::rename(REF = A2, ALT = A1, rsid = snp) %>%
-      dplyr::select(chrom, rsid, REF, ALT,
-                    !!pos_name := pos,
-                    !!beta_name := beta_hat,
-                    !!se_name := se,
-                    !!p_name := p_value)
-    dup_snps <- dat$rsid[duplicated(dat$rsid)]
-    if(length(dup_snps) > 0){
-      dat <- filter(dat, !rsid %in% dup_snps)
+    if(str_ends(file_path, ".gz")){
+      h <- readr::read_table(pipe(paste0("gzip -cd ", file_path, " | head -2")))
+      n <- which(names(h) == snp_name)
+      awk_cmd <- paste0("gzip -cd ", file_path, " | awk -v rsid_list='", rs_list,
+                        "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($",
+                        n, " == arr[i]) print $0}'")
+    }else{
+      h <- readr::read_table(pipe(paste0("head -2 ", file_path)))
+      n <- which(names(h) == snp_name)
+      awk_cmd <- paste0("awk -v rsid_list='", rs_list,
+                        "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($",
+                        n, " == arr[i]) print $0}' ", file_path)
     }
-    dat
-  })
-  dat_filter <- fulldat %>% filter(rsid %in% df_inst$rsid) %>%
-    filter(p_name < pval_z)
+    X <- read_table(pipe(awk_cmd), col_names = names(h))
+    if(!is.null(p_value_name)){
+      dat_filter <- X %>% dplyr::rename(p_value = p_value_name,rsid = snp_name) %>%
+        filter(p_value < pval_z)
+    }else{
+      dat_filter <- X %>% dplyr::rename(beta_hat = beta_hat_name, se = se_name,rsid = snp_name) %>%
+        mutate(p_value = 2 * pnorm(-abs(beta_hat/se))) %>%
+        filter(p_value < pval_z)
+    }
+  }
+  dat_filter$id <- trait_id
   return(dat_filter)
 }
+#' @export
 get_association_inst <- function(df_inst,type,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
                                  access_token = ieugwasr::check_access_token(),
-                                 file_list = NULL){
+                                 file_list = NULL, trait_list = NULL,
+                                 snp_name_list=NULL,beta_hat_name_list = NULL,
+                                 se_name_list = NULL,p_value_name_list = NULL){
   if(type == "IEU"){
     df_association <- get_association_IEU(df_inst = df_inst,pval_z = pval_z,batch = batch,
                                           access_token = access_token)
   }else if(type == "local"){
-    if(is.null(file_list)){
-      print("Please provide paths of local files!")
+    if(is.null(file_list) | is.null(trait_list)){
+      stop("Please provide paths and trait ID of local files!")
     }
-    df_association <- purrr::map_dfr(file_list,function(i){
-      get_association_local(file_path = i,df_inst = df_inst,pval_z = pval_z)
+    df_association <- purrr::map_dfr(seq(length(file_list)),function(i){
+      get_association_local(file_path = file_list[i],trait_id = trait_list[i],
+                            df_inst = df_inst,pval_z = pval_z,
+                            snp_name=snp_name_list[i],
+                            beta_hat_name = beta_hat_name_list[i],
+                            se_name = se_name_list[i],
+                            p_value_name = p_value_name_list[i])
     })
     cat("Retrieved", nrow(df_association), "associations with", length(file_list),
         "traits", "\n")
   }
   return(df_association)
-}
-retrieve_traits <- function (id_x, type, pval_x = 5e-8, pval_z = 1e-5,
-                             pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
-                             r2 = 0.001, kb = 10000,
-                             access_token = ieugwasr::check_access_token(),
-                             min_snps = 5,min_instruments = 3,
-                             file_path = NULL, ref_path = NULL,file_list = NULL) {
-  df_inst <- get_exposure_inst(id_x = id_x,type = type,file_path = file_path,
-                               pval_x = 5e-8,r2 = r2,kb = kb, pop = pop,
-                               access_token = access_token,ref_path = ref_path)
-  df_association <- get_association_inst(df_inst = df_inst,type = type,
-                                         pval_z = pval_z,batch = batch,
-                                         access_token = access_token,file_list = file_list)
-  x <- df_association %>% dplyr::group_by(id) %>% dplyr::summarize(n = length(unique(rsid))) # need to edit it
-  cat(sum(x$n >= min_snps), "traits have at least", min_snps,
-      "shared variants with", id_x, "\n")
-  ids <- x$id[x$n >= min_snps]
-  num_instruments <- lapply(ids, tophits) %>% sapply(nrow)
-  cat("Delete",sum(num_instruments < min_instruments),"traits with less than",min_instruments,
-      "instruments","\n")
-  final_id <- ids[num_instruments >= min_instruments]
-  phe <- dplyr::filter(phe, id %in% final_id)
-  ret <- list(topx = top_hits, phe = phe)
-  return(ret)
 }
 #' @export
 make_metadata <- function(select_id,id,trait,sex,consortium=NA,nsnp,unit=NA,author=NA,

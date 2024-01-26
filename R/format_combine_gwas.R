@@ -17,7 +17,7 @@ format_combine_gwas <- function(df_file,c,df_info){
     f <- df_file$location[i]
     if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
       dat <- format_ieu_chrom(f, c)
-    }else if(str_ends(f, "h.tsv.gz")){
+    }else if(str_ends(f, ".h.tsv.gz")){
       dat <- format_flat_chrom(f, c,
                                snp_name = "hm_rsid",
                                pos_name = "hm_pos",
