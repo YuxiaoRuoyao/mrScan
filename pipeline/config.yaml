@@ -9,10 +9,14 @@ analysis:
     pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
     extract_traits:
         batch: ["ieu-a","ieu-b","ukb-b","ebi-a"]
-        #batch: ["ieu-a","ieu-b","ukb-b"]
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
-        min_instruments: 3 # The number of minimum instruments of each selected traits
+        type_exposure: "IEU" # exposure data type. IEU or local
+        type_candidate_traits:"IEU" # candidate traits data type. IEU or local
+        # file path of local exposure GWAS summary data; if not use local data, just write NA
+        file_path: "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/GWAS_summary_data/35459240-GCST90029070-EFO_0004458.h.tsv.gz"
+        # csv file containing local candidate traits info; if not use local data, just write NA
+        df_candidate_traits: "example_candidate_info.csv"
     quality_control:
         nsnp_cutoff: 1e6
         pop: "European"

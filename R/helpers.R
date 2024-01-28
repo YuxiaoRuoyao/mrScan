@@ -99,17 +99,17 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
   return(df_inst)
 }
 #' @export
-get_exposure_inst <- function(id_x,type,file_path = NULL,pval_x = 5e-8,r2 = 0.001,
+get_exposure_inst <- function(id_x,type,file_path = NA,pval_x = 5e-8,r2 = 0.001,
                               kb = 10000, pop = "EUR",
                               access_token = ieugwasr::check_access_token(),
-                              ref_path = NULL){
+                              ref_path = NA){
   if(type == "IEU"){
     df_inst <- get_inst_IEU(id_x = id_x,pval_x = pval_x,r2 = r2,kb = kb,pop = pop,
                  access_token = access_token)
   }else if(type == "local"){
-    if(is.null(file_path)){
+    if(is.na(file_path)){
       print("Please provide local file path!")
-    }else if(is.null(ref_path)){
+    }else if(is.na(ref_path)){
       print("Please provide LD reference file path!")
     }
     df_inst <- get_inst_local(file_path = file_path,id_x = id_x,r2 = r2,kb = kb,
@@ -136,9 +136,9 @@ get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b"
   return(phe)
 }
 #' @export
-get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NULL,
-                                  beta_hat_name = NULL, se_name = NULL,
-                                  p_value_name = NULL){
+get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
+                                  beta_hat_name = NA, se_name = NA,
+                                  p_value_name = NA){
   rs_list <- paste(df_inst$rsid,collapse = " ")
   if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
     dat_filter <- query_chrompos_file(chrompos = paste0(df_inst$chr,":",df_inst$position,"-",df_inst$position),
@@ -155,7 +155,7 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NUL
       dplyr::rename(rsid = hm_rsid) %>%
       filter(p_value < pval_z)
   }else{
-    if(is.null(snp_name) | is.null(beta_hat_name) | is.null(se_name)){
+    if(is.na(snp_name) | is.na(beta_hat_name) | is.na(se_name)){
       stop("Please input the column names of SNP, Beta hat and SE!")
     }
     if(str_ends(file_path, ".gz")){
@@ -172,7 +172,7 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NUL
                         n, " == arr[i]) print $0}' ", file_path)
     }
     X <- read_table(pipe(awk_cmd), col_names = names(h))
-    if(!is.null(p_value_name)){
+    if(!is.na(p_value_name)){
       dat_filter <- X %>% dplyr::rename(p_value = p_value_name,rsid = snp_name) %>%
         filter(p_value < pval_z)
     }else{
@@ -187,14 +187,14 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NUL
 #' @export
 get_association_inst <- function(df_inst,type,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
                                  access_token = ieugwasr::check_access_token(),
-                                 file_list = NULL, trait_list = NULL,
-                                 snp_name_list=NULL,beta_hat_name_list = NULL,
-                                 se_name_list = NULL,p_value_name_list = NULL){
+                                 file_list = NA, trait_list = NA,
+                                 snp_name_list=NA,beta_hat_name_list = NA,
+                                 se_name_list = NA,p_value_name_list = NA){
   if(type == "IEU"){
     df_association <- get_association_IEU(df_inst = df_inst,pval_z = pval_z,batch = batch,
                                           access_token = access_token)
   }else if(type == "local"){
-    if(is.null(file_list) | is.null(trait_list)){
+    if(is.na(file_list) | is.na(trait_list)){
       stop("Please provide paths and trait ID of local files!")
     }
     df_association <- purrr::map_dfr(seq(length(file_list)),function(i){

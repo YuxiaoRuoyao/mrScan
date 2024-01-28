@@ -10,9 +10,9 @@
 #' @param min_snps the number of minimum shared SNPs with IV of X. Default=5
 #' @param type_exposure Exposure data type. Either could be "IEU" or "local". Default = "IEU"
 #' @param type_candidate_traits Candidate traits data type. Either could be "IEU" or "local". Default = "IEU"
-#' @param file_path File path of local exposure GWAS summary data. It should be entered when you use local exposure data. Default = NULL
-#' @param ref_path LD reference data path. It should be entered when you use local exposure data. Default = NULL
-#' @param file_list GWAS summary data file paths for candidate traits. It should be entered when you use local traits data. Default = NULL
+#' @param file_path File path of local exposure GWAS summary data. It should be entered when you use local exposure data. Default = NA
+#' @param ref_path LD reference data path. It should be entered when you use local exposure data. Default = NA
+#' @param file_list GWAS summary data file paths for candidate traits. It should be entered when you use local traits data. Default = NA
 #' @returns A GWAS ID vector and a trait info dataframe
 #'
 #' @import TwoSampleMR
@@ -23,17 +23,17 @@
 #' @import gwasvcf
 #' @import rlang
 #' @export
-retrieve_traits <- function (id_exposure, pval_x = 5e-8, pval_z = 1e-5,
+extract_traits <- function (id_exposure, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
                              access_token = ieugwasr::check_access_token(),
                              min_snps = 5,
                              type_exposure = "IEU",
                              type_candidate_traits = "IEU",
-                             file_path = NULL, ref_path = NULL,file_list = NULL,
-                             trait_list = NULL, snp_name_list = NULL,
-                             beta_hat_name_list = NULL, se_name_list = NULL,
-                             p_value_name_list = NULL) {
+                             file_path = NA, ref_path = NA,file_list = NA,
+                             trait_list = NA, snp_name_list = NA,
+                             beta_hat_name_list = NA, se_name_list = NA,
+                             p_value_name_list = NA) {
   df_inst <- get_exposure_inst(id_x = id_exposure,type = type_exposure,
                                file_path = file_path,
                                pval_x = 5e-8,r2 = r2,kb = kb, pop = pop,
