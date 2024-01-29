@@ -26,7 +26,7 @@ if (file.size(res_name) != 0) {
     df_info <- res$trait.info
 } else {
     id_list <- c(id_outcome,id_exposure)
-    df_info <- gwasinfo(id_outcome,id_exposure)
+    df_info <- gwasinfo(id_list)
 }
 
 file_list <- df_download$V1 %>% strsplit("/") %>% sapply(tail,1) %>% head(-1) %>%
