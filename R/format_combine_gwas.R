@@ -31,14 +31,11 @@ format_combine_gwas <- function(df_file,c,df_info){
                                sample_size_name = NA,
                                effect_is_or = FALSE)
       if(all(is.na(dat$sample_size))){
-        if(df_file$id[i] == "ebi-a-GCST90029070"){
-          dat$sample_size <- 575531
-        } # need to delete it later
-        #if(df_file$id[i] %in% df_info$id){
-        #  dat$sample_size <- df_info %>% filter(id == df_file$id[i]) %>% pull(sample_size)
-        #}else{
-        #  dat$sample_size <- gwasinfo(df_file$id[i])$sample_size
-        #}
+        if(df_file$id[i] %in% df_info$id){
+          dat$sample_size <- df_info %>% filter(id == df_file$id[i]) %>% pull(sample_size)
+        }else{
+          dat$sample_size <- gwasinfo(df_file$id[i])$sample_size
+        }
       }
     }
     n <- df_file$id[i]
