@@ -39,7 +39,7 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
                            snp_name = NA, pos_name = NA, chrom_name = NA, A1_name = NA,
                            A2_name = NA, beta_hat_name = NA, se_name = NA, p_value_name = NA,
                            af_name = NA, sample_size_name = NA, effect_is_or = NA){
-  fulldat <- purrr::map_dfr(seq(1:2), function(c){
+  fulldat <- purrr::map_dfr(seq(1:22), function(c){
     if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
       dat <- format_ieu_chrom(file_path, c)
     }else if(str_ends(file_path, ".h.tsv.gz")){

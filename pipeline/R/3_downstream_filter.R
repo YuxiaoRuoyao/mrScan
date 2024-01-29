@@ -13,6 +13,18 @@ extra_trait <- snakemake@params[["extra_trait"]]
 out <- snakemake@output[["out"]]
 
 id.list <- id_file$id
+empty_files <- c()
+for (f in mr_files) {
+  if(is_empty(readRDS(f))){
+    empty_files <- c(empty_files,f)
+  }
+}
+empty_id <- empty_files %>% strsplit("_") %>% sapply(tail, 1) %>%
+  strsplit(".RDS") %>% sapply(tail, 1) %>% unique()
+df_info[df_info$id %in% empty_id,"status"] <- "delete due to not enough instruments"
+id.list <- id.list[!id.list %in% empty_id]
+
+mr_files <- mr_files[!mr_files %in% empty_files]
 res_mr <- map(mr_files, function(f){
   readRDS(f)
 })
