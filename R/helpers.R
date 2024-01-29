@@ -194,9 +194,6 @@ get_association_inst <- function(df_inst,type,pval_z = 1e-5,batch = c("ieu-a", "
     df_association <- get_association_IEU(df_inst = df_inst,pval_z = pval_z,batch = batch,
                                           access_token = access_token)
   }else if(type == "local"){
-    if(is.na(file_list) | is.na(trait_list)){
-      stop("Please provide paths and trait ID of local files!")
-    }
     df_association <- purrr::map_dfr(seq(length(file_list)),function(i){
       get_association_local(file_path = file_list[i],trait_id = trait_list[i],
                             df_inst = df_inst,pval_z = pval_z,
