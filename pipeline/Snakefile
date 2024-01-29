@@ -128,7 +128,7 @@ rule extract_traits:
             type_candidate_traits = config["analysis"]["extract_traits"]["type_candidate_traits"],
             file_path = config["analysis"]["extract_traits"]["file_path"],
             ref_path = config["analysis"]["ldprune"]["ref_path"],
-            df_candidate_traits <- config["analysis"]["extract_traits"]["df_candidate_traits"]
+            df_candidate_traits = config["analysis"]["extract_traits"]["df_candidate_traits"]
     output: out = data_dir + exposure_prefix + "extract_traits.RDS"
     script: 'R/1_extract_traits.R'
 
