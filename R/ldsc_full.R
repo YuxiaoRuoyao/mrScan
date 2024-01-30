@@ -31,8 +31,12 @@ ldsc_full<-function(beta_files, ld_files, m_files){
     select(ends_with(".ss")) %>%
     as.matrix()
   N <- apply(SS, 2, median, na.rm=TRUE)
-
-  R <- mrScan::R_ldsc(Z_hat = Z_hat,
+  if(class(N) == "integer"){
+    N_int <- N
+    N <- as.numeric(N_int)
+    names(N) <- names(N_int)
+  }
+  R <- R_ldsc(Z_hat = Z_hat,
               ldscores = X$L2,
               ld_size = M,
               N = N,
