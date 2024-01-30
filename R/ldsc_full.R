@@ -32,7 +32,7 @@ ldsc_full<-function(beta_files, ld_files, m_files){
     as.matrix()
   N <- apply(SS, 2, median, na.rm=TRUE)
 
-  R <- R_ldsc(Z_hat = Z_hat,
+  R <- mrScan::R_ldsc(Z_hat = Z_hat,
               ldscores = X$L2,
               ld_size = M,
               N = N,
