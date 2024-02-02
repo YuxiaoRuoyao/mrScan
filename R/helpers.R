@@ -1,16 +1,13 @@
 #' @import dplyr
-#' @importFrom dplyr select filter rename group_by summarize
 #' @import TwoSampleMR
 #' @import ieugwasr
 #' @import mr.raps
-#' @import plyr
-#' @import purrr
 #' @import stringr
 #' @import sumstatFactors
-#' @import gwasrapidd
 #' @import gwasvcf
 #' @import rlang
 #' @import readr
+#' @importFrom purrr map_dfr map2 map
 #' @export
 get_inst_IEU <- function(id_x,pval_x = 5e-8,r2 = 0.001, kb = 10000, pop = "EUR",
                          access_token = ieugwasr::check_access_token()){
@@ -291,42 +288,6 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
 #   }) %>% unlist()
 #   return(df_pairs)
 # }
-run_grapple <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,R=NULL){
-  grapple.data<-data.frame(cbind(beta.outcome, beta.exposure,
-                                 se.outcome, se.exposure))
-  i <- ncol(beta.exposure)
-  names(grapple.data)<-c("gamma_out", paste0("gamma_exp", 1:i),
-                         "se_out", paste0("se_exp", 1:i))
-  res <- GRAPPLE::grappleRobustEst(data = grapple.data,
-                          plot.it =FALSE,cor.mat = R,
-                          niter = 100000)
-  res.summary <- data.frame(exposure=colnames(beta.exposure),
-                            b=res$beta.hat,
-                            se=sqrt(diag(res$beta.var)),
-                            pvalue=res$beta.p.value,
-                            method = "GRAPPLE")
-  return(res.summary)
-}
-run_MRBEE <- function(beta.exposure,beta.outcome,se.exposure,se.outcome,
-                      pleio_p_thresh = 0, Rcor = NULL){
-  beta_hat <- data.frame(cbind(beta.outcome,beta.exposure))
-  se <- data.frame(cbind(se.outcome,se.exposure))
-  if(is.null(Rcor)){
-    Rcor <- diag(1,nrow = ncol(beta_hat))
-    print("Assume independence between traits!")
-  }
-  bT <- list(R = Rcor, Ncor = Inf,
-             EstHarm = beta_hat,
-             SEHarm =  se)
-  pD <- MRBEE::prepData(bT,verbose =FALSE)
-  fit <- MRBEE::MRBEE.IMRP(pD, PleioPThreshold = pleio_p_thresh)
-  res.summary <- data.frame(exposure = colnames(beta.exposure),
-                            b = fit$CausalEstimates[-1],
-                            se = sqrt(diag(fit$VCovCausalEstimates))[-1])
-  res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
-  res.summary$method <- "MRBEE"
-  return(res.summary)
-}
 #' @export
 download_gwas <- function(id_list,df_harmonise){
   ebi_list <- id_list[grep("GCST",id_list)]

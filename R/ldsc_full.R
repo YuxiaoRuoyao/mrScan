@@ -6,11 +6,11 @@
 #'
 #' @import ieugwasr
 #' @import dplyr
-#' @import purrr
 #' @import readr
 #' @import bigsnpr
 #' @import stringr
 #' @import sumstatFactors
+#' @importFrom purrr map_dfr map
 #' @export
 ldsc_full<-function(beta_files, ld_files, m_files){
   ld <- purrr::map_dfr(1:22, function(c){

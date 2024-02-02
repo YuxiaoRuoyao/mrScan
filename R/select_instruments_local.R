@@ -4,7 +4,7 @@
 #' @returns A list of harmonized data for the outcome (mvdat_y) and a list of harmonized data for the main exposure (mvdat_x)
 #'
 #' @import dplyr
-#' @import purrr
+#' @importFrom purrr map_dfr
 #' @export
 select_instruments_local <- function(beta_files,pval_threshold = 5e-8){
   X <- purrr::map_dfr(beta_files, readRDS)

@@ -9,8 +9,7 @@
 #'
 #' @import ieugwasr
 #' @import dplyr
-#' @import data.table
-#' @importFrom stats pnorm
+#' @importFrom data.table dcast setDT
 #' @export
 downstream_filter <- function(id_exposure,id.list,df_info,res,sig_level = 0.05){
   df_summary<-data.frame(id=id.list) %>% left_join(df_info[,c("id","trait")],by="id")

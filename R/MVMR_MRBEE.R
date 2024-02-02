@@ -8,7 +8,7 @@
 #'
 #' @import MRBEE
 #' @import dplyr
-#' @import purrr
+#' @importFrom purrr map_dfr
 #' @export
 MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8,pleio_p_thresh = 0){
   X <- purrr::map_dfr(beta_files, readRDS)

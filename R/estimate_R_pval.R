@@ -4,9 +4,9 @@
 #' @returns A matrix with pairwise sample overlapping correlation between traits
 #'
 #' @import dplyr
-#' @import purrr
 #' @import stringr
 #' @import sumstatFactors
+#' @importFrom purrr map_dfr
 #' @export
 estimate_R_pval <- function(beta_files,p_thresh=0.05){
   X <- purrr::map_dfr(beta_files, readRDS)

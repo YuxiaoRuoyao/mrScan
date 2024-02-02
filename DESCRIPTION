@@ -17,18 +17,24 @@ Imports:
     TwoSampleMR,
     mr.raps,
     cluster,
-    factoextra,
-    plyr,
     purrr,
     data.table,
     glmnet,
     hdme,
-    GRAPPLE,
-    MRBEE
+    stringr,
+    sumstatFactors
 RoxygenNote: 7.2.3
 Suggests: 
+    esmr,
+    GRAPPLE,
+    MRBEE,
     knitr,
-    rmarkdown
+    rmarkdown,
+    gwasvcf,
+    VariantAnnotation,
+    rlang,
+    bigsnpr,
+    RecordLinkage
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

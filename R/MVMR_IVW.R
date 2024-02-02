@@ -5,7 +5,7 @@
 #'
 #' @import TwoSampleMR
 #' @import dplyr
-#' @import purrr
+#' @importFrom purrr map_dfr
 #' @export
 MVMR_IVW <- function(beta_files,pval_threshold=5e-8){
   X <- purrr::map_dfr(beta_files, readRDS)

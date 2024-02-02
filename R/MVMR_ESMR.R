@@ -5,9 +5,8 @@
 #' @returns A dataframe of result summary
 #'
 #' @import dplyr
-#' @import purrr
-#' @import ebnm
 #' @import esmr
+#' @importFrom purrr map_dfr
 #' @export
 MVMR_ESMR <- function(beta_files,R_matrix,pval_threshold=5e-8){
   X <- purrr::map_dfr(beta_files, readRDS)

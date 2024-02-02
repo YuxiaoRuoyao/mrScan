@@ -10,7 +10,6 @@
 #'
 #' @import ieugwasr
 #' @import dplyr
-#' @importFrom dplyr filter mutate
 #' @export
 quality_control <- function(dat,nsnp_cutoff=1e6,pop="European",sex="Males and Females",
                             R2_cutoff = 0.9){
@@ -19,10 +18,10 @@ quality_control <- function(dat,nsnp_cutoff=1e6,pop="European",sex="Males and Fe
   new.dat<-dplyr::filter(dat, nsnp > nsnp_cutoff & sex == sex & population == pop)
   id.list <- new.dat$id
   id.list<-unique(c(id.list,na.SNP.trait,na.sex.trait))
-  new.dat<-dat %>% filter(id %in% id.list) %>% filter(population == pop)
+  new.dat<-dat %>% dplyr::filter(id %in% id.list) %>% dplyr::filter(population == pop)
   id.list<-new.dat$id # 140
   dat <- dat %>%
-    mutate(status = if_else(id %in% id.list, "select after QC", "delete in QC"))
+    dplyr::mutate(status = if_else(id %in% id.list, "select after QC", "delete in QC"))
   # delete menarche trait with sex males and females
   dat <- dat %>%
     dplyr::mutate(status = ifelse(grepl('menarche', trait) == TRUE & sex == "Males and Females",

@@ -10,7 +10,6 @@
 #'
 #' @import ieugwasr
 #' @import dplyr
-#' @importFrom dplyr left_join group_by pull slice_max
 #' @export
 unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
                           method = "cluster",extra_traits = "None"){

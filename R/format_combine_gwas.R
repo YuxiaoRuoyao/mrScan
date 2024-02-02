@@ -6,14 +6,14 @@
 #'
 #' @import stringr
 #' @import readr
-#' @import VariantAnnotation
 #' @import gwasvcf
 #' @import dplyr
 #' @import rlang
-#' @import purrr
+#' @importFrom purrr reduce map
+#' @rawNamespace import(VariantAnnotation, except = c(select,fixed))
 #' @export
 format_combine_gwas <- function(df_file,c,df_info){
-  fulldat <- map(seq(nrow(df_file)), function(i){
+  fulldat <- purrr::map(seq(nrow(df_file)), function(i){
     f <- df_file$location[i]
     if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
       dat <- format_ieu_chrom(f, c)

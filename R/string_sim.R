@@ -5,7 +5,7 @@
 #'
 #' @import RecordLinkage
 #' @import dplyr
-#' @import purrr
+#' @importFrom purrr map2 map
 #' @export
 #'
 string_sim <- function(id.list,df_info){

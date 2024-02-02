@@ -6,8 +6,8 @@
 #'
 #' @import GRAPPLE
 #' @import dplyr
-#' @import purrr
 #' @import stringr
+#' @importFrom purrr map_dfr
 #' @export
 MVMR_GRAPPLE <- function(beta_files,R_matrix,pval_threshold = 1e-5){
   X <- purrr::map_dfr(beta_files, readRDS)
