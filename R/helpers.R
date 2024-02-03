@@ -136,7 +136,8 @@ get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b"
 get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
                                   beta_hat_name = NA, se_name = NA,
                                   p_value_name = NA){
-  rs_list <- paste(df_inst$rsid,collapse = " ")
+  tmp_file <- tempfile()
+  writeLines(df_inst$rsid, tmp_file)
   if(str_ends(file_path, "vcf.gz") | str_ends(file_path, "vcf.bgz")){
     dat_filter <- query_chrompos_file(chrompos = paste0(df_inst$chr,":",df_inst$position,"-",df_inst$position),
                                       vcffile = file_path) %>%
@@ -146,8 +147,8 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
   }else if(str_ends(file_path, ".h.tsv.gz")){
     h <- readr::read_table(pipe(paste0("gzip -cd ", file_path, " | head -2")))
     n <- which(names(h) == "hm_rsid")
-    awk_cmd <- paste0("gzip -cd ", file_path, " | awk -v rsid_list='", rs_list,
-                      "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($", n, " == arr[i]) print $0}'")
+    awk_cmd <- paste0("gzip -cd ", file_path, " | awk 'NR==FNR { A[$1]=1 ; next } $",
+                      n ," in A' ", tmp_file, " -")
     dat_filter <- read_table(pipe(awk_cmd), col_names = names(h)) %>%
       dplyr::rename(rsid = hm_rsid) %>%
       filter(p_value < pval_z)
@@ -158,15 +159,13 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
     if(str_ends(file_path, ".gz")){
       h <- readr::read_table(pipe(paste0("gzip -cd ", file_path, " | head -2")))
       n <- which(names(h) == snp_name)
-      awk_cmd <- paste0("gzip -cd ", file_path, " | awk -v rsid_list='", rs_list,
-                        "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($",
-                        n, " == arr[i]) print $0}'")
+      awk_cmd <- paste0("gzip -cd ", file_path, " | awk 'NR==FNR { A[$1]=1 ; next } $",
+                        n ," in A' ", tmp_file, " -")
     }else{
       h <- readr::read_table(pipe(paste0("head -2 ", file_path)))
       n <- which(names(h) == snp_name)
-      awk_cmd <- paste0("awk -v rsid_list='", rs_list,
-                        "' 'BEGIN{split(rsid_list, arr, \" \")} {for (i in arr) if ($",
-                        n, " == arr[i]) print $0}' ", file_path)
+      awk_cmd <- paste0("awk 'NR==FNR { A[$1]=1 ; next } $", n ," in A' ",
+                        tmp_file, " ", file_path)
     }
     X <- read_table(pipe(awk_cmd), col_names = names(h))
     if(!is.na(p_value_name)){
@@ -179,6 +178,7 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
     }
   }
   dat_filter$id <- trait_id
+  unlink(tmp_file)
   return(dat_filter)
 }
 #' @export
