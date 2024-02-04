@@ -73,22 +73,48 @@ remotes::install_github("privefl/bigsnpr")
 ### Download the Snakemake pipeline
 
 You need to download the whole pipeline directory to your local space. There are 
-a few ways to that:  
+multiple ways to that. You can quickly use [Download Directory](https://download-directory.github.io/). 
+Just copy address link https://github.com/YuxiaoRuoyao/mrScan/tree/master/pipeline and download.  
 
-- Use [Download Directory](https://download-directory.github.io/). Just copy 
-address link https://github.com/YuxiaoRuoyao/mrScan/tree/master/pipeline and download.  
-- Manually use command line via SVN.
+### Edit the config file based on your need
 
+You may need to edit options in the `config.yaml` to fit your need. The config file 
+contains comments describing each option. Here are some detailed notes you may need 
+when choosing parameter options:  
+
+
+* `extract_traits`: We provide two options `IEU` or `local` for extracting instruments 
+of the main exposure. If you choose `IEU` option, you need to make sure your exposure ID
+is exactly matched the GWAS trait ID in IEU GWAS database. If you choose `local` option,
+you need to provide the local file path of the data.   
+
+
+Similarly, you still have either `IEU` or `local` when selecting candidate traits. 
+You may need to change the trait batch when choosing `IEU` option. (Here is the [batch description](https://gwas.mrcieu.ac.uk/datasets/)) If you already have a list of candidate 
+confounders list and have downloaded their GWAS summary statistics, you need to create 
+a candidate traits info dataframe. Check the optional step below for detailed instruction.  
+
+
+* `ldprune`: When you do LD clumping on local data, you need to download the LD 
+reference files [here](http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz). And then change 
+`ref_path` to your own directory.  
+
+
+* `estimate_R`: When you use LDSC to estimate pairwise genetic correlation or sample 
+overlap between traits, you need to download the reference LD score files [here](https://zenodo.org/records/8182036).
+Run the following command to uncompress the file:
 ```{r eval=FALSE}
-brew install svn
-svn checkout https://github.com/YuxiaoRuoyao/mrScan/trunk/pipeline
+tar xvzf eur_w_ld_chr.tar.gz
 ```
-
+Remember to change `l2_dir` option to your local path.
 
 ### (Optional Step) Create a csv file with all candidate traits if you want to use local data
 
 If you have a list of potential candidate traits and have already downloaded GWAS summary 
-data to local, you need to create a csv file containing the file information of local data.
+data to local, you need to create a csv file containing the file information of local data. 
+And then change the `df_candidate_traits` option to your file name in the `config.yaml`.  
+
+
 The GWAS data itself can be in one of three formats: 
 
 - A vcf file downloaded from the IEU Open GWAS database
@@ -111,3 +137,38 @@ just write NA for snp, beta_hat, se and p_value column and don't need to check t
 exact column name. But you must need to provide snp, beta_hat and se column names if 
 it's a flat file because we don't know your own data structure in advance.
 
+
+### Run the pipeline
+
+We recommend to run the Snakemake pipeline on a cluster since it may create hundreds of 
+jobs. If you run it on the cluster, you may need to edit the `run-snakemake.sh` 
+script to match your cluster structure. Also, you can edit the `cluster.yaml` to 
+change the memory or time usage for each step.  
+
+To run the pipeline:
+
+```{r eval=FALSE}
+bash run-snakemake.sh
+```
+
+You may want to dry run the pipeline first to see what will be done:
+```{r eval=FALSE}
+snakemake -np
+```
+
+Please note that if you use default data setting, this pipeline will search traits and 
+extract instruments based on IEU OpenGWAS database by API. It could cause error when 
+the server is experiencing traffic or the internet is not stable. If some jobs fail 
+due to this problem, just rerun the pipeline after some time.  
+
+### Check the result
+
+All results will be in a folder in your directory called `results/` unless you changed the 
+`output_dir` option in `config.yaml`. And `data/` directory will save all the data 
+used or generated in the intermediate steps. The `log/` directory contains the error 
+or output log for each job. You can check error reasons in this folder.  
+
+We recommend you to **check the selected traits for each step** and you can manually 
+delete or add some traits based on your own needs and understanding.
+**Ensure to rerun the pipeline after changing the intermediate results**, Snakemake will help 
+you to only rerun the steps that are affected by the change in the intermediate results.
