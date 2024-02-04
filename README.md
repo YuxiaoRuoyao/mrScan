@@ -173,8 +173,8 @@ directory will save all the data used or generated in the intermediate
 steps. The `log/` directory contains the error or output log for each
 job. You can check error reasons in this folder.
 
-We recommend you to **check the selected traits for each step** and you
-can manually delete or add some traits based on your own needs and
-understanding. **Ensure to rerun the pipeline after changing the
-intermediate results**, Snakemake will help you to only rerun the steps
+We recommend you to check the selected traits for each step and you can
+manually delete or add some traits based on your own needs and
+understanding. Ensure to rerun the pipeline after changing the
+intermediate results, Snakemake will help you to only rerun the steps
 that are affected by the change in the intermediate results.
