@@ -8,8 +8,7 @@ quality_control(
   dat,
   nsnp_cutoff = 1e+06,
   pop = "European",
-  sex = "Males and Females",
-  R2_cutoff = 0.9
+  sex = "Males and Females"
 )
 }
 \arguments{
@@ -21,10 +20,6 @@ If users input metadata by themselves, use make_metadata() to convert data forma
 \item{pop}{Limit population of traits. Default = "European"}
 
 \item{sex}{Gender limitation. Default = "Males and Females"}
-
-\item{R2_cutoff}{cutoff for duplicated traits of the exposure. Default = 0.9}
-
-\item{id_exposure}{GWAS ID for main exposure.}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

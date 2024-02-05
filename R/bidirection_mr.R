@@ -5,11 +5,10 @@
 #' @param over.dispersion Parameter for mr_raps method. Default = TRUE
 #' @param loss.function Parameter for mr_raps method. Default = "tukey"
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
-#' @returns
+#' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
 #' @import dplyr
-#' @import data.table
 #' @export
 bidirection_mr <- function(ex_dat1,ex_dat2,method = "mr_raps",
                            over.dispersion = TRUE,loss.function = "tukey",
