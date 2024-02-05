@@ -117,8 +117,8 @@ get_exposure_inst <- function(id_x,type,file_path = NA,pval_x = 5e-8,r2 = 0.001,
 #' @export
 get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
                                 access_token = ieugwasr::check_access_token()){
-  batch1 <- c("ieu-a","ieu-b","ukb-b")
-  batch2 <- batch[!batch %in% batch1]
+  batch1 <- batch[batch %in% c("ieu-a", "ieu-b","ukb-b")]
+  batch2 <- batch[!batch %in% c("ieu-a", "ieu-b","ukb-b")]
   phe1 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch1,
                           access_token = access_token)
   if(length(batch2) != 0){

@@ -12,9 +12,10 @@ analysis:
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
         type_exposure: "IEU" # exposure data type. IEU or local
-        type_candidate_traits:"IEU" # candidate traits data type. IEU or local
+        type_candidate_traits: "IEU" # candidate traits data type. IEU or local
         # file path of local exposure GWAS summary data; if not use local data, just write NA
-        file_path: "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/GWAS_summary_data/35459240-GCST90029070-EFO_0004458.h.tsv.gz"
+        #file_path: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/35459240-GCST90029070-EFO_0004458.h.tsv.gz"
+        file_path: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/ieu-b-35.vcf.gz"
         # csv file containing local candidate traits info; if not use local data, just write NA
         df_candidate_traits: "example_candidate_info.csv"
     quality_control:
@@ -23,11 +24,12 @@ analysis:
         sex: "Males and Females"
         R2_cutoff: 0.85 # R2 cutoff for duplicated traits with X or Y
     bidirection_mr:
-        # Whether to adjust for extra traits in bidirection MR. If you want to do only UVMR, just set None
-        extra_trait: "ukb-b-19953" # None
+        # Whether to adjust for extra traits in bidirection MR. If you want to do only UVMR, just set "None"
+        extra_trait: "ukb-b-19953" # "None"
         method: "mr_raps" # MR method for bidirectional MR
         over_dispersion: TRUE # Over dispersion for MR_raps
         loss_function: "tukey" # Loss function for MR_raps
+        min_instruments: 3 # minimum number of instruments for candidate traits
     downstream_filter:
         sig_level: 0.05 # significant level for t-test
     unique_traits:
@@ -61,7 +63,7 @@ analysis:
         type: ["ldsc","pval"] # ldsc or pval
         p_thresh: 0.05
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
-    
+
     MVMR_analysis:
         method: ["IVW","GRAPPLE","MRBEE","ESMR"]
         #method: ["IVW","GRAPPLE","MRBEE"]

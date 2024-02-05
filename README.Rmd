@@ -131,12 +131,13 @@ The csv file should contain the following columns and use NA to indicate missing
 - se: Column name for standard error of beta_hat.
 - p_value: Column name for p-value.  
 
-Note the pvalue column content could be NA if the data does not have pvalue. If the local file 
-is downloaded from IEU Open GWAS database or EBI database (harmonized one), you can 
+Note the pvalue column content could be NA if the data does not have pvalue. If the local files 
+are downloaded from IEU Open GWAS database or EBI database (harmonized one), you can 
 just write NA for snp, beta_hat, se and p_value column and don't need to check the 
 exact column name. But you must need to provide snp, beta_hat and se column names if 
-it's a flat file because we don't know your own data structure in advance.
+it's a flat file because we don't know your own data structure in advance. 
 
+We have prepared an example info file named `example_candidate_info.csv` for your reference.
 
 ### Run the pipeline
 

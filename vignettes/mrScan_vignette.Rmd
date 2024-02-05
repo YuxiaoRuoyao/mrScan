@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 ```{r setup}
 library(mrScan)
 library(dplyr)
@@ -21,63 +22,149 @@ library(TwoSampleMR)
 library(mr.raps)
 ```
 
-We'll use C-reactive protein (CRP) level (ieu-b-35) and schizophrenia (ieu-b-42) as the example. 
+We'll use C-reactive protein (CRP) level (ieu-b-35) as the exposure and 
+schizophrenia (ieu-b-42) as the outcome in this example. Please note if you want 
+to conduct the whole analysis parallel, we provide a Snakemake pipeline and you 
+can check the usage in the README.
+
+```{r}
+x_id <- "ieu-b-35"
+y_id <- "ieu-b-42"
+```
 
 ## Step 1: Initially extract trait list
 
-We only search traits in ieu-a, ieu-b and ukb-b batches in this example. You can 
-add more batches according to your needs. You can check list of data batches in 
-IEU GWAS database by ieugwasr::batches(). In this analysis, we get 103 traits having 
-at least 5 shared variants with the CRP-level.
+We only search traits in ukb-b batch (IEU analysis of UK Biobank phenotypes) in IEU 
+OpenGWAS database in this example. You can add more batches according to your needs. 
+You can check the list of data batches in IEU GWAS database by ieugwasr::batches().  
+
+
+If you want to use local data for the main exposure, set `type_exposure="local"`, 
+and input data path in `file_path`. You need to download the LD reference files 
+[here](http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz) to perform LD clumping. And then 
+input `ref_path` to your directory path of LD reference file. You can do this like:
 
 ```{r eval=FALSE}
-res_step1 <- extract_traits(id_exposure = "ieu-b-35", id_outcome = "ieu-b-42",
-                            batch = c("ieu-a","ieu-b","ukb-b"))
+extract_traits(id_exposure = x_id,type_exposure = "local",
+               file_path = "/path/to/ieu-b-35.vcf",
+               ref_path = "/path/to/reference/EUR")
 ```
 
+If you already have a list of candidate traits and don't want to search traits in 
+IEU OpenGWAS database, you can download data locally. You need to specify the file path 
+for each trait in `file_list` and trait ID in `trait_list`. Then check the data to find 
+column names of `SNP` (rsid), `beta_hat`, `se`, `p_value` and input in the function like: 
+```{r eval=FALSE}
+extract_traits(id_exposure = x_id,type_candidate_traits = "local",
+               file_list = c("/path/to/trait1","/path/to/trait2"),
+               trait_list = c("trait1","trait2"),
+               snp_name_list = c("snp_name1","snp_name2"),
+               beta_hat_name_list = c("beta_hat_name1","beta_hat_name2"),
+               se_name_list = c("se_name1","se_name2"),
+               p_value_name_list = c("pval_name1","pval_name2"))
+```
+
+Note the `p_value_name_list` could be NA if the data does not have pvalue. 
+If the local files are downloaded from IEU Open GWAS database or EBI database (harmonized one), 
+you can just omit these parameters and don???t need to check the exact column names. 
+But you must need to provide snp, beta_hat and se column names if it???s a flat file provided by yourself.
+You can also create a candidate trait info dataframe for that. (Please check the package 
+README, Optional Step, for detailed instruction). Assume the info dataframe is `df_info`,
+you can do this by:
+```{r eval=FALSE}
+extract_traits(id_exposure = x_id,type_candidate_traits = "local",
+               file_list = df_info$path,trait_list = df_info$trait_ID,
+               snp_name_list = df_info$snp,beta_hat_name_list = df_info$beta_hat,
+               se_name_list = df_info$se,p_value_name_list = df_info$p_value)
+```
+
+
+In this analysis, we get 63 traits having at least 5 shared variants with the CRP-level.
+
+```{r eval=FALSE}
+res_step1 <- extract_traits(id_exposure = x_id,batch = c("ukb-b"))
+```
+
+
 ```{r}
-load("../data/res_step1.rda")
+load("data/res_step1.rda")
 length(res_step1$id.list)
 head(res_step1$trait.info)
 ```
 
 ## Step 2: Quality control 
 
-After initial filtering, we get 92 traits left. We just select traits for both gender, 
+After initial filtering, we get 62 traits left. We just select traits for both gender, 
 European and with the number of SNPs > 1e6. You can change the filtering standard 
 by your need. You can check the info matrix for the status of each trait. 
 ```{r eval=FALSE}
-res_step2 <- quality_control(id_exposure = "ieu-b-35",dat = res_step1$trait.info,
-                             R2_cutoff = 0.85)
+res_step2 <- quality_control(dat = res_step1$trait.info)
 ```
 
-
+It deletes a menarche trait which should be a female trait, but the sex information 
+is "Males and Females".
 ```{r}
-load("../data/res_step2.rda")
+load("data/res_step2.rda")
 length(res_step2$id.list)
 head(res_step2$trait.info)
+res_step2$trait.info %>% filter(status == "delete in QC")
 ```
 
 
-
-## Step 3: Downstream traits filtering (check cor with X and Y meanwile)
+## Step 3: Downstream traits filtering
 
 Downstream traits of both main exposure and each outcome should be deleted since 
 the precision for estimating direct causal effect of the main exposure to the outcome 
 could be decreased if too many genetic instruments of relationship between the main 
 exposure and downstream traits were included. In this step, we will do bidirection 
-MR estimates between traits and X/Y. The default method is MR-RAPs with over.dispersion=TRUE,
-loss.function="tukey", and you can change it to other methods. We will select 
-all upstream traits and exclude downstream traits in this step.  
+MR estimates between traits and X/Y and then select all upstream traits and exclude 
+downstream traits in this step.  
+
+### Bidirection MR
+
+First of all, we'll do simple MR between each candidate traits and either the main 
+exposure and the outcome. To be specific, we will do four MR estimates including:
+$X \rightarrow Z$, $Z \rightarrow X$, $Y \rightarrow Z$ and $Z \rightarrow Y$. 
+The default method is `MR-RAPs` with `over.dispersion=TRUE`, `loss.function="tukey"`, 
+and you can change parameters or the method.  
+
+
+Note that this step may take some time. We recommend you to extract instruments 
+for all traits first to avoid repeating extracting instruments.
+
+```{r eval=FALSE}
+# extract instruments for all traits
+all_inst <- extract_instruments(c(x_id,y_id,res_step2$id.list))
+df_pair <- expand.grid(trait1 = c(x_id,y_id), trait2 = res_step2$id.list)
+res_mr <- purrr::map2(df_pair$trait1[1:5], df_pair$trait2[1:5], function(i, j){
+  ex_dat1 <- all_inst %>% filter(id.exposure == i)
+  ex_dat2 <- all_inst %>% filter(id.exposure == j)
+  bidirection_mr(ex_dat1 = ex_dat1, ex_dat2 = ex_dat2)
+})
+```
+
+We want to delete traits with limited number of instruments. The default `min_instruments = 3`.
+```{r}
+empty_id <- df_pair[which(sapply(res_mr,is.null)),"trait2"] %>% unique() %>% as.vector()
+res_step2$trait.info[res_step2$trait.info$id %in% empty_id,"status"] <- "delete due to not enough instruments"
+res_step2$id.list <- res_step2$id.list[!res_step2$id.list %in% empty_id]
+```
+
+### Downstream filtering
+
+We'll do one-sided t-test based on the results of bidirection MR. The default t-test 
+cutoff is 0.05 and if you want to include more traits, you can loose the cutoff 
+to 0.1 or more. We select all upstream traits for either X or Y and delete all 
+downstream traits for either the main exposure and the outcome.
 
 After this step, we select 40 traits. The output contains select trait list, 
 updated trait into matrix, and all input traits with bidirection estimates, 
-t-test results. The default t-test cutoff is 0.05 and if you want to include more traits,
-you can loose the cutoff to 0.1 or more. 
-
-```{r eval=FALSE}
-res_step3 <- downstream_filter(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                               id.list = res_step2$id.list,df_info = res_step2$trait.info)
+t-test results. 
+```{r}
+res_mr_filter <- lapply(res_mr, function(x) x[lengths(x) > 0])
+all_mr <- do.call(Map, c(f = rbind, res_mr_filter))
+res_downstream <- downstream_filter(id_exposure = x_id,id.list = res_step2$id.list,
+                                    df_info = res_step2$trait.info, res = all_mr)
 ```
 
 

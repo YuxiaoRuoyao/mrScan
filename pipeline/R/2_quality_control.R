@@ -1,9 +1,7 @@
 library(ieugwasr)
 library(dplyr)
 library(mrScan)
-#source("R/helpers.R")
 res_initial <- snakemake@input[["file"]]
-id_exposure <- snakemake@params[["id_exposure"]]
 nsnp_cutoff <- as.numeric(snakemake@params[["nsnp_cutoff"]])
 pop <- snakemake@params[["population"]]
 sex <- snakemake@params[["sex"]]
