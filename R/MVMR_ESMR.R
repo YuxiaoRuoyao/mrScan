@@ -19,10 +19,10 @@ MVMR_ESMR <- function(beta_files,R_matrix,pval_threshold=5e-8){
   beta_hat <- data.frame(beta_hat[, o],check.names = F)
   se <- data.frame(se[, o],check.names = F)
   i <- ncol(beta_hat)
-  fit <- esmr(beta_hat_Y <- beta_hat[,1],
-              se_Y <- se[,1],
-              beta_hat_X <- beta_hat[,2:i],
-              se_X <- se[, 2:i],
+  fit <- esmr(beta_hat_Y = beta_hat[,1],
+              se_Y = se[,1],
+              beta_hat_X = beta_hat[,2:i],
+              se_X = se[, 2:i],
               R = R_matrix,
               pval_thresh = pval_threshold)
   res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
