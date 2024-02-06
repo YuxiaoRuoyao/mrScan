@@ -1,10 +1,13 @@
 ---
-title: "mrScan_vignette"
+title: "mrScan vignette"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{mrScan_vignette}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{mrScan vignette}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -14,18 +17,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 ```{r setup}
 library(mrScan)
 library(dplyr)
 library(TwoSampleMR)
-library(mr.raps)
 ```
 
-We'll use C-reactive protein (CRP) level (ieu-b-35) as the exposure and 
-schizophrenia (ieu-b-42) as the outcome in this example. Please note if you want 
-to conduct the whole analysis parallel, we provide a Snakemake pipeline and you 
-can check the usage in the README.
+We'll use C-reactive protein (CRP) level (ieu-b-35) as the exposure and
+schizophrenia (ieu-b-42) as the outcome in this example. Please note if
+you want to conduct the whole analysis parallel, we provide a Snakemake
+pipeline and you can check the usage in the README.
 
 ```{r}
 x_id <- "ieu-b-35"
@@ -34,15 +35,17 @@ y_id <- "ieu-b-42"
 
 ## Step 1: Initially extract trait list
 
-We only search traits in ukb-b batch (IEU analysis of UK Biobank phenotypes) in IEU 
-OpenGWAS database in this example. You can add more batches according to your needs. 
-You can check the list of data batches in IEU GWAS database by ieugwasr::batches().  
+We only search traits in ukb-b batch (IEU analysis of UK Biobank
+phenotypes) in IEU OpenGWAS database in this example. You can add more
+batches according to your needs. You can check the list of data batches
+in IEU GWAS database by ieugwasr::batches().
 
-
-If you want to use local data for the main exposure, set `type_exposure="local"`, 
-and input data path in `file_path`. You need to download the LD reference files 
-[here](http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz) to perform LD clumping. And then 
-input `ref_path` to your directory path of LD reference file. You can do this like:
+If you want to use local data for the main exposure, set
+`type_exposure="local"`, and input data path in `file_path`. You need to
+download the LD reference files
+[here](http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz) to perform LD
+clumping. And then input `ref_path` to your directory path of LD
+reference file. You can do this like:
 
 ```{r eval=FALSE}
 extract_traits(id_exposure = x_id,type_exposure = "local",
@@ -50,10 +53,12 @@ extract_traits(id_exposure = x_id,type_exposure = "local",
                ref_path = "/path/to/reference/EUR")
 ```
 
-If you already have a list of candidate traits and don't want to search traits in 
-IEU OpenGWAS database, you can download data locally. You need to specify the file path 
-for each trait in `file_list` and trait ID in `trait_list`. Then check the data to find 
-column names of `SNP` (rsid), `beta_hat`, `se`, `p_value` and input in the function like: 
+If you already have a list of candidate traits and don't want to search
+traits in IEU OpenGWAS database, you can download data locally. You need
+to specify the file path for each trait in `file_list` and trait ID in
+`trait_list`. Then check the data to find column names of `SNP` (rsid),
+`beta_hat`, `se`, `p_value` and input in the function like:
+
 ```{r eval=FALSE}
 extract_traits(id_exposure = x_id,type_candidate_traits = "local",
                file_list = c("/path/to/trait1","/path/to/trait2"),
@@ -64,13 +69,16 @@ extract_traits(id_exposure = x_id,type_candidate_traits = "local",
                p_value_name_list = c("pval_name1","pval_name2"))
 ```
 
-Note the `p_value_name_list` could be NA if the data does not have pvalue. 
-If the local files are downloaded from IEU Open GWAS database or EBI database (harmonized one), 
-you can just omit these parameters and don???t need to check the exact column names. 
-But you must need to provide snp, beta_hat and se column names if it???s a flat file provided by yourself.
-You can also create a candidate trait info dataframe for that. (Please check the package 
-README, Optional Step, for detailed instruction). Assume the info dataframe is `df_info`,
-you can do this by:
+Note the `p_value_name_list` could be NA if the data does not have
+pvalue. If the local files are downloaded from IEU Open GWAS database or
+EBI database (harmonized one), you can just omit these parameters and
+don't need to check the exact column names. But you must need to provide
+snp, beta_hat and se column names if it's a flat file provided by
+yourself. You can also create a candidate trait info dataframe for that.
+(Please check the package README, Optional Step, for detailed
+instruction). Assume the info dataframe is `df_info`, you can do this
+by:
+
 ```{r eval=FALSE}
 extract_traits(id_exposure = x_id,type_candidate_traits = "local",
                file_list = df_info$path,trait_list = df_info$trait_ID,
@@ -78,13 +86,12 @@ extract_traits(id_exposure = x_id,type_candidate_traits = "local",
                se_name_list = df_info$se,p_value_name_list = df_info$p_value)
 ```
 
-
-In this analysis, we get 63 traits having at least 5 shared variants with the CRP-level.
+In this analysis, we get 63 traits having at least 5 shared variants
+with the CRP-level.
 
 ```{r eval=FALSE}
 res_step1 <- extract_traits(id_exposure = x_id,batch = c("ukb-b"))
 ```
-
 
 ```{r}
 load("data/res_step1.rda")
@@ -92,302 +99,424 @@ length(res_step1$id.list)
 head(res_step1$trait.info)
 ```
 
-## Step 2: Quality control 
+## Step 2: Quality control
 
-After initial filtering, we get 62 traits left. We just select traits for both gender, 
-European and with the number of SNPs > 1e6. You can change the filtering standard 
-by your need. You can check the info matrix for the status of each trait. 
+After initial filtering, we get 62 traits left. We just select traits
+for both gender, European and with the number of SNPs \> 1e6. You can
+change the filtering standard by your need. You can check the info
+matrix for the status of each trait.
+
 ```{r eval=FALSE}
 res_step2 <- quality_control(dat = res_step1$trait.info)
 ```
 
-It deletes a menarche trait which should be a female trait, but the sex information 
-is "Males and Females".
+It deletes a menarche trait which should be a female trait, but the sex
+information is "Males and Females".
+
 ```{r}
 load("data/res_step2.rda")
 length(res_step2$id.list)
-head(res_step2$trait.info)
 res_step2$trait.info %>% filter(status == "delete in QC")
 ```
 
-
 ## Step 3: Downstream traits filtering
 
-Downstream traits of both main exposure and each outcome should be deleted since 
-the precision for estimating direct causal effect of the main exposure to the outcome 
-could be decreased if too many genetic instruments of relationship between the main 
-exposure and downstream traits were included. In this step, we will do bidirection 
-MR estimates between traits and X/Y and then select all upstream traits and exclude 
-downstream traits in this step.  
+Downstream traits of both main exposure and each outcome should be
+deleted since the precision for estimating direct causal effect of the
+main exposure to the outcome could be decreased if too many genetic
+instruments of relationship between the main exposure and downstream
+traits were included. In this step, we will do bidirection MR estimates
+between traits and X/Y and then select all upstream traits and exclude
+downstream traits in this step.
 
 ### Bidirection MR
 
-First of all, we'll do simple MR between each candidate traits and either the main 
-exposure and the outcome. To be specific, we will do four MR estimates including:
-$X \rightarrow Z$, $Z \rightarrow X$, $Y \rightarrow Z$ and $Z \rightarrow Y$. 
-The default method is `MR-RAPs` with `over.dispersion=TRUE`, `loss.function="tukey"`, 
-and you can change parameters or the method.  
+First of all, we'll do simple MR between each candidate traits ($Z$) and
+either the main exposure and the outcome. To be specific, we will do
+four MR estimates including: $X \rightarrow Z$, $Z \rightarrow X$,
+$Y \rightarrow Z$ and $Z \rightarrow Y$. The default method is `MR-RAPs`
+with `over.dispersion=TRUE`, `loss.function="tukey"`, and you can change
+parameters or the method.
 
-
-Note that this step may take some time. We recommend you to extract instruments 
-for all traits first to avoid repeating extracting instruments.
+Note that this step may take some time. We recommend you to extract
+instruments for all traits first to avoid repeating extracting
+instruments.
 
 ```{r eval=FALSE}
 # extract instruments for all traits
 all_inst <- extract_instruments(c(x_id,y_id,res_step2$id.list))
 df_pair <- expand.grid(trait1 = c(x_id,y_id), trait2 = res_step2$id.list)
-res_mr <- purrr::map2(df_pair$trait1[1:5], df_pair$trait2[1:5], function(i, j){
+res_mr <- purrr::map2(df_pair$trait1, df_pair$trait2, function(i, j){
   ex_dat1 <- all_inst %>% filter(id.exposure == i)
   ex_dat2 <- all_inst %>% filter(id.exposure == j)
   bidirection_mr(ex_dat1 = ex_dat1, ex_dat2 = ex_dat2)
 })
 ```
 
-We want to delete traits with limited number of instruments. The default `min_instruments = 3`.
+We want to delete traits with limited number of instruments. The default
+`min_instruments = 3`. In this example, we don't delete any traits here.
+
 ```{r}
+load("data/res_mr.rda")
+df_pair <- expand.grid(trait1 = c(x_id,y_id), trait2 = res_step2$id.list)
 empty_id <- df_pair[which(sapply(res_mr,is.null)),"trait2"] %>% unique() %>% as.vector()
-res_step2$trait.info[res_step2$trait.info$id %in% empty_id,"status"] <- "delete due to not enough instruments"
+res_step2$trait.info[res_step2$trait.info$id %in% empty_id,
+                     "status"] <- "delete due to not enough instruments"
 res_step2$id.list <- res_step2$id.list[!res_step2$id.list %in% empty_id]
+```
+
+### (Optional Step) Bidirection MVMR
+
+Sometimes if you have background knowledge about this relationship, you
+may already have certain heritable confounders. Instead of simple
+univariable MR, you can adjust for the specific confounder ($M$) in the
+bidirection estimate step. Then you will do four MVMR estimates
+including: $X + M \rightarrow Z$, $Z + M\rightarrow X$,
+$Y + M \rightarrow Z$ and $Z + M \rightarrow Y$. For instance, in this
+CRP-level and schizophrenia example, we may know BMI could be an
+important confounder, so we can adjust for a BMI trait (ukb-b-19953). If
+you want to do this step, we recommend you to use the Snakemake pipeline
+since it's faster and easy to rerun when API link is not stable.
+
+```{r eval=FALSE}
+all_inst <- extract_instruments(c(x_id,y_id,res_step2$id.list))
+all_mvmr_inst <- 
 ```
 
 ### Downstream filtering
 
-We'll do one-sided t-test based on the results of bidirection MR. The default t-test 
-cutoff is 0.05 and if you want to include more traits, you can loose the cutoff 
-to 0.1 or more. We select all upstream traits for either X or Y and delete all 
-downstream traits for either the main exposure and the outcome.
+We'll do one-sided t-test based on the results of bidirection MR. The
+default t-test cutoff is 0.05 and if you want to include more traits,
+you can loose the cutoff to 0.1 or more. We select all upstream traits
+for either X or Y and delete all downstream traits for either the main
+exposure and the outcome.
 
-After this step, we select 40 traits. The output contains select trait list, 
-updated trait into matrix, and all input traits with bidirection estimates, 
-t-test results. 
+After this step, we select 34 traits. The output contains select trait
+list, updated trait into matrix, and all input traits with bidirection
+estimates, t-test results.
+
 ```{r}
 res_mr_filter <- lapply(res_mr, function(x) x[lengths(x) > 0])
 all_mr <- do.call(Map, c(f = rbind, res_mr_filter))
 res_downstream <- downstream_filter(id_exposure = x_id,id.list = res_step2$id.list,
                                     df_info = res_step2$trait.info, res = all_mr)
+length(res_downstream$id.list)
 ```
 
+### Delete high correlation traits with either X and Y
+
+We have calculated the coarse genetic correlation between each candidate
+trait and either X and Y when doing bidirection MR by calculating the
+beta hat correlation for genetic instruments. This is not 100% accurate
+but may enough for filtering high correlation traits with X and Y. We
+still suggest you to check the result and may tune the `R2_cutoff`. In
+this example, we don't have duplicated traits with either the main
+exposure and the outcome.
 
 ```{r}
-load("../data/res_step3.rda")
-length(res_step3$id.list)
-head(res_step3$trait.info)
-head(res_step3$df_bidirection)
-# See selected traits
-res_step3$trait.info %>% filter(id %in% res_step3$id.list)
+res_cor <- all_mr$cor
+res_high_cor_XY <- filter_high_cor_XY(id_list = res_downstream$id.list, 
+                                      df_info = res_downstream$trait.info,
+                                      res_cor = res_cor,
+                                      id_exposure = x_id,
+                                      R2_cutoff = 0.85)
+res_step3 <- list(id.list = res_high_cor_XY$id.list,
+                  trait.info = res_high_cor_XY$trait.info,
+                  df_bidirection = res_downstream$df_bidirection)
 ```
 
+```{r}
+load("data/res_step3.rda")
+length(res_step3$id.list)
+head(res_step3$df_bidirection)
+# See selected traits
+res_step3$trait.info %>% filter(id %in% res_step3$id.list) %>% select(id,trait)
+```
 
 ## Step 4: Get unique traits
 
-By the trait list above, we can see several similar or even duplicated traits are extracted. 
-In this step, we'll calculate genetic correlation for each trait pair and select unique 
-trait in each cluster.   
+By the trait list above, we can see several similar or even duplicated
+traits are extracted. In this step, we'll calculate genetic correlation
+for each trait pair and select unique traits.
 
-There are two ways to get trait correlation: 
-1. Simply calculate string similarity by Jaro???Winkler distance. This way 
-is quick but biased because it only based on provided trait names. If you want 
-to quickly check it by this method, we recommend you to check the df_pair matrix 
+There are two ways to get trait correlation:   
+
+1. Simply calculate string similarity by Jaro--Winkler distance. This way is quick 
+but biased because it only based on provided trait names. If you want to quickly
+check it by this method, we recommend you to check the df_pair matrix
 and the cluster result.  
 
-2. Calculate accurate genetic correlation by LDSC method. It will need you to download 
-GWAS summary data locally and we recommend to do it on the server. You can follow 
-the Snakemake pipeline for this step. 
+2. Calculate accurate genetic correlation by LDSC method. It will need
+you to download GWAS summary data for traits locally and we recommend you to do 
+it on a cluster server. You can follow the Snakemake pipeline for this step.  
 
 
-The default clustering method is greedy clustering on the pairwise 
-correlation matrix by the $R^2$ cutoff. You can also choose sample_size or nsnps method, 
-which are basically selected traits with higher sample size or the number of SNPs. 
-The following code example is for string similarity method.
+The default clustering method is greedy clustering on the pairwise
+correlation matrix filtering by the `R^2` cutoff. You may tune the
+cutoff according to your needs. You can also choose sample_size or nsnps
+method, which are basically selected traits with higher sample size or
+the number of SNPs. If you use `bidirection_mvmr` before, please input
+the confounder trait at the `extra_traits` parameter. The following code
+example is for using string similarity to get trait correlation:
+
 ```{r}
-res_cor <- string_sim(id.list = res_step3$id.list, df_info = res_step3$trait.info)
+res_string_sim <- string_sim(id.list = res_step3$id.list, df_info = res_step3$trait.info)
 res_step4 <- unique_traits(id.list = res_step3$id.list, df_info = res_step3$trait.info,
-                           R_matrix = res_cor$R_matrix, df_pair = res_cor$df_pair,
-                           R2_cutoff = 0.9, method = "cluster")
+                           R_matrix = res_string_sim$R_matrix, 
+                           df_pair = res_string_sim$df_pair,
+                           R2_cutoff = 0.8)
 ```
 
+We get 13 unique traits after this step:
 
 ```{r}
 length(res_step4$id.list)
 res_step4$trait.info %>% filter(id %in% res_step4$id.list) %>% select(id,trait,cluster)
 ```
 
-
-
 ## Step 5: Confounder selection
 
-Next, we will use different methods to do confounder selection. The potential options 
-include classic Lasso, double classic Lasso, corrected Lasso, double corrected Lasso, 
-marginal selection and etc. In this example, we will try different methods.
+Next, we will use different methods to do confounder selection. The
+potential options include classic Lasso, double classic Lasso, corrected
+Lasso, double corrected Lasso, and marginal selection.
+
+### Select instruments
+
+We provide two options to do that: 
+
+- `select_instruments_api`: This is based on TwoSampleMR::mv_extract_exposures(). 
+It will work when you don't have a large trait list.  
+
+- `select_instruments_local`: When you have a large trait list, the API way could 
+be very slow and easily get error. Then we recommend you to download GWAS summary 
+statistics locally for these traits and follow the Snakemake pipeline.
+
+Here is the code for api option:
+
+```{r eval=FALSE}
+inst_api <- select_instruments_api(id.list = res_step4$id.list,
+                                   id_exposure = x_id,id_outcome = y_id)
+```
+
+### Use different methods to do confounder selection
+
+We have multiple different choices and you can choose methods based on
+your needs. For classic Lasso methods, you can choose `lambda_type` with
+either `1se` or `min`. And you may set seed to make the results
+consistent.
+
 ```{r}
-res_step5_lasso <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                     method = "classic_Lasso", lambda_type = "min")
+load("data/inst_api.rda")
+res_step5_clasLasso <- classic_Lasso(id_exposure = x_id, 
+                                     id.list = res_step4$id.list,
+                                     df_info = res_step4$trait.info,
+                                     mvdat_y = inst_api$mvdat_y,
+                                     lambda_type = "1se")
+res_step5_db_clasLasso <- double_Lasso(id_exposure = x_id,
+                                       id.list = res_step4$id.list,
+                                       df_info = res_step4$trait.info,
+                                       mvdat_x = inst_api$mvdat_x,
+                                       mvdat_y = inst_api$mvdat_y,
+                                       lambda_type = "1se")
+res_step5_clasLasso$id.list
+res_step5_db_clasLasso$id.list
+```
+
+The corrected Lasso method is based on [`hdme`](https://github.com/osorensen/hdme/tree/master) 
+package. It will correct for measurement error in the Lasso for linear regression. 
+We conduct this method in the genetic data since GWAS summary statistics have 
+measurement error inside.
+```{r}
+res_step5_corrLasso <- corrected_Lasso(id_exposure = x_id,
+                                       id.list = res_step4$id.list,
+                                       df_info = res_step4$trait.info,
+                                       mvdat_y = inst_api$mvdat_y)
 ```
 
 
-```{r}
-res_step5_double_lasso <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                                               id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                                               method = "double_Lasso", lambda_type = "1se")
-res_step5_double_lasso$id.list 
+```{r eval=FALSE}
+res_step5_db_corrLasso <- double_corrected_Lasso(id_exposure = x_id,
+                                                 id.list = res_step4$id.list,
+                                                 df_info = res_step4$trait.info,
+                                                 mvdat_x = inst_api$mvdat_x,
+                                                 mvdat_y = inst_api$mvdat_y)
 ```
 
 
+
 ```{r}
-res_step5_marginal <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                                           id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                                           method = "marginal",df_bidirection = res_step3$df_bidirection)
+load("data/res_step5_db_corrLasso.rda")
+res_step5_corrLasso$id.list
+res_step5_db_corrLasso$id.list
+```
+
+
+Marginal selection is based on bidirection MR result. It will select traits ($Z$) 
+with both $Z \rightarrow X$ and $Z \rightarrow Y$ significant. You may change the 
+`p_cutoff` for your needs. If you use `bidirection_mvmr` before, please add the 
+confounder trait in `extra_traits` option. 
+
+```{r}
+res_step5_marginal <- marginal(id.list = res_step4$id.list,
+                               df_info = res_step4$trait.info,
+                               df_bidirection = res_step3$df_bidirection)
 res_step5_marginal$id.list
 ```
 
-
+Stepwise selection can support forward selection, backward selection and both direction 
+selection. You may change the method to check the results.
 ```{r}
-res_step5_stepwise <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                     method = "stepwise", stepwise_method = "forward")
+res_step5_stepwise <- stepwise(id_exposure = x_id,
+                               id.list = res_step4$id.list,
+                               df_info = res_step4$trait.info,
+                               mvdat_y = inst_api$mvdat_y)
 res_step5_stepwise$id.list
 ```
 
 
-```{r}
-res_step5_correct <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                     method = "corrected_Lasso", radius_type="1se")
-res_step5_correct$id.list
+## Step 6: MVMR analysis to get causal estimates
+
+Finally, after adjusting for selected traits, we will apply different
+MVMR methods to get direct causal estimates from the main exposure to the
+outcome. In order to get more accurate result, we need to estimate correlation 
+matrix between measurement errors for the outcome and all exposures. If the list 
+of selected traits is pretty large, we recommend you to use the Snakemake pipeline 
+and run it on the cluster server. Here we just use traits selected by double classic 
+Lasso `r res_step5_db_clasLasso$id.list` as the example.
+
+### Download GWAS summary statistics
+
+You can use the following code to generate download.sh file and conduct
+it in the linux command line. 
+
+This function has a few options you may need to change:  
+
+- `df_harmonise`: If all traits you want to download are from IEU OpenGWAS 
+database, just leave it as `NULL`. If you want to include traits from 
+EBI database, please download `harmonised_list.txt` first [here](https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/harmonised_list.txt).
+And then change this parameter to the file path.  
+
+- `data_path`: The directory you want to download the data.
+
+- `path_checkpoint`: The path of successfully download `.txt` file. If all data 
+has been successfully downloaded, it will generate a checkpoint file.
+
+```{r eval=FALSE}
+df_download <- download_gwas(id_list = c(x_id,y_id,res_step5_db_clasLasso$id.list),
+                             data_path = "data/",path_checkpoint = "data/success_download.txt")
+write.table(df_download,file = "data/download.sh",row.names = FALSE,
+            col.names = FALSE, quote = FALSE)
 ```
 
-
-```{r}
-res_step5_double_correct <- confounder_selection(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-                     id.list = res_step4$id.list, df_info = res_step4$trait.info,
-                     method = "double_corrected_Lasso", radius_type="1se")
-res_step5_double_correct$id.list
-```
-
-## Step 6: MVMR analysis to get causal estimates without correlation matrix between traits
-
-Finally, after adjusting for selected traits, we will apply different MVMR methods 
-to get causal estimates from the main exposure to the outcome. The function offers 
-multiple MVMR methods including regular MV-IVW, MV-median and more robust methods 
-like GRAPPLE, MRBEE. In this step, we assume traits are independent with each other. 
-Here we use traits selected from double corrected Lasso as the example.
-
-```{r}
-res_final_ivw <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-              id.list = res_step5_double_correct$id.list,
-              df_info = res_step5_double_correct$trait.info,
-              MVMR_method = "IVW")
-res_final_ivw_T <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-              id.list = res_step5_double_correct$id.list,
-              df_info = res_step5_double_correct$trait.info,
-              MVMR_method = "IVW_instrument_specific")
-res_final_bee <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-              id.list = res_step5_double_correct$id.list,
-              df_info = res_step5_double_correct$trait.info,
-              MVMR_method = "MRBEE",pleio_p_thresh = 0)
-res_final_grapple <- MVMR_analysis(id_exposure = "ieu-b-35",id_outcome = "ieu-b-42",
-              id.list = res_step5_double_correct$id.list,
-              df_info = res_step5_double_correct$trait.info,
-              MVMR_method = "GRAPPLE")
-
-```
-
-
-Get direct causal estimates of CRP-level on schizophrenia by different methods:
-```{r}
-rbind(res_final_ivw,res_final_ivw_T) %>% dplyr::select(id.exposure,b,se,pval,method) %>%
-  rename("exposure" = "id.exposure","pvalue" = "pval") %>%
-  rbind(res_final_bee,res_final_grapple) %>%
-  filter(exposure == "ieu-b-35")
-```
-
-## Step 7: MVMR analysis to get causal estimates with correlation matrix between traits
-
-In order to take genetic correlation between traits into consideration, we need to 
-estimate it first. You need to download raw GWAS summary statistics to local. You 
-can save files on the server since they could be pretty large. 
-
-### 1. Download GWAS summary statistics
-
-You can use the following code to generate download.sh file and conduct it in the 
-linux command line. The default position to save this file is your current working 
-directory and you can change it by position parameter.
-```{r}
-download_gwas(id_list = c("ieu-b-35","ieu-b-42",
-                          res_step5_double_correct$id.list))
-```
-
-
+Then you need to conduct this code in the command line.
 ```{bash, eval=FALSE, engine="sh"}
-bash download.sh
+bash data/download.sh
 ```
 
-### 2. Formatting and harmonize data
+### Formatting and harmonize data
 
-After downloading data, next step is to format raw GWAS summary data to remove 
-ambiguous SNPs. The following code uses ieu-b-42, ieu-b-35 and ieu-b-104 as the example, and you can 
-format each trait by the same rule. Put the outcome as the first trait.
-```{r eval=FALSE}
-library(stringr)
-library(readr)
-library(VariantAnnotation)
-library(gwasvcf)
-library(dplyr)
-library(magrittr)
-library(rlang)
-library(purrr)
-format_combine_gwas(id_list = c("ieu-b-42","ieu-b-35","ukb-b-19953"),
-               file_list = c("ieu-b-42.vcf.gz","ieu-b-35.vcf.gz","ukb-b-19953.vcf.gz"),
-               out_dir="data/",prefix="test")
-```
-
-### 3. LD clumping
-
-You can download the LD reference dataset from here http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz
-This contains an LD reference panel for each of the 5 super-populations in the 1000 genomes reference dataset.
-```{r}
-ld_prune_chrom_plink(beta_dir = "data/",prefix = "test",ref_path = "/path/LD_reference/EUR",
-                     out_dir = "/path/ld_prune_output/")
-```
-
-### 4. Calculate R correlation matrix
-
-There are two options for this. One is by using pvalue method and the other is LDSC way. 
-pvalue method is quick and easier but the estimated matrix could be biased. If you want to 
-use more accurate LDSC way, you need to download reference LD score first. 
+After downloading data, next step is to format raw GWAS summary data to
+remove ambiguous SNPs and then combine them together. You need to generate a 
+dataframe contain `id` (trait id) and `location` (data location) columns first.
+Note that you should **put the outcome as the first trait**. This function will 
+be conducted for every chromosome.
 
 ```{r eval=FALSE}
-estimate_R_pval(ld_prune_file_dir = "/path/ld_prune_output/",prefix = "test",
-                out_dir = "data/")
+df_file <- data.frame(id = c(y_id,x_id,res_step5_db_clasLasso$id.list)) %>%
+  mutate(location = paste0("data/",id,".vcf.gz"))
+for (c in 1:22) {
+  dat <- format_combine_gwas(df_file = df_file, c = c, 
+                             df_info = res_step5_db_clasLasso$trait.info)
+  saveRDS(dat,file = paste0("data/test_beta.",c,".RDS"))
+}
+```
+
+### LD clumping
+
+You can download the LD reference dataset from [here](http://fileserve.mrcieu.ac.uk/ld/1kg.v3.tgz)
+This contains an LD reference panel for each of the 5 super-populations in the 1000 genomes
+reference dataset. And then change the `ref_path` option to your reference data path.
+You can do this like:
+
+```{r eval=FALSE}
+for (c in 1:22) {
+  dat_ldpruned <- ld_prune_plink(X = readRDS(paste0("data/test_beta.",c,".RDS")),
+                                 ref_path = "/path/1kg_plink/EUR")
+  saveRDS(dat_ldpruned, file = paste0("data/test_beta_ldpruned.",c,".RDS"))
+}
+```
+
+### Calculate R correlation matrix
+
+There are two options for this. One is by using p-value method and the
+other is LDSC way. p-value method is quick and easier but the estimated
+matrix could be biased. If you want to use more accurate LDSC way, you
+need to [download](https://zenodo.org/records/8182036) reference LD scores from 
+1000 Genomes first. You can conduct the code like:
+
+```{r eval=FALSE}
+# pvalue method
+R_est_pval <- estimate_R_pval(beta_files = paste0("data/test_beta_ldpruned.",seq(1,22),".RDS"))
 ```
 
 
 ```{r eval=FALSE}
-ldsc_full(l2_dir = "/path/l2_dir/",beta_dir = "data/",prefix = "test",out_dir = "data/")
+# LDSC method
+R_est_ldsc <- ldsc_full(beta_files = paste0("data/test_beta.",c,".RDS"), 
+                        ld_files = paste0("/path/eur_w_ld_chr/",seq(1,22),".l2.ldscore.gz"), 
+                        m_files = paste0("/path/eur_w_ld_chr/",seq(1,22),".l2.M_5_50"))
 ```
 
 
 ```{r}
-test.R_est_ldsc <- readRDS("data/test.R_est_ldsc.RDS")
-test.R_est_pval <- readRDS("data/test.R_est_pval.RDS")
-test.R_est_ldsc
-test.R_est_pval
+R_est_ldsc <- readRDS("data/R_est_ldsc.RDS")
+R_est_pval <- readRDS("data/R_est_pval.RDS")
+R_est_ldsc
+R_est_pval
 ```
 
+### Get MVMR estimates with R matrix
 
-### 5. Get MVMR estimates with R matrix
-```{r}
-res_grapple_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test",R = test.R_est_ldsc,
-                    p_thresh = 1e-5,MVMR_method = "GRAPPLE")
-res_bee_R <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test",R = test.R_est_ldsc,
-                    p_thresh = 5e-8, pleio_p_thresh = 0,
-                    MVMR_method = "MRBEE")
-res_ivw <- MVMR_analysis_local(ld_prune_file_dir = "/path/ld_prune_output/",
-                    prefix = "test",p_thresh = 5e-8,
-                    MVMR_method = "IVW")
+Apart from basic MVMR-IVW, you can use different robust MVMR methods including 
+GRAPPLE, MRBEE, and ESMR. If you have too many traits, we don't recommend you to 
+use GRAPPLE since it cannot converge and give you biased estimates. You may also 
+need to check the p-value thresholds of instrument selection for every method.
+
+```{r error=FALSE, message=FALSE, warning=FALSE, results='hide'}
+res_IVW <- MVMR_IVW(beta_files = paste0("data/test_beta_ldpruned.",seq(1,22),".RDS"))
+res_GRAPPLE <- MVMR_GRAPPLE(beta_files = paste0("data/test_beta_ldpruned.",seq(1,22),".RDS"),
+                            R_matrix = R_est_ldsc$Re)
+res_MRBEE <- MVMR_MRBEE(beta_files = paste0("data/test_beta_ldpruned.",seq(1,22),".RDS"),
+                        R_matrix = R_est_ldsc$Re)
+res_ESMR <- MVMR_ESMR(beta_files = paste0("data/test_beta_ldpruned.",seq(1,22),".RDS"),
+                      R_matrix = R_est_ldsc$Re)
 ```
 
+You can combine results and plot them out:
+```{r fig.width=8, fig.height=6}
+library(ggplot2)
+selection_method <- "double_classic_Lasso"
+bind_rows(res_IVW,res_GRAPPLE,res_MRBEE,res_ESMR) %>% 
+  mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.975)*se) %>%
+  mutate(odds=exp(b),CI_lower=exp(CI_lower),CI_higher=exp(CI_higher)) %>%
+  filter(exposure==x_id) %>%
+  filter(converge == TRUE | is.na(converge)) %>%
+  ggplot() + 
+  geom_vline(xintercept = 1) +
+  geom_point(aes(y = selection_method, x = odds, color = method,group = method),
+             position=position_dodge(width = 0.9), size = 3) +
+  geom_errorbar(aes(y = selection_method, xmin =CI_lower, xmax = CI_higher, color = method),
+                position=position_dodge(width = 0.9)) +
+  xlab("Odds Ratio (95% CI)") + coord_flip() +
+  theme_bw() + ggtitle(paste0("Direct causal effect of ",x_id,"  on ",y_id))+
+  theme(axis.text.y = element_text(size = 15),
+        axis.text.x = element_text(size = 10, angle = 0),
+        strip.text = element_text(size = 15),
+        legend.text = element_text(size = 10),
+        plot.title = element_text(size=15),
+        legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = 15),
+        legend.position = "bottom")
+```
 

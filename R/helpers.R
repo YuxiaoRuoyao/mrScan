@@ -289,21 +289,27 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
 #   return(df_pairs)
 # }
 #' @export
-download_gwas <- function(id_list,df_harmonise){
+download_gwas <- function(id_list,df_harmonise = NULL,data_path = NULL,
+                          path_checkpoint = NULL){
   ebi_list <- id_list[grep("GCST",id_list)]
   regular_list <- id_list[!id_list %in% ebi_list]
-
-  GCST_list <- ebi_list %>% strsplit("-") %>% sapply(tail,1)
-  df_harmonise$V2 <- df_harmonise$V1 %>% strsplit("-") %>% sapply( "[", 3)
-  GCST_file <- df_harmonise %>% filter(str_detect(V2,paste0(GCST_list,collapse = '|'))) %>%
-    pull(V1) %>% str_split("/",n=2) %>% sapply(tail,1)
-  nf_list <- ebi_list[!GCST_list %in% df_harmonise$V2]
-  if(length(nf_list) > 0){
-    cat(paste0("Cannot find correct download link of ",nf_list,". Please input manually!"))
+  if(length(ebi_list)>0 & is.null(df_harmonise)){
+    stop("Please provide the path of harmonised_list.txt")
+  }else if(length(ebi_list)>0 & !is.null(df_harmonise)){
+    GCST_list <- ebi_list %>% strsplit("-") %>% sapply(tail,1)
+    df_harmonise$V2 <- df_harmonise$V1 %>% strsplit("-") %>% sapply( "[", 3)
+    GCST_file <- df_harmonise %>% filter(str_detect(V2,paste0(GCST_list,collapse = '|'))) %>%
+      pull(V1) %>% str_split("/",n=2) %>% sapply(tail,1)
+    nf_list <- ebi_list[!GCST_list %in% df_harmonise$V2]
+    if(length(nf_list) > 0){
+      cat(paste0("Cannot find correct download link of ",nf_list,". Please input manually!"))
+    }
+    f3 <- paste0("wget -N -P ",data_path," https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/",GCST_file)
+  }else{
+    f3 <- NULL
   }
   f1 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz")
   f2 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz.tbi")
-  f3 <- paste0("wget -N -P ",data_path," https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/",GCST_file)
   checkpoint <- paste0("echo 'all done!' > ",path_checkpoint)
   f <- data.frame(c(f1,f2,f3,checkpoint))
   return(f)

@@ -1,0 +1,9 @@
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ieu-b-35/ieu-b-35.vcf.gz
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ieu-b-42/ieu-b-42.vcf.gz
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ukb-b-19953/ukb-b-19953.vcf.gz
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ukb-b-4650/ukb-b-4650.vcf.gz
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ieu-b-35/ieu-b-35.vcf.gz.tbi
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ieu-b-42/ieu-b-42.vcf.gz.tbi
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ukb-b-19953/ukb-b-19953.vcf.gz.tbi
+wget -N -P data/ https://gwas.mrcieu.ac.uk/files/ukb-b-4650/ukb-b-4650.vcf.gz.tbi
+echo 'all done!' > data/success_download.txt

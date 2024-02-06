@@ -1,6 +1,5 @@
 library(TwoSampleMR)
 library(dplyr)
-library(data.table)
 library(mrScan)
 ex_dat1 <- readRDS(snakemake@input[["file1"]])
 ex_dat2 <- readRDS(snakemake@input[["file2"]])
