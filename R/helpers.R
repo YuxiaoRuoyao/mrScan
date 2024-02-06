@@ -269,25 +269,6 @@ calculate_cor <- function (ids1, ids2, inst_pval = 5e-08){
   }) %>% unlist()
   return(cor_vals)
 }
-# calculate_cor <- function (df_pairs, inst_pval = 5e-08){
-#   df_pairs$cor <- purrr::map2(df_pairs$X1, df_pairs$X2, function(x, y){
-#     ex_dat <- extract_instruments(outcomes = x, p1 = inst_pval)
-#     out_dat <- extract_outcome_data(snps = ex_dat$SNP,outcomes = y)
-#     dat_1_2 <- harmonise_data(ex_dat, out_dat)
-#     ex_dat <- extract_instruments(outcomes = y, p1 = inst_pval)
-#     out_dat <- extract_outcome_data(snps = ex_dat$SNP, outcomes = x)
-#     dat_2_1 <- harmonise_data(ex_dat, out_dat)
-#     X_1_2 <- dplyr::filter(dat_1_2, id.exposure == x & id.outcome == y) %>%
-#       rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
-#       select(SNP, beta1, beta2)
-#     X_2_1 <- dplyr::filter(dat_2_1, id.exposure == y & id.outcome == x) %>%
-#       rename(beta2 = beta.exposure, beta1 = beta.outcome) %>%
-#       select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
-#     X <- dplyr::bind_rows(X_1_2, X_2_1)
-#     with(X, cor(beta1, beta2))
-#   }) %>% unlist()
-#   return(df_pairs)
-# }
 #' @export
 download_gwas <- function(id_list,df_harmonise = NULL,data_path = NULL,
                           path_checkpoint = NULL){
