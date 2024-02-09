@@ -1,8 +1,8 @@
 #' @title Conduct bidirection MVMR between traits
 #' @param ex_dat1 Dataframe of instruments for the main exposure or outcome and extra trait (X/Y + M). Output from TwoSampleMR::mv_extract_exposures()
-#' @param ex_dat2 Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()
+#' @param ex_dat2 Dataframe of instruments for a candidate confounder trait (Z). Output from TwoSampleMR::extract_instruments()
 #' @param ex_dat3 Dataframe of instruments for a candidate confounder trait and extra trait (Z + M). Output from TwoSampleMR::mv_extract_exposures()
-#' @param ex_dat4 Dataframe of instruments for the main exposure or outcome. Output from TwoSampleMR::extract_instruments()
+#' @param ex_dat4 Dataframe of instruments for the main exposure or outcome (X/Y). Output from TwoSampleMR::extract_instruments()
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
 #' @returns A list contain bidirection estimates and traits correlation
 #'
@@ -10,7 +10,7 @@
 #' @import dplyr
 #' @import GRAPPLE
 #' @export
-bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments){
+bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3){
   ID1 <- unique(ex_dat4$id.exposure) # X/Y
   ID2 <- unique(ex_dat2$id.exposure) # Z
   ID3 <- unique(ex_dat1$id.exposure)[-1] # M

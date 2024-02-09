@@ -175,12 +175,25 @@ including: $X + M \rightarrow Z$, $Z + M\rightarrow X$,
 $Y + M \rightarrow Z$ and $Z + M \rightarrow Y$. For instance, in this
 CRP-level and schizophrenia example, we may know BMI could be an
 important confounder, so we can adjust for a BMI trait (ukb-b-19953). If
-you want to do this step, we recommend you to use the Snakemake pipeline
-since it's faster and easy to rerun when API link is not stable.
+you want to do this step, we recommend you to use the Snakemake pipeline to run 
+it parallel since it's faster and easy to rerun when API link is not stable.
 
 ```{r eval=FALSE}
-all_inst <- extract_instruments(c(x_id,y_id,res_step2$id.list))
-all_mvmr_inst <- 
+m_id <- "ukb-b-19953"
+new_id <- res_step2$id.list[!res_step2$id.list %in% m_id]
+all_inst <- extract_instruments(c(x_id,y_id,new_id))
+df_pair <- expand.grid(trait1 = c(x_id,y_id), trait2 = new_id)
+mvmr_pair <- mapply(append, c(x_id,y_id,new_id), m_id, SIMPLIFY = FALSE)
+all_inst_mvmr <- sapply(mvmr_pair,mv_extract_exposures)
+  
+res_mvmr <- purrr::map2(df_pair$trait1, df_pair$trait2, function(i, j){
+  ex_dat1 <- all_inst_mvmr[[which(names(mvmr_pair) == i)]] # (X/Y + M)
+  ex_dat2 <- all_inst %>% filter(id.exposure == j) # Z
+  ex_dat3 <- all_inst_mvmr[[which(names(mvmr_pair) == j)]] # (Z + M)
+  ex_dat4 <- all_inst %>% filter(id.exposure == i) # X/Y
+  bidirection_mvmr(ex_dat1 = ex_dat1, ex_dat2 = ex_dat2,
+                   ex_dat3 = ex_dat3, ex_dat4 = ex_dat4,min_instruments = 3)
+})
 ```
 
 ### Downstream filtering
