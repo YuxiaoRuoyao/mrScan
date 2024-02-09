@@ -4,16 +4,16 @@
 \alias{bidirection_mvmr}
 \title{Conduct bidirection MVMR between traits}
 \usage{
-bidirection_mvmr(ex_dat1, ex_dat2, ex_dat3, ex_dat4, min_instruments)
+bidirection_mvmr(ex_dat1, ex_dat2, ex_dat3, ex_dat4, min_instruments = 3)
 }
 \arguments{
 \item{ex_dat1}{Dataframe of instruments for the main exposure or outcome and extra trait (X/Y + M). Output from TwoSampleMR::mv_extract_exposures()}
 
-\item{ex_dat2}{Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()}
+\item{ex_dat2}{Dataframe of instruments for a candidate confounder trait (Z). Output from TwoSampleMR::extract_instruments()}
 
 \item{ex_dat3}{Dataframe of instruments for a candidate confounder trait and extra trait (Z + M). Output from TwoSampleMR::mv_extract_exposures()}
 
-\item{ex_dat4}{Dataframe of instruments for the main exposure or outcome. Output from TwoSampleMR::extract_instruments()}
+\item{ex_dat4}{Dataframe of instruments for the main exposure or outcome (X/Y). Output from TwoSampleMR::extract_instruments()}
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
 }
