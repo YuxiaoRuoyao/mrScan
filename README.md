@@ -16,8 +16,8 @@ You can install the development version of mrScan from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("YuxiaoRuoyao/mrScan")
-#browseVignettes("mrScan")
+devtools::install_github("YuxiaoRuoyao/mrScan",build_vignettes = TRUE)
+browseVignettes("mrScan")
 ```
 
 You should also install the following packages in advance for vignette:

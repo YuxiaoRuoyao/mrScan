@@ -26,8 +26,8 @@ You can install the development version of mrScan from [GitHub](https://github.c
 
 ```{r eval=FALSE}
 # install.packages("devtools")
-devtools::install_github("YuxiaoRuoyao/mrScan")
-#browseVignettes("mrScan")
+devtools::install_github("YuxiaoRuoyao/mrScan",build_vignettes = TRUE)
+browseVignettes("mrScan")
 ```
 
 
