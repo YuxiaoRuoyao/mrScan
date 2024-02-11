@@ -1,8 +1,11 @@
 input:
-    label: "SCZ"
+    label: "SCZ" # Label for the outcome
     exposure_label: "CRP"
     id_exposure: "ebi-a-GCST90029070"
     id_outcome: "ieu-b-42"
+    # csv file contain trait information of the exposure and outcome
+    # It should contain id, trait, sex, sample_size, population. You can leave it as NA if you don't want to provide.
+    info_exposure_outcome: NA
 
 analysis:
     pop: "EUR"
@@ -15,9 +18,10 @@ analysis:
         type_candidate_traits: "IEU" # candidate traits data type. IEU or local
         # file path of local exposure GWAS summary data; if not use local data, just write NA
         #file_path: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/35459240-GCST90029070-EFO_0004458.h.tsv.gz"
-        file_path: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/ieu-b-35.vcf.gz"
+        file_path: NA
         # csv file containing local candidate traits info; if not use local data, just write NA
-        df_candidate_traits: "example_candidate_info.csv"
+        #df_candidate_traits: "example_candidate_info.csv"
+        df_candidate_traits: NA
     quality_control:
         nsnp_cutoff: 1e6
         pop: "European"
@@ -63,7 +67,7 @@ analysis:
         type: ["ldsc","pval"] # ldsc or pval
         p_thresh: 0.05
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
-
+    
     MVMR_analysis:
         method: ["IVW","GRAPPLE","MRBEE","ESMR"]
         #method: ["IVW","GRAPPLE","MRBEE"]

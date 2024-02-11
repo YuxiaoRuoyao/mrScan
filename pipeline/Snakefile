@@ -20,6 +20,7 @@ from snakemake.utils import validate
 ###### Load configuration file
 configfile: "config.yaml"
 
+
 # output options
 data_dir = config["out"]["data_dir"] #where the data is
 out_dir = config["out"]["output_dir"] #where results will go
@@ -32,6 +33,10 @@ id_exposure = config["input"]["id_exposure"]
 id_outcome = config["input"]["id_outcome"]
 l2_dir = config["analysis"]["estimate_R"]["l2_dir"] # where LD score reference data lives
 
+df_info_exposure_outcome = config["input"]["info_exposure_outcome"]
+if df_info_exposure_outcome == "NA":
+    df_info_exposure_outcome = out_dir + "df_info_exposure_outcome.csv"
+    
 selection_type = []
 if "classic_Lasso" in config["analysis"]["confounder_selection"]["method"]:
     classic_Lasso_string = expand("classic_Lasso_{lambda_type}_seed{seed}",
@@ -94,15 +99,15 @@ if "ESMR" in config["analysis"]["MVMR_analysis"]["method"]:
     ESMR_string = expand("ESMR_{ESMR_pt}",ESMR_pt = config["analysis"]["MVMR_analysis"]["p_thresh_ESMR"])
     MVMR_method.extend(ESMR_string)
 
-if os.path.exists(out_dir + exposure_prefix + "qc_id_list.csv"):
-    trait_id = pd.read_csv(out_dir + exposure_prefix + "qc_id_list.csv")['id'].tolist()
+if os.path.exists("/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_id_list.csv"):
+    trait_id = pd.read_csv("/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_id_list.csv")['id'].tolist()
     
 rule all:
     input:
         #data_dir + exposure_prefix + "extract_traits.RDS",
         #out_dir + exposure_prefix + "qc_id_list.csv",
         #out_dir + exposure_prefix + "qc_trait_info.csv",
-        #out_dir + prefix + "downstream_filter.RDS"
+        #out_dir + prefix + "downstream_filter.RDS",
         #data_dir + prefix + "download.sh",
         #data_dir + prefix + "success_download.txt"
         #data_dir + prefix + "pairwise_cor.RDS",
@@ -114,6 +119,7 @@ rule all:
         out_dir + prefix + "summary.csv",
         out_dir + prefix + "summary.png"
 
+    
 rule extract_traits:
     params: id_exposure = id_exposure,
             batch = config["analysis"]["extract_traits"]["batch"],
@@ -136,8 +142,8 @@ checkpoint quality_control:
     params: nsnp_cutoff = config["analysis"]["quality_control"]["nsnp_cutoff"],
             population = config["analysis"]["quality_control"]["pop"],
             sex = config["analysis"]["quality_control"]["sex"]
-    output: id_list = out_dir + exposure_prefix + "qc_id_list.csv",
-            trait_info = out_dir + exposure_prefix + "qc_trait_info.csv",
+    output: id_list = "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_id_list.csv",
+            trait_info = "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_trait_info.csv",
     script: 'R/2_quality_control.R'
 
 def input_downstream(wcs):
@@ -155,8 +161,8 @@ rule extract_inst:
     params: pval_instruments = config["analysis"]["pval_instruments"],
             trait = "{ID}"
     output: out = data_dir + "inst_{ID}.RDS"
-    retries: 3
     wildcard_constraints: ID = "[^_]+"
+    retries: 3
     script: "R/3_extract_inst.R"
 
 rule extract_inst_mvmr:
@@ -192,15 +198,15 @@ rule bidirection_mvmr:
     
 # Do both downstream filtering and delete high correlation traits with either X and Y
 rule downstream_filter:
-    input: id_list = out_dir + exposure_prefix + "qc_id_list.csv", 
+    input: id_list = "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_id_list.csv", 
            mr_files = input_downstream,
-           trait_info = out_dir + exposure_prefix + "qc_trait_info.csv"
+           trait_info = "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/results/" + exposure_prefix + "qc_trait_info.csv"
     params: id_exposure = id_exposure,
             sig_level = config["analysis"]["downstream_filter"]["sig_level"],
             R2_cutoff = config["analysis"]["quality_control"]["R2_cutoff"],
             extra_trait = config["analysis"]["bidirection_mr"]["extra_trait"]
     output: out = out_dir + prefix + "downstream_filter.RDS"
-    script:"R/3_downstream_filter.R"
+    script: "R/3_downstream_filter.R"
 
 rule generate_download_file:
     input: file =  out_dir + prefix + "downstream_filter.RDS",
@@ -210,7 +216,7 @@ rule generate_download_file:
             id_exposure = id_exposure,
             id_outcome = id_outcome
     output: out = data_dir + prefix + "download.sh"
-    script:"R/4_download_data.R"
+    script: "R/4_download_data.R"
 
 checkpoint download_gwas:
     input: data_dir + prefix + "download.sh"
@@ -227,7 +233,7 @@ rule combine_gwas:
     params: path = original_gwas_dir
     output: out = data_dir + prefix + "all_beta.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+"
-    script:"R/4_combine_gwas.R"
+    script: "R/4_combine_gwas.R"
 
 rule calculate_cor:
     input: beta = expand(data_dir + prefix + "all_beta.{chrom}.RDS", chrom = range(1, 23)),
@@ -339,8 +345,16 @@ def input_MVMR_combine_gwas(wildcards):
     else:
         return out_dir + prefix + f"{MVMR_id}.RDS"
 
+rule info_exposure_outcome:
+    params: id_exposure = id_exposure,
+            id_outcome = id_outcome
+    output: 
+        out = df_info_exposure_outcome
+    script: "R/generate_info.R"
+    
 rule MVMR_combine_gwas:
     input: file = input_MVMR_combine_gwas,
+           file_info_exposure_outcome = df_info_exposure_outcome,
            download = data_dir + prefix + "download.sh"
     params: path = original_gwas_dir,
             id_exposure = id_exposure,
@@ -348,7 +362,7 @@ rule MVMR_combine_gwas:
     output: out = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+",
                           MVMR_id = "(?!.*all).*"
-    script:"R/6_MVMR_combine_gwas.R"
+    script: "R/6_MVMR_combine_gwas.R"
 
 rule MVMR_LD_clumping:
     input: beta = data_dir + prefix + "{MVMR_id}_beta.{chrom}.RDS"
@@ -359,7 +373,7 @@ rule MVMR_LD_clumping:
             pthresh = config["analysis"]["ldprune"]["pthresh"]
     output: out = data_dir + prefix + "{MVMR_id}_beta_ldpruned.{chrom}.RDS"
     wildcard_constraints: chrom = "\d+"
-    script:"R/6_ld_prune_plink.R"
+    script: "R/6_ld_prune_plink.R"
 
 rule MVMR_R_ldsc:
     input: beta = expand(data_dir + prefix + "{{MVMR_id}}_beta.{chrom}.RDS", chrom = range(1, 23)),

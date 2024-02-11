@@ -77,6 +77,24 @@ You may need to edit options in the `config.yaml` to fit your need. The
 config file contains comments describing each option. Here are some
 detailed notes you may need when choosing parameter options:
 
+- `info_exposure_outcome`: Trait information csv file name for the main
+  exposure and the outcome. It should contain the following column:
+
+- id: Trait ID from IEU OpenGWAS database
+
+- trait: Trait name
+
+- sex: Gender of traits
+
+- sample_size: sample size of the data
+
+- population: population of the data
+
+If you traits are from IEU OpenGWAS database, you can leave it as NA and
+the pipeline will generate one by `ieugwasr::gwasinfo()`. If you want to
+provide your own file, you need to change this parameter to the local
+file path.
+
 - `extract_traits`: We provide two options `IEU` or `local` for
   extracting instruments of the main exposure. If you choose `IEU`
   option, you need to make sure your exposure ID is exactly matched the

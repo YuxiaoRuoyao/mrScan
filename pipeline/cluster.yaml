@@ -1,5 +1,5 @@
 __default__:
-    mem: "50G"
+    mem: "30G"
     cpus: "5"
     name: "{rule}-{wildcards}"
     log: "log/snake-{rule}-{wildcards}"
@@ -12,7 +12,11 @@ combine_gwas:
 calculate_cor:
     mem: "100G"
     time: "12:00:00"
-    
+
+download_gwas:
+    mem: "100G"
+    time: "12:00:00"
+
 MVMR_combine_gwas:
     mem: "50G"
     time: "8:00:00"

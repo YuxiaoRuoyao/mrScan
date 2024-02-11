@@ -9,10 +9,10 @@ library(ieugwasr)
 library(mrScan)
 library(sumstatFactors)
 
-#source("R/helpers.R")
 
 res_name <- snakemake@input[["file"]]
 df_download <- read.csv(snakemake@input[["download"]],header=F)
+df_info_exposure_outcome <- read.csv(snakemake@input[["file_info_exposure_outcome"]])
 c <- as.numeric(snakemake@wildcards[["chrom"]])
 file_path <- snakemake@params[["path"]]
 id_exposure <- snakemake@params[["id_exposure"]]
@@ -23,10 +23,10 @@ if (file.size(res_name) != 0) {
     res <- readRDS(res_name)
     id_list <- res$id.list
     id_list <- c(id_outcome,id_exposure,id_list)
-    df_info <- res$trait.info
+    df_info <- res$trait.info %>% full_join(df_info_exposure_outcome)
 } else {
     id_list <- c(id_outcome,id_exposure)
-    df_info <- gwasinfo(id_list)
+    df_info <- df_info_exposure_outcome
 }
 
 file_list <- df_download$V1 %>% strsplit("/") %>% sapply(tail,1) %>% head(-1) %>%

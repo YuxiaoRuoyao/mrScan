@@ -10,6 +10,7 @@ id_outcome <- snakemake@params[["id_outcome"]]
 out1 <- snakemake@output[["out1"]]
 out2 <- snakemake@output[["out2"]]
 
+res <- Filter(function(f) !is.null(readRDS(f)), res)
 selection_methods <- res %>% strsplit(prefix) %>% sapply(tail, 1) %>%
   strsplit("_MVMR_") %>% sapply(head, 1)
 selection_methods <- gsub('selection_', '', selection_methods) %>%
@@ -30,6 +31,7 @@ all_res <- all_res %>% mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.
 # plot by odds
 plt<- all_res %>% filter(exposure==id_exposure) %>%
        filter(converge == TRUE | is.na(converge)) %>%
+       filter(se < 2) %>%
        ggplot() +
        geom_vline(xintercept = 1) +
        geom_point(aes(y = selection_method, x = odds, color = method,  group = method),

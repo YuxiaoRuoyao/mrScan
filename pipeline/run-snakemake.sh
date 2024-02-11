@@ -12,7 +12,7 @@ snakemake \
    --cluster "sbatch \
               --output={cluster.log}_%j.out \
               --error={cluster.log}_%j.err \
-              --account=jvmorr0 \
+              --account=jvmorr1 \
               --job-name={cluster.name} \
               --time={cluster.time}  \
               --cpus-per-task={cluster.cpus}  \

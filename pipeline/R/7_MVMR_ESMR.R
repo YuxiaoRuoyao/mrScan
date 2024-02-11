@@ -16,6 +16,12 @@ if(R_type == "pval"){
   R_matrix <- as.matrix(R$Re)
 }
 
-res <- MVMR_ESMR(beta_files = beta_files, R_matrix = R_matrix,
-                 pval_threshold = pval_threshold)
-saveRDS(res,file = out)
+res <- tryCatch({
+  MVMR_ESMR(beta_files = beta_files, R_matrix = R_matrix,
+            pval_threshold = pval_threshold) 
+}, error = function(e) {
+  message("Error in MVMR_ESMR: ", e)
+  return(NULL)
+})
+
+saveRDS(res, file = out)
