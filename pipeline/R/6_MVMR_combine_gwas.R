@@ -23,7 +23,8 @@ if (file.size(res_name) != 0) {
     res <- readRDS(res_name)
     id_list <- res$id.list
     id_list <- c(id_outcome,id_exposure,id_list)
-    df_info <- res$trait.info %>% full_join(df_info_exposure_outcome)
+    df_info <- res$trait.info %>% full_join(df_info_exposure_outcome) %>%
+      distinct(id,sample_size,.keep_all = TRUE)
 } else {
     id_list <- c(id_outcome,id_exposure)
     df_info <- df_info_exposure_outcome
