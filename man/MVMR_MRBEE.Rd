@@ -4,7 +4,7 @@
 \alias{MVMR_MRBEE}
 \title{Use MRBEE to do MVMR analysis by locally data}
 \usage{
-MVMR_MRBEE(beta_files, R_matrix, pval_threshold = 5e-08, pleio_p_thresh = 0)
+MVMR_MRBEE(beta_files, R_matrix, pval_threshold = 5e-08)
 }
 \arguments{
 \item{beta_files}{Paths of merged GWAS summary data after LD pruning}
@@ -12,9 +12,6 @@ MVMR_MRBEE(beta_files, R_matrix, pval_threshold = 5e-08, pleio_p_thresh = 0)
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
-
-\item{pleio_p_thresh}{pvalue cutoff for determining if a specific IV has sufficient evidence of horizontal pleiotropy to be removed.
-Default = 0}
 }
 \value{
 A dataframe of result summary

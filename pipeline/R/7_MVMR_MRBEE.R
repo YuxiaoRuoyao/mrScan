@@ -1,11 +1,9 @@
 library(dplyr)
 library(MRBEE)
-library(purrr)
 library(mrScan)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
-pleio_p_thresh <- as.numeric(snakemake@params[["pleio_p_thresh"]])
 R <- readRDS(snakemake@input[["R"]])
 R_type <- snakemake@params[["R_type"]]
 out <- snakemake@output[["out"]]
@@ -17,6 +15,6 @@ if(R_type == "pval"){
 }
 
 res <- MVMR_MRBEE(beta_files = beta_files, R_matrix =  R_matrix,
-           pval_threshold = pval_threshold,pleio_p_thresh = pleio_p_thresh)
+                  pval_threshold = pval_threshold)
 
 saveRDS(res,file = out)
