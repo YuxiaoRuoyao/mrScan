@@ -16,7 +16,7 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
   names(p)<-names(z)<-nms
   o <- match(colnames(R_matrix), nms)
   z <- data.frame(z[, o],check.names = F)
-  i <- ncol(beta_hat)
+  i <- ncol(z)
   pmin <- apply(p[,-1, drop = F], 1, min)
   ix <- which(pmin < pval_threshold)
   # Make the last one be outcome for R matrix
