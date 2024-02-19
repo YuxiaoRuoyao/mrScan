@@ -4,10 +4,10 @@ library(MVMR)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 R <- readRDS(snakemake@input[["R"]])
-R_type <- snakemake@params[["R_type"]]
 df_info <- readRDS(snakemake@input[["file"]])$trait.info
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
 F_threshold <- as.numeric(snakemake@params[["F_threshold"]])
+R_type <- snakemake@params[["R_type"]]
 extra_traits <- snakemake@params[["extra_traits"]]
 out <- snakemake@output[["out"]]
 
