@@ -12,7 +12,7 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
   X <- purrr::map_dfr(beta_files, readRDS)
   p <- X %>% select(ends_with(".p"))
   z <- X %>% select(ends_with(".z"))
-  nms <- stringr::str_replace(names(beta_hat), ".beta", "")
+  nms <- stringr::str_replace(names(z), ".z", "")
   names(p)<-names(z)<-nms
   o <- match(colnames(R_matrix), nms)
   z <- data.frame(z[, o],check.names = F)
