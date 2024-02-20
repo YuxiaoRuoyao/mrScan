@@ -12,7 +12,7 @@
 quality_control <- function(dat,nsnp_cutoff=1e6,pop="European",gender="Males and Females"){
   id.list1 <- dat %>% filter(nsnp > nsnp_cutoff & sex == gender & population == pop) %>% pull(id)
   id.list2 <- dat %>% filter(is.na(nsnp) & sex == gender & population == pop) %>% pull(id)
-  id.list3 <- dat %>% filter(is.na(sex) & nsnp > nsnp_cutoff & population == pop) %>% pull(id)
+  id.list3 <- dat %>% filter(is.na(sex) | sex == "NA" & nsnp > nsnp_cutoff & population == pop) %>% pull(id)
   id.list <- unique(c(id.list1,id.list2,id.list3))
   dat <- dat %>%
     dplyr::mutate(status = if_else(id %in% id.list, "select after QC", "delete in QC"))
