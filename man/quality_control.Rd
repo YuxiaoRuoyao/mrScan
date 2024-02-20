@@ -8,7 +8,7 @@ quality_control(
   dat,
   nsnp_cutoff = 1e+06,
   pop = "European",
-  sex = "Males and Females"
+  gender = "Males and Females"
 )
 }
 \arguments{
@@ -19,7 +19,7 @@ If users input metadata by themselves, use make_metadata() to convert data forma
 
 \item{pop}{Limit population of traits. Default = "European"}
 
-\item{sex}{Gender limitation. Default = "Males and Females"}
+\item{gender}{Gender limitation. Default = "Males and Females"}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

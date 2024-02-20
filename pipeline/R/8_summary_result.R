@@ -15,7 +15,7 @@ selection_methods <- res %>% strsplit(prefix) %>% sapply(tail, 1) %>%
   strsplit("_MVMR_") %>% sapply(head, 1)
 selection_methods <- gsub('selection_', '', selection_methods) %>%
   strsplit("_seed") %>% sapply(head,1)
-selection_methods[selection_methods=="unique_traits"] <- "all"
+selection_methods[selection_methods=="unique_traits_filter"] <- "all"
 
 all_res <- data.frame()
 for (i in 1:length(res)) {
