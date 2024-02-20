@@ -26,16 +26,19 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
                       byse=rep(1,length(ix)),
                       bXse=matrix(1,length(ix),i-1),
                       Rxy=R_matrix,var.est = "variance")
+    res.summary <- data.frame(exposure = names(fit$theta),
+                              b = fit$theta,
+                              se = sqrt(diag(fit$covtheta)))
   }else{
     fit <- MRBEE.IMRP.UV(by = z[ix,1],bx = z[ix,-1],
                          byse = rep(1,length(ix)),
                          bxse = rep(1,length(ix)),
                          Rxy=R_matrix,
                          var.est="variance")
+    res.summary <- data.frame(exposure = nms[-1],
+                              b = fit$theta,
+                              se = sqrt(fit$vartheta))
   }
-  res.summary <- data.frame(exposure = names(fit$theta),
-                            b = fit$theta,
-                            se = sqrt(diag(fit$covtheta)))
   res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
   res.summary$method <- paste0("MRBEE_",pval_threshold)
   rownames(res.summary) <- NULL
