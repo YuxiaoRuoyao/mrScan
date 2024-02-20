@@ -21,10 +21,18 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
   ix <- which(pmin < pval_threshold)
   # Make the last one be outcome for R matrix
   R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
-  fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
-                    byse=rep(1,length(ix)),
-                    bXse=matrix(1,length(ix),i-1),
-                    Rxy=R_matrix)
+  if(i>2){
+    fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
+                      byse=rep(1,length(ix)),
+                      bXse=matrix(1,length(ix),i-1),
+                      Rxy=R_matrix,var.est = "variance")
+  }else{
+    fit <- MRBEE.IMRP.UV(by = z[ix,1],bx = z[ix,-1],
+                         byse = rep(1,length(ix)),
+                         bxse = rep(1,length(ix)),
+                         Rxy=R_matrix,
+                         var.est="variance")
+  }
   res.summary <- data.frame(exposure = names(fit$theta),
                             b = fit$theta,
                             se = sqrt(diag(fit$covtheta)))
