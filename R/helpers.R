@@ -48,7 +48,7 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
                                A2_name = "hm_other_allele",
                                beta_hat_name = "hm_beta",
                                se_name = "standard_error",
-                               p_value_name = "p_value",
+                               p_value_name = NA,
                                af_name = "hm_effect_allele_frequency",
                                sample_size_name = NA,
                                effect_is_or = FALSE)
@@ -151,6 +151,7 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
                       n ," in A' ", tmp_file, " -")
     dat_filter <- read_table(pipe(awk_cmd), col_names = names(h)) %>%
       dplyr::rename(rsid = hm_rsid) %>%
+      mutate(p_value = 2 * pnorm(-abs(hm_beta/standard_error))) %>%
       filter(p_value < pval_z)
   }else{
     if(is.na(snp_name) | is.na(beta_hat_name) | is.na(se_name)){

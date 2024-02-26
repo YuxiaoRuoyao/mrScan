@@ -10,7 +10,9 @@ id_exposure <- snakemake@params[["id_exposure"]]
 sig_level <- as.numeric(snakemake@params[["sig_level"]])
 R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
 extra_trait <- snakemake@params[["extra_trait"]]
-out <- snakemake@output[["out"]]
+out_id_list <- snakemake@output[["out_id_list"]]
+out_trait_info <- snakemake@output[["out_trait_info"]]
+out_df_bidirection <- snakemake@output[["out_df_bidirection"]]
 
 id.list <- id_file$id
 empty_files <- c()
@@ -44,5 +46,6 @@ if(extra_trait != "None"){
   select_trait <- c(select_trait,extra_trait)
   df_info[df_info$id %in% extra_trait,"status"] <- "select after downstream filtering"
 }
-saveRDS(list(id.list=select_trait,trait.info=df_info,df_bidirection = res_downstream$df_bidirection),
-        file = out)
+write.csv(data.frame(id = select_trait),file = out_id_list,row.names = F)
+write.csv(df_info,file = out_trait_info,row.names = F)
+write.csv(res_downstream$df_bidirection, file = out_df_bidirection,row.names = F)

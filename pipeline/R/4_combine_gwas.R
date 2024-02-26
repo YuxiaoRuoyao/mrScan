@@ -9,16 +9,12 @@ library(ieugwasr)
 library(mrScan)
 library(sumstatFactors)
 
-#source("R/helpers.R")
-
-res <- readRDS(snakemake@input[["file"]])
+id_list <- read.csv(snakemake@input[["id_list"]])$id
+df_info <- read.csv(snakemake@input[["trait_info"]])
 df_download <- read.csv(snakemake@input[["download"]],header=F)
 c <- as.numeric(snakemake@wildcards[["chrom"]])
 file_path <- snakemake@params[["path"]]
 out <- snakemake@output[["out"]]
-
-id_list <- res$id.list
-df_info <- res$trait.info
 
 file_list <- df_download$V1 %>% strsplit("/") %>% sapply(tail,1) %>% head(-1) %>%
   data.frame() %>% setNames("location") %>% filter(!str_detect(location, "\\.tbi$")) %>%

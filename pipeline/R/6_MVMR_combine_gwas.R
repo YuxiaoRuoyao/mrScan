@@ -9,7 +9,6 @@ library(ieugwasr)
 library(mrScan)
 library(sumstatFactors)
 
-
 res_name <- snakemake@input[["file"]]
 df_download <- read.csv(snakemake@input[["download"]],header=F)
 df_info_exposure_outcome <- read.csv(snakemake@input[["file_info_exposure_outcome"]])
@@ -19,11 +18,10 @@ id_exposure <- snakemake@params[["id_exposure"]]
 id_outcome <- snakemake@params[["id_outcome"]]
 out <- snakemake@output[["out"]]
 
-if (file.size(res_name) != 0) {
-    res <- readRDS(res_name)
-    id_list <- res$id.list
+if (length(res_name) == 2) {
+    id_list <- read.csv(res_name[[1]])$id
     id_list <- unique(c(id_outcome,id_exposure,id_list))
-    df_info <- res$trait.info %>% full_join(df_info_exposure_outcome) %>%
+    df_info <- read.csv(res_name[[2]]) %>% full_join(df_info_exposure_outcome) %>%
       distinct(id,sample_size,.keep_all = TRUE)
 } else {
     id_list <- c(id_outcome,id_exposure)

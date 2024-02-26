@@ -2,13 +2,14 @@
 #' @param beta_files Paths of merged GWAS summary data after LD pruning
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
+#' @param pleio_threshold pvalue threshold in pleiotropy detection. Default = 0
 #' @returns A dataframe of result summary
 #'
 #' @import MRBEE
 #' @import dplyr
 #' @importFrom purrr map_dfr
 #' @export
-MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
+MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0){
   X <- purrr::map_dfr(beta_files, readRDS)
   p <- X %>% select(ends_with(".p"))
   z <- X %>% select(ends_with(".z"))
@@ -25,7 +26,8 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
     fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
                       byse=rep(1,length(ix)),
                       bXse=matrix(1,length(ix),i-1),
-                      Rxy=R_matrix,var.est = "variance")
+                      Rxy=R_matrix,
+                      pv.thres = pleio_threshold, var.est = "variance")
     res.summary <- data.frame(exposure = names(fit$theta),
                               b = fit$theta,
                               se = sqrt(diag(fit$covtheta)))
@@ -34,13 +36,13 @@ MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8){
                          byse = rep(1,length(ix)),
                          bxse = rep(1,length(ix)),
                          Rxy=R_matrix,
-                         var.est="variance")
+                         pv.thres = pleio_threshold, var.est="variance")
     res.summary <- data.frame(exposure = nms[-1],
                               b = fit$theta,
                               se = sqrt(fit$vartheta))
   }
   res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
-  res.summary$method <- paste0("MRBEE_",pval_threshold)
+  res.summary$method <- paste0("MRBEE_",pval_threshold,"_pleio_",pleio_threshold)
   rownames(res.summary) <- NULL
   return(res.summary)
 }
