@@ -46,5 +46,6 @@ strength_filter <- function(beta_files,R_matrix,df_info,
   }
   other.id <- sres$id[!sres$id %in% select.id]
   df_info[df_info$id %in% other.id,"status"] <- "Delete due to weak instruments strength"
-  return(list(id.list = select.id,df_strength = data.frame(sres),trait.info=df_info))
+  df_strength <- data.frame(sres) %>% left_join(df_info[,c("id","trait")])
+  return(list(id.list = select.id,df_strength = df_strength,trait.info=df_info))
 }
