@@ -4,7 +4,7 @@ library(MVMR)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 R <- readRDS(snakemake@input[["R"]])
-df_info <- readRDS(snakemake@input[["file"]])$trait.info
+df_info <- read.csv(snakemake@input[["trait_info"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
 F_threshold <- as.numeric(snakemake@params[["F_threshold"]])
 R_type <- snakemake@params[["R_type"]]
@@ -21,7 +21,7 @@ if(R_type == "pval"){
 
 res <- strength_filter(beta_files = beta_files,R_matrix = R_matrix,df_info = df_info,
                        pval_threshold = pval_threshold, F_threshold = F_threshold,
-                       extra_traits = extra_traits)
+                       extra_traits = extra_traits, Filter = TRUE)
 
 write.csv(data.frame(id = res$id.list),file = out_id_list,row.names = F)
 write.csv(res$trait.info,file = out_trait_info,row.names = F)

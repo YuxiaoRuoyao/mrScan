@@ -10,6 +10,7 @@ strength_filter(
   df_info,
   pval_threshold = 5e-08,
   F_threshold = 5,
+  Filter = FALSE,
   extra_traits = "None"
 )
 }
@@ -23,6 +24,8 @@ strength_filter(
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
 
 \item{F_threshold}{F-statistic cutoff. Default = 5}
+
+\item{Filter}{Whether perform trait filtering based on F-stats and F_threshold. Default = FALSE}
 
 \item{extra_traits}{trait ID you want to include no matter the instrument strength. Default = "None"}
 }
