@@ -26,7 +26,7 @@ format_combine_gwas <- function(df_file,c,df_info){
                                A2_name = "hm_other_allele",
                                beta_hat_name = "hm_beta",
                                se_name = "standard_error",
-                               p_value_name = NA,
+                               p_value_name = "p_value",
                                af_name = "hm_effect_allele_frequency",
                                sample_size_name = NA,
                                effect_is_or = FALSE)
