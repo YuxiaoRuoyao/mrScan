@@ -45,7 +45,7 @@ strength_filter <- function(beta_files,R_matrix,df_info,
   if(Filter == TRUE){
     select.id <- sres %>% filter(F.statistic > F_threshold) %>% pull(id)
     if(extra_traits != "None"){
-      select.id <- c(select.id,extra_traits)
+      select.id <- unique(c(select.id,extra_traits))
     }
     other.id <- sres$id[!sres$id %in% select.id]
     df_info[df_info$id %in% other.id,"status"] <- "Delete due to weak instruments strength"
