@@ -82,13 +82,13 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
                        bX=as.matrix(mvdat_1$exposure_beta/mvdat_1$exposure_se),
                        byse=rep(1,nrow(mvdat_1$exposure_beta)),
                        bXse=matrix(1,nrow(mvdat_1$exposure_beta),ncol(mvdat_1$exposure_beta)),
-                       Rxy = diag(1,nrow = nrow(mvdat_1$exposure_beta)+1),
+                       Rxy = diag(1,nrow = ncol(mvdat_1$exposure_beta)+1),
                        pv.thres = 0)
     fit2 <- MRBEE.IMRP(by=mvdat_2$outcome_beta/mvdat_2$outcome_se,
                        bX=as.matrix(mvdat_2$exposure_beta/mvdat_2$exposure_se),
                        byse=rep(1,nrow(mvdat_2$exposure_beta)),
                        bXse=matrix(1,nrow(mvdat_2$exposure_beta),ncol(mvdat_2$exposure_beta)),
-                       Rxy = diag(1,nrow = nrow(mvdat_2$exposure_beta)+1),
+                       Rxy = diag(1,nrow = ncol(mvdat_2$exposure_beta)+1),
                        pv.thres = 0)
     res1 <- data.frame(id.exposure=colnames(mvdat_1$exposure_beta),
                        id.outcome=mvdat_1$outname$id.outcome,
