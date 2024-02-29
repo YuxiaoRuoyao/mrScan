@@ -4,10 +4,10 @@
 \alias{MVMR_MRBEE}
 \title{Use MRBEE to do MVMR analysis by locally data}
 \usage{
-MVMR_MRBEE(beta_files, R_matrix, pval_threshold = 5e-08, pleio_threshold = 0)
+MVMR_MRBEE(dat, R_matrix, pval_threshold = 5e-08, pleio_threshold = 0)
 }
 \arguments{
-\item{beta_files}{Paths of merged GWAS summary data after LD pruning}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
 
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 

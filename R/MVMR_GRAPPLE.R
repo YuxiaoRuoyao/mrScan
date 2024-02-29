@@ -1,5 +1,5 @@
 #' @title Use GRAPPLE to do MVMR analysis by locally data
-#' @param beta_files Paths of merged GWAS summary data after LD pruning
+#' @param dat A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 1e-5
 #' @returns A dataframe of result summary
@@ -9,11 +9,10 @@
 #' @import stringr
 #' @importFrom purrr map_dfr
 #' @export
-MVMR_GRAPPLE <- function(beta_files,R_matrix,pval_threshold = 1e-5){
-  X <- purrr::map_dfr(beta_files, readRDS)
-  beta_hat <- X %>% select(ends_with(".beta"))
-  se <- X %>% select(ends_with(".se"))
-  p <- X %>% select(ends_with(".p"))
+MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5){
+  beta_hat <- dat %>% select(ends_with(".beta"))
+  se <- dat %>% select(ends_with(".se"))
+  p <- dat %>% select(ends_with(".p"))
   nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   names(beta_hat)<-names(se)<-names(p)<-nms
   o <- match(colnames(R_matrix), nms)

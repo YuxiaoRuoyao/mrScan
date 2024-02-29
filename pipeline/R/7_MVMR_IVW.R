@@ -7,5 +7,6 @@ beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
 out <- snakemake@output[["out"]]
 
-res <- MVMR_IVW(beta_files = beta_files,pval_threshold = pval_threshold)
+dat <- purrr::map_dfr(beta_files, readRDS)
+res <- MVMR_IVW(dat = dat, pval_threshold = pval_threshold)
 saveRDS(res, file = out)

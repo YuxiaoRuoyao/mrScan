@@ -4,10 +4,10 @@
 \alias{MVMR_IVW}
 \title{Use IVW to do MVMR analysis by locally data}
 \usage{
-MVMR_IVW(beta_files, pval_threshold = 5e-08)
+MVMR_IVW(dat, pval_threshold = 5e-08)
 }
 \arguments{
-\item{beta_files}{Paths of merged GWAS summary data after LD pruning}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
 }

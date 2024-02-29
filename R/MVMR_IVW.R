@@ -1,5 +1,5 @@
 #' @title Use IVW to do MVMR analysis by locally data
-#' @param beta_files Paths of merged GWAS summary data after LD pruning
+#' @param dat A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
 #' @returns A dataframe of result summary
 #'
@@ -7,11 +7,10 @@
 #' @import dplyr
 #' @importFrom purrr map_dfr
 #' @export
-MVMR_IVW <- function(beta_files,pval_threshold=5e-8){
-  X <- purrr::map_dfr(beta_files, readRDS)
-  beta_hat <- X %>% select(ends_with(".beta"))
-  se <- X %>% select(ends_with(".se"))
-  p <- X %>% select(ends_with(".p"))
+MVMR_IVW <- function(dat,pval_threshold=5e-8){
+  beta_hat <- dat %>% select(ends_with(".beta"))
+  se <- dat %>% select(ends_with(".se"))
+  p <- dat %>% select(ends_with(".p"))
   nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   names(beta_hat)<-names(se)<-names(p)<-nms
   pmin <- apply(p[,-1, drop = F], 1, min)

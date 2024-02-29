@@ -4,10 +4,10 @@
 \alias{MVMR_GRAPPLE}
 \title{Use GRAPPLE to do MVMR analysis by locally data}
 \usage{
-MVMR_GRAPPLE(beta_files, R_matrix, pval_threshold = 1e-05)
+MVMR_GRAPPLE(dat, R_matrix, pval_threshold = 1e-05)
 }
 \arguments{
-\item{beta_files}{Paths of merged GWAS summary data after LD pruning}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
 
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 

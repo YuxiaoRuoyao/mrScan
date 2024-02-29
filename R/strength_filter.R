@@ -1,5 +1,5 @@
 #' @title Calculates the conditional F-statistic to assess instrument strength and filter traits
-#' @param beta_files Paths of merged GWAS summary data after LD pruning
+#' @param dat A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param df_info Dataframe of trait info from previous step
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
@@ -12,14 +12,13 @@
 #' @import MVMR
 #' @importFrom purrr map_dfr
 #' @export
-strength_filter <- function(beta_files,R_matrix,df_info,
+strength_filter <- function(dat,R_matrix,df_info,
                             pval_threshold = 5e-8,F_threshold = 5,
                             Filter = FALSE, extra_traits = "None"){
-  X <- purrr::map_dfr(beta_files, readRDS)
-  snp <- data.frame(X$snp)
-  beta_hat <- X %>% select(ends_with(".beta"))
-  se <- X %>% select(ends_with(".se"))
-  p <- X %>% select(ends_with(".p"))
+  snp <- data.frame(dat$snp)
+  beta_hat <- dat %>% select(ends_with(".beta"))
+  se <- dat %>% select(ends_with(".se"))
+  p <- dat %>% select(ends_with(".p"))
   nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   names(beta_hat)<-names(se)<-names(p)<-nms
   o <- match(colnames(R_matrix), nms)

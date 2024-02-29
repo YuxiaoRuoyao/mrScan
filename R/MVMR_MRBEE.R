@@ -1,5 +1,5 @@
 #' @title Use MRBEE to do MVMR analysis by locally data
-#' @param beta_files Paths of merged GWAS summary data after LD pruning
+#' @param dat A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
 #' @param pleio_threshold pvalue threshold in pleiotropy detection. Default = 0
@@ -9,10 +9,9 @@
 #' @import dplyr
 #' @importFrom purrr map_dfr
 #' @export
-MVMR_MRBEE <- function(beta_files,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0){
-  X <- purrr::map_dfr(beta_files, readRDS)
-  p <- X %>% select(ends_with(".p"))
-  z <- X %>% select(ends_with(".z"))
+MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0){
+  p <- dat %>% select(ends_with(".p"))
+  z <- dat %>% select(ends_with(".z"))
   nms <- stringr::str_replace(names(z), ".z", "")
   names(p)<-names(z)<-nms
   o <- match(colnames(R_matrix), nms)

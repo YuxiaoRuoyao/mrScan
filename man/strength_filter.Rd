@@ -5,7 +5,7 @@
 \title{Calculates the conditional F-statistic to assess instrument strength and filter traits}
 \usage{
 strength_filter(
-  beta_files,
+  dat,
   R_matrix,
   df_info,
   pval_threshold = 5e-08,
@@ -15,7 +15,7 @@ strength_filter(
 )
 }
 \arguments{
-\item{beta_files}{Paths of merged GWAS summary data after LD pruning}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
 
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 

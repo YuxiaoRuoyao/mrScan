@@ -15,10 +15,10 @@ if(R_type == "pval"){
 }else if(R_type == "ldsc"){
   R_matrix <- as.matrix(R$Re)
 }
-
+dat <- purrr::map_dfr(beta_files, readRDS)
 res <- tryCatch({
-  MVMR_ESMR(beta_files = beta_files, R_matrix = R_matrix,
-            pval_threshold = pval_threshold) 
+  MVMR_ESMR(dat = dat, R_matrix = R_matrix,
+            pval_threshold = pval_threshold)
 }, error = function(e) {
   message("Error in MVMR_ESMR: ", e)
   return(NULL)

@@ -18,8 +18,8 @@ if(R_type == "pval"){
 }else if(R_type == "ldsc"){
   R_matrix <- as.matrix(R$Re)
 }
-
-res <- strength_filter(beta_files = beta_files,R_matrix = R_matrix,df_info = df_info,
+dat <- purrr::map_dfr(beta_files, readRDS)
+res <- strength_filter(dat = dat,R_matrix = R_matrix,df_info = df_info,
                        pval_threshold = pval_threshold, F_threshold = F_threshold,
                        extra_traits = extra_traits, Filter = TRUE)
 

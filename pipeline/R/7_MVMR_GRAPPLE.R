@@ -15,8 +15,8 @@ if(R_type == "pval"){
 }else if(R_type == "ldsc"){
   R_matrix <- as.matrix(R$Re)
 }
-
-res <- MVMR_GRAPPLE(beta_files = beta_files, R_matrix = R_matrix,
+dat <- purrr::map_dfr(beta_files, readRDS)
+res <- MVMR_GRAPPLE(dat = dat, R_matrix = R_matrix,
                     pval_threshold = pval_threshold)
 saveRDS(res,file = out)
 

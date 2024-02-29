@@ -1,5 +1,5 @@
 #' @title Use ESMR to do MVMR analysis by locally data
-#' @param beta_files Paths of merged GWAS summary data after LD pruning
+#' @param dat A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
 #' @returns A dataframe of result summary
@@ -8,11 +8,10 @@
 #' @import esmr
 #' @importFrom purrr map_dfr
 #' @export
-MVMR_ESMR <- function(beta_files,R_matrix,pval_threshold=5e-8){
-  X <- purrr::map_dfr(beta_files, readRDS)
-  beta_hat <- X %>% dplyr::select(ends_with(".beta"))
-  se <- X %>% dplyr::select(ends_with(".se"))
-  p <- X %>% dplyr::select(ends_with(".p"))
+MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8){
+  beta_hat <- dat %>% dplyr::select(ends_with(".beta"))
+  se <- dat %>% dplyr::select(ends_with(".se"))
+  p <- dat %>% dplyr::select(ends_with(".p"))
   nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   names(beta_hat)<-names(se)<-names(p)<-nms
   o <- match(colnames(R_matrix), nms)
