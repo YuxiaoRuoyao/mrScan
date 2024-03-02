@@ -5,7 +5,7 @@ id.list <- read.csv(snakemake@input[["id_list"]])$id
 df_info <- read.csv(snakemake@input[["trait_info"]])
 inst_files <- unlist(snakemake@input[["files"]])
 R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
-extra_traits <- snakemake@params[["extra_traits"]]
+extra_traits <- unlist(snakemake@params[["extra_traits"]])
 out_id_list <- snakemake@output[["out_id_list"]]
 out_trait_info <- snakemake@output[["out_trait_info"]]
 
