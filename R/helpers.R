@@ -114,39 +114,44 @@ get_exposure_inst <- function(id_x,type,file_path = NA,pval_x = 5e-8,r2 = 0.001,
   }
   return(df_inst)
 }
-# get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
-#                                 access_token = ieugwasr::check_access_token()){
-#   rsid_chunks <- split(df_inst$rsid, ceiling(seq_along(df_inst$rsid)/50))
-#   results <- vector("list", length(rsid_chunks))
-#   names(results) <- names(rsid_chunks)
-#   for (i in seq_along(rsid_chunks)) {
-#     results[[i]] <- ieugwasr::phewas(variants = rsid_chunks[[i]], pval = pval_z,
-#                                      batch = batch, access_token = access_token)
-#     print(paste0('Finish chunk ',i))
-#   }
-#   phe <- do.call(rbind, results)
-#   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
-#       "traits", "\n")
-#   return(phe)
-# }
 #' @export
 get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
                                 access_token = ieugwasr::check_access_token()){
-  batch1 <- batch[batch %in% c("ieu-a", "ieu-b","ukb-b")]
-  batch2 <- batch[!batch %in% c("ieu-a", "ieu-b","ukb-b")]
-  phe1 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch1,
-                           access_token = access_token)
-  if(length(batch2) != 0){
-    phe2 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch2,
-                             access_token = access_token)
-    phe <- rbind(phe1,phe2)
-  }else{
-    phe <- phe1
+  counter <- 0
+  progress_message <- function() {
+    counter <<- counter + 1
+    if (counter %% 50 == 0) {
+      cat("Processed", counter, "SNPs...\n")
+    }
   }
+  results <- purrr::map(df_inst$rsid, function(rsid) {
+    progress_message()
+    ieugwasr::phewas(variants = rsid, pval = pval_z, batch = batch,
+                     access_token = access_token)
+  })
+  phe <- dplyr::bind_rows(results)
   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
       "traits", "\n")
   return(phe)
 }
+
+# get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
+#                                 access_token = ieugwasr::check_access_token()){
+#   batch1 <- batch[batch %in% c("ieu-a", "ieu-b","ukb-b")]
+#   batch2 <- batch[!batch %in% c("ieu-a", "ieu-b","ukb-b")]
+#   phe1 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch1,
+#                            access_token = access_token)
+#   if(length(batch2) != 0){
+#     phe2 <- ieugwasr::phewas(variants = df_inst$rsid, pval = pval_z, batch = batch2,
+#                              access_token = access_token)
+#     phe <- rbind(phe1,phe2)
+#   }else{
+#     phe <- phe1
+#   }
+#   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
+#       "traits", "\n")
+#   return(phe)
+# }
 #' @export
 get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
                                   beta_hat_name = NA, se_name = NA,
