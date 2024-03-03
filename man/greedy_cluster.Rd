@@ -9,7 +9,7 @@ greedy_cluster(id.list, R, R2_cutoff = 0.9)
 \arguments{
 \item{id.list}{GWAS ID list of traits based on previous steps}
 
-\item{R}{Dataframe of pairwise correlation matrix}
+\item{R}{Dataframe of pairwise correlation matrix. The colnames and rownames are trait IDs.}
 
 \item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
 }

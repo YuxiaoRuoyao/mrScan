@@ -14,7 +14,7 @@
 unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
                           method = "cluster",extra_traits = "None"){
   if(method=="cluster"){
-    clusters <- greedy_cluster(id.list = colnames(R_matrix),R = R_matrix,
+    clusters <- greedy_cluster(id.list = id.list,R = R_matrix,
                                R2_cutoff = R2_cutoff)
     df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
     df_cluster <- dplyr::left_join(clusters,df_info[,c("id","sample_size")],

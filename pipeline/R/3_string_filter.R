@@ -13,7 +13,11 @@ file_ids <- sub(".*inst_(.*)\\.RDS$", "\\1", basename(inst_files))
 named_inst_files <- setNames(inst_files, file_ids)
 get_row_count <- function(id) {
   data <- readRDS(named_inst_files[id])
-  data.frame(id = id, n = nrow(data))
+  if(!is.null(data)){
+    data.frame(id = id, n = nrow(data))
+  }else{
+    data.frame(id = id, n = 0)
+  }
 }
 df_inst_counts <- purrr::map_dfr(id.list, get_row_count)
 res_filter <- string_filter(id.list = id.list, df_info = df_info,
