@@ -10,6 +10,7 @@ id_exposure <- snakemake@params[["id_exposure"]]
 sig_level <- as.numeric(snakemake@params[["sig_level"]])
 R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
 extra_trait <- snakemake@params[["extra_trait"]]
+method <- snakemake@params[["method"]]
 out_id_list <- snakemake@output[["out_id_list"]]
 out_trait_info <- snakemake@output[["out_trait_info"]]
 out_df_bidirection <- snakemake@output[["out_df_bidirection"]]
@@ -34,7 +35,8 @@ res <- do.call(Map, c(f = rbind, res_mr))
 res_cor <- res$cor
 
 res_downstream <- downstream_filter(id_exposure = id_exposure,id.list = id.list,
-                                    df_info = df_info,res = res, sig_level = sig_level)
+                                    df_info = df_info,res = res, sig_level = sig_level,
+                                    method = method)
 select_trait <- res_downstream$id.list
 df_info <- res_downstream$trait.info
 # delete high correlation traits with either X and Y

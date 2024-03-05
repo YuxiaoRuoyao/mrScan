@@ -13,8 +13,7 @@ select_id <- df_string %>% filter(string_cluster %in%
                                       189, 190, 193, 194, 195, 196, 207, 208,
                                       221, 248, 262, 275, 278, 299)) %>%
   pull(id) %>% vctrs::vec_c(id_list) %>% unique()
-df_string <- df_string %>% filter(id %in% select_id) %>%
-  mutate(status=="select after string similarity filtering")
+df_string[df_string$id %in% select_id, "status"] <- "select after string similarity filtering"
 df_string[df_string$id == "ieu-b-4808","status"] <- "delete due to string similarity"
 df_string_list <- unique(c(df_string_list,select_id))
 df_string_list <- df_string_list[df_string_list != "ieu-b-4808"]
