@@ -4,12 +4,17 @@
 \alias{MVMR_IVW}
 \title{Use IVW to do MVMR analysis by locally data}
 \usage{
-MVMR_IVW(dat, pval_threshold = 5e-08)
+MVMR_IVW(dat, pval_threshold = 5e-08, type)
 }
 \arguments{
-\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
+\item{dat}{If type == "local", it's a data frame of combined GWAS summary data after LD pruning.
+The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
+If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().}
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
+
+\item{type}{Input data type. It could be either "local" for local GWAS summary data after LD pruning or
+"IEU" for output from TwoSampleMR::mv_harmonise_data().}
 }
 \value{
 A dataframe of result summary

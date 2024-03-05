@@ -407,3 +407,73 @@ filter_high_cor_XY <- function(id_list,df_info,res_cor,id_exposure,R2_cutoff){
   select_trait <- id_list[!id_list %in% c(trait_cor_X,trait_cor_Y)]
   return(list(id.list = select_trait, trait.info = df_info))
 }
+#' @export
+MR_IVW <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
+                   se.norm.exposure,se.norm.outcome){
+  res <- mr_ivw(b_exp = z.norm.exposure,se_exp = se.norm.exposure,
+                b_out = z.norm.outcome,se_out = se.norm.outcome)
+  data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+             b = res$b, se = res$se, pvalue = res$pval, method = "MR_IVW")
+}
+#' @export
+MR_GRAPPLE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
+                       se.norm.exposure,se.norm.outcome){
+  grapple_dat <- data.frame(gamma_exp1 = z.norm.exposure,
+                            gamma_out1 = z.norm.outcome,
+                            se_exp1 = se.norm.exposure,
+                            se_out1 = se.norm.outcome)
+  res_and_warning <- withCallingHandlers({
+    res <- grappleRobustEst(
+      data = grapple_dat,
+      plot.it = FALSE
+    )
+    res
+  }, warning = function(w) {
+    if (grepl("Did not converge", w$message)) {
+      notConverge <<- TRUE
+    } else {
+      notConverge <<- FALSE
+    }
+    invokeRestart("muffleWarning")
+  })
+  if (!exists("notConverge")) {
+    notConverge <- FALSE
+  }
+  res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+                            b = res_and_warning$beta.hat,
+                            se = sqrt(res_and_warning$beta.var),
+                            pvalue = res_and_warning$beta.p.value,method = "MR_GRAPPLE",
+                            converge = !notConverge)
+  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
+  return(res_summary)
+}
+#' @export
+MR_MRBEE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
+                     se.norm.exposure,se.norm.outcome){
+  fit <- MRBEE.IMRP.UV(by = z.norm.outcome,bx = z.norm.exposure,
+                       byse = se.norm.outcome,
+                       bxse = se.norm.exposure,
+                       Rxy= diag(1,nrow = 2),
+                       pv.thres = 0, var.est="variance")
+  data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+             b = fit$theta,se = sqrt(fit$vartheta)) %>%
+    mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MR_MRBEE")
+}
+#' @export
+MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
+                    se.norm.exposure, se.norm.outcome) {
+  tryCatch({
+    fit <- esmr(beta_hat_Y = z.norm.outcome,
+                se_Y = se.norm.exposure,
+                beta_hat_X = z.norm.exposure,
+                se_X = se.norm.exposure)
+    data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+               b = fit$beta$beta_m, se = fit$beta$beta_s) %>%
+      mutate(pvalue = 2 * pnorm(-abs(b / se)), method = "MR_ESMR")
+  }, error = function(e){
+    message("Error in MR_ESMR: ", e$message)
+    data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+               b = NA, se = NA, pvalue = NA,
+               method = "MR_ESMR")
+  })
+}

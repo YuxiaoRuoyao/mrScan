@@ -37,7 +37,16 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
     out_3_4 <- extract_outcome_data(snps = ex_dat3$SNP,outcomes = ID1)
     mvdat_1 <- mv_harmonise_data(ex_dat1,out_1_2)
     mvdat_2 <- mv_harmonise_data(ex_dat3,out_3_4)
-
+    methods <- list(MVMR_IVW = MVMR_IVW, MVMR_GRAPPLE = MVMR_GRAPPLE,
+                    MVMR_MRBEE = MVMR_MRBEE,MVMR_ESMR = MVMR_ESMR)
+    params1 <- list(dat = mvdat_1, type = "IEU")
+    params2 <- list(dat = mvdat_2, type = "IEU")
+    res1 <- lapply(methods, function(f, params) {
+      do.call(f, params)}, params = params1) %>% bind_rows() %>%
+      filter(id.exposure == ID1)
+    res2 <- lapply(methods, function(f, params) {
+      do.call(f, params)}, params = params2) %>% bind_rows() %>%
+      filter(id.exposure == ID2)
     # grapple.dat1<-cbind(mvdat_1$exposure_beta,mvdat_1$exposure_se,
     #                     mvdat_1$outcome_beta,mvdat_1$outcome_se)
     # grapple.dat2<-cbind(mvdat_2$exposure_beta,mvdat_2$exposure_se,
@@ -78,30 +87,30 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
     #                    se = fit2$beta$beta_s) %>%
     #   mutate(pval = 2*pnorm(-abs(b/se))) %>%
     #   filter(id.exposure == ID2)
-    fit1 <- MRBEE.IMRP(by=mvdat_1$outcome_beta/mvdat_1$outcome_se,
-                       bX=as.matrix(mvdat_1$exposure_beta/mvdat_1$exposure_se),
-                       byse=rep(1,nrow(mvdat_1$exposure_beta)),
-                       bXse=matrix(1,nrow(mvdat_1$exposure_beta),ncol(mvdat_1$exposure_beta)),
-                       Rxy = diag(1,nrow = ncol(mvdat_1$exposure_beta)+1),
-                       pv.thres = 0)
-    fit2 <- MRBEE.IMRP(by=mvdat_2$outcome_beta/mvdat_2$outcome_se,
-                       bX=as.matrix(mvdat_2$exposure_beta/mvdat_2$exposure_se),
-                       byse=rep(1,nrow(mvdat_2$exposure_beta)),
-                       bXse=matrix(1,nrow(mvdat_2$exposure_beta),ncol(mvdat_2$exposure_beta)),
-                       Rxy = diag(1,nrow = ncol(mvdat_2$exposure_beta)+1),
-                       pv.thres = 0)
-    res1 <- data.frame(id.exposure=colnames(mvdat_1$exposure_beta),
-                       id.outcome=mvdat_1$outname$id.outcome,
-                       b = fit1$theta,
-                       se = sqrt(diag(fit1$covtheta))) %>%
-      mutate(pval = 2*pnorm(-abs(b/se))) %>%
-      filter(id.exposure == ID1)
-    res2 <- data.frame(id.exposure=colnames(mvdat_2$exposure_beta),
-                       id.outcome=mvdat_2$outname$id.outcome,
-                       b = fit2$theta,
-                       se = sqrt(diag(fit2$covtheta))) %>%
-      mutate(pval = 2*pnorm(-abs(b/se))) %>%
-      filter(id.exposure == ID2)
+    # fit1 <- MRBEE.IMRP(by=mvdat_1$outcome_beta/mvdat_1$outcome_se,
+    #                    bX=as.matrix(mvdat_1$exposure_beta/mvdat_1$exposure_se),
+    #                    byse=rep(1,nrow(mvdat_1$exposure_beta)),
+    #                    bXse=matrix(1,nrow(mvdat_1$exposure_beta),ncol(mvdat_1$exposure_beta)),
+    #                    Rxy = diag(1,nrow = ncol(mvdat_1$exposure_beta)+1),
+    #                    pv.thres = 0)
+    # fit2 <- MRBEE.IMRP(by=mvdat_2$outcome_beta/mvdat_2$outcome_se,
+    #                    bX=as.matrix(mvdat_2$exposure_beta/mvdat_2$exposure_se),
+    #                    byse=rep(1,nrow(mvdat_2$exposure_beta)),
+    #                    bXse=matrix(1,nrow(mvdat_2$exposure_beta),ncol(mvdat_2$exposure_beta)),
+    #                    Rxy = diag(1,nrow = ncol(mvdat_2$exposure_beta)+1),
+    #                    pv.thres = 0)
+    # res1 <- data.frame(id.exposure=colnames(mvdat_1$exposure_beta),
+    #                    id.outcome=mvdat_1$outname$id.outcome,
+    #                    b = fit1$theta,
+    #                    se = sqrt(diag(fit1$covtheta))) %>%
+    #   mutate(pval = 2*pnorm(-abs(b/se))) %>%
+    #   filter(id.exposure == ID1)
+    # res2 <- data.frame(id.exposure=colnames(mvdat_2$exposure_beta),
+    #                    id.outcome=mvdat_2$outname$id.outcome,
+    #                    b = fit2$theta,
+    #                    se = sqrt(diag(fit2$covtheta))) %>%
+    #   mutate(pval = 2*pnorm(-abs(b/se))) %>%
+    #   filter(id.exposure == ID2)
     return(list(mr12 = res1, mr21 = res2, cor = cor_vals))
   }
 }

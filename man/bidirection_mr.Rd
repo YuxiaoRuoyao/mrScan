@@ -4,25 +4,12 @@
 \alias{bidirection_mr}
 \title{Conduct bidirection MR between traits}
 \usage{
-bidirection_mr(
-  ex_dat1,
-  ex_dat2,
-  method = "mr_raps",
-  over.dispersion = TRUE,
-  loss.function = "tukey",
-  min_instruments = 3
-)
+bidirection_mr(ex_dat1, ex_dat2, min_instruments = 3)
 }
 \arguments{
 \item{ex_dat1}{Dataframe of instruments for the main exposure or outcome. Output from TwoSampleMR::extract_instruments()}
 
 \item{ex_dat2}{Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()}
-
-\item{method}{MR method. See TwoSampleMR::mr_method_list() for details. Default = "mr_raps"}
-
-\item{over.dispersion}{Parameter for mr_raps method. Default = TRUE}
-
-\item{loss.function}{Parameter for mr_raps method. Default = "tukey"}
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
 }
