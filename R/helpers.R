@@ -425,7 +425,8 @@ MR_GRAPPLE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
   res_and_warning <- withCallingHandlers({
     res <- grappleRobustEst(
       data = grapple_dat,
-      plot.it = FALSE
+      plot.it = FALSE,
+      diagnosis = FALSE
     )
     res
   }, warning = function(w) {
