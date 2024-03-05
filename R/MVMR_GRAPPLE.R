@@ -102,7 +102,7 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type){
                               pvalue = res_and_warning$beta.p.value,
                               method = "MVMR_GRAPPLE",
                               converge = !notConverge)
-    res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   }
+  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   return(res.summary)
 }

@@ -455,9 +455,10 @@ MR_MRBEE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
                        bxse = se.norm.exposure,
                        Rxy= diag(1,nrow = 2),
                        pv.thres = 0, var.est="variance")
-  data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-             b = fit$theta,se = sqrt(fit$vartheta)) %>%
+  res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+                            b = fit$theta,se = sqrt(fit$vartheta)) %>%
     mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MR_MRBEE")
+  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
 }
 #' @export
 MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
