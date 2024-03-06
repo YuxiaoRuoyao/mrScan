@@ -70,7 +70,6 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     }
     res.summary$pvalue <- with(res.summary, 2*pnorm(-abs(b/se)))
     res.summary$method <- paste0("MRBEE_",pval_threshold,"_pleio_",pleio_threshold)
-    rownames(res.summary) <- NULL
   }
   if(type == "IEU"){
     id.exposure <- colnames(dat$exposure_beta)
@@ -94,8 +93,9 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                       pv.thres = pleio_threshold, var.est = "variance")
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                               b = fit$theta,se = sqrt(diag(fit$covtheta))) %>%
-      mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MVR_MRBEE")
+      mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MVMR_MRBEE")
   }
   res.summary[which(res.summary$se > 1),"pvalue"] <- 1
+  rownames(res.summary) <- NULL
   return(res.summary)
 }
