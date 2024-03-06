@@ -16,12 +16,6 @@ if(R_type == "pval"){
   R_matrix <- as.matrix(R$Re)
 }
 dat <- purrr::map_dfr(beta_files, readRDS)
-res <- tryCatch({
-  MVMR_ESMR(dat = dat, R_matrix = R_matrix,
-            pval_threshold = pval_threshold)
-}, error = function(e) {
-  message("Error in MVMR_ESMR: ", e)
-  return(NULL)
-})
-
+res <- MVMR_ESMR(dat = dat, R_matrix =  R_matrix,
+                 pval_threshold = pval_threshold, type = "local")
 saveRDS(res, file = out)

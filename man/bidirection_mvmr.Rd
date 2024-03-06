@@ -4,7 +4,14 @@
 \alias{bidirection_mvmr}
 \title{Conduct bidirection MVMR between traits}
 \usage{
-bidirection_mvmr(ex_dat1, ex_dat2, ex_dat3, ex_dat4, min_instruments = 3)
+bidirection_mvmr(
+  ex_dat1,
+  ex_dat2,
+  ex_dat3,
+  ex_dat4,
+  min_instruments = 3,
+  df_info = NULL
+)
 }
 \arguments{
 \item{ex_dat1}{Dataframe of instruments for the main exposure or outcome and extra trait (X/Y + M). Output from TwoSampleMR::mv_extract_exposures()}
@@ -16,6 +23,9 @@ bidirection_mvmr(ex_dat1, ex_dat2, ex_dat3, ex_dat4, min_instruments = 3)
 \item{ex_dat4}{Dataframe of instruments for the main exposure or outcome (X/Y). Output from TwoSampleMR::extract_instruments()}
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
+
+\item{df_info}{Dataframe of trait info containing sample sizes. The required columns include
+`id` for trait ID, `sample_size` for sample sizes. Default = NULL}
 }
 \value{
 A list contain bidirection estimates and traits correlation

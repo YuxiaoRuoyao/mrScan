@@ -6,38 +6,62 @@
 #' @param pleio_threshold pvalue threshold in pleiotropy detection. Default = 0
 #' @param type Input data type. It could be either "local" for local GWAS summary data after LD pruning or
 #' "IEU" for output from TwoSampleMR::mv_harmonise_data().
+#' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
+#' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
+#' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Dafault = NULL
 #' @returns A dataframe of result summary
 #'
 #' @import MRBEE
 #' @import dplyr
+#' @import ieugwasr
 #' @importFrom purrr map_dfc
 #' @export
-MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,type){
+MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,type,
+                       ss.exposure = NULL, ss.outcome = NULL){
   if(type == "local"){
-    p <- dat %>% select(ends_with(".p"))
     z <- dat %>% select(ends_with(".z"))
+    p <- dat %>% select(ends_with(".p"))
+    ss <- dat %>% select(ends_with(".ss"))
     nms <- stringr::str_replace(names(z), ".z", "")
-    names(p)<-names(z)<-nms
+    #names(p)<-names(z)<-nms
+    names(z)<-names(p)<-names(ss)<-nms
+    N <- apply(ss, 2, median, na.rm = TRUE)
+    z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
+    se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
+      data.frame(check.names = F)
     o <- match(colnames(R_matrix), nms)
-    z <- data.frame(z[, o],check.names = F)
-    i <- ncol(z)
+    #z <- data.frame(z[, o],check.names = F)
+    z.norm <- z.norm[,o]
+    se.norm <- se.norm[,o]
+    #i <- ncol(z)
+    i <- ncol(z.norm)
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
     if(i>2){
-      fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
-                        byse=rep(1,length(ix)),
-                        bXse=matrix(1,length(ix),i-1),
+      # fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
+      #                   byse=rep(1,length(ix)),
+      #                   bXse=matrix(1,length(ix),i-1),
+      #                   Rxy=R_matrix,
+      #                   pv.thres = pleio_threshold, var.est = "variance")
+      fit <- MRBEE.IMRP(by=z.norm[ix,1],bX=as.matrix(z.norm[ix,-1]),
+                        byse=se.norm[ix,1],
+                        bXse=as.matrix(se.norm[ix,-1]),
                         Rxy=R_matrix,
                         pv.thres = pleio_threshold, var.est = "variance")
       res.summary <- data.frame(exposure = names(fit$theta),
                                 b = fit$theta,
                                 se = sqrt(diag(fit$covtheta)))
     }else{
-      fit <- MRBEE.IMRP.UV(by = z[ix,1],bx = z[ix,-1],
-                           byse = rep(1,length(ix)),
-                           bxse = rep(1,length(ix)),
+      # fit <- MRBEE.IMRP.UV(by = z[ix,1],bx = z[ix,-1],
+      #                      byse = rep(1,length(ix)),
+      #                      bxse = rep(1,length(ix)),
+      #                      Rxy=R_matrix,
+      #                      pv.thres = pleio_threshold, var.est="variance")
+      fit <- MRBEE.IMRP.UV(by = z.norm[ix,1],bx = z.norm[ix,-1],
+                           byse = se.norm[ix,1],
+                           bxse = se.norm[ix,-1],
                            Rxy=R_matrix,
                            pv.thres = pleio_threshold, var.est="variance")
       res.summary <- data.frame(exposure = nms[-1],
@@ -51,8 +75,12 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
   if(type == "IEU"){
     id.exposure <- colnames(dat$exposure_beta)
     id.outcome <- dat$outname$id.outcome
-    ss.exposure <- gwasinfo(id.exposure)$sample_size
-    ss.outcome <- gwasinfo(id.outcome)$sample_size
+    if(is.null(ss.exposure)){
+      ss.exposure <- gwasinfo(id.exposure)$sample_size
+    }
+    if(is.null(ss.outcome)){
+      ss.outcome <- gwasinfo(id.outcome)$sample_size
+    }
     z.exposure<- dat$exposure_beta/dat$exposure_se
     z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`)
     names(ss.exposure) <- id.exposure

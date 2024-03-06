@@ -17,6 +17,6 @@ if(R_type == "pval"){
 }
 dat <- purrr::map_dfr(beta_files, readRDS)
 res <- MVMR_GRAPPLE(dat = dat, R_matrix = R_matrix,
-                    pval_threshold = pval_threshold)
+                    pval_threshold = pval_threshold, type = "local")
 saveRDS(res,file = out)
 

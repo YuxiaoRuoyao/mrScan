@@ -8,5 +8,5 @@ pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
 out <- snakemake@output[["out"]]
 
 dat <- purrr::map_dfr(beta_files, readRDS)
-res <- MVMR_IVW(dat = dat, pval_threshold = pval_threshold)
+res <- MVMR_IVW(dat = dat, pval_threshold = pval_threshold, type = "local")
 saveRDS(res, file = out)

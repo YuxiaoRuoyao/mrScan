@@ -4,7 +4,15 @@
 \alias{MVMR_MRBEE}
 \title{Use MRBEE to do MVMR analysis by locally data}
 \usage{
-MVMR_MRBEE(dat, R_matrix, pval_threshold = 5e-08, pleio_threshold = 0, type)
+MVMR_MRBEE(
+  dat,
+  R_matrix,
+  pval_threshold = 5e-08,
+  pleio_threshold = 0,
+  type,
+  ss.exposure = NULL,
+  ss.outcome = NULL
+)
 }
 \arguments{
 \item{dat}{If type == "local", it's a data frame of combined GWAS summary data after LD pruning.
@@ -17,6 +25,11 @@ If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().
 
 \item{type}{Input data type. It could be either "local" for local GWAS summary data after LD pruning or
 "IEU" for output from TwoSampleMR::mv_harmonise_data().}
+
+\item{ss.exposure}{A vector of sample size for exposures. You can provide it when type = "IEU".
+The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
+
+\item{ss.outcome}{A numeric number of sample size for the outcome. You can provide it when type = "IEU". Dafault = NULL}
 }
 \value{
 A dataframe of result summary
