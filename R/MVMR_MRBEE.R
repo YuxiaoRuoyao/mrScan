@@ -93,7 +93,7 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                       Rxy = diag(nrow = length(id.exposure)+1),
                       pv.thres = pleio_threshold, var.est = "variance")
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-                              b = fit$theta,se = sqrt(fit$vartheta)) %>%
+                              b = fit$theta,se = sqrt(diag(fit$covtheta))) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MVR_MRBEE")
   }
   res.summary[which(res.summary$se > 1),"pvalue"] <- 1
