@@ -96,6 +96,6 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                               b = fit$theta,se = sqrt(fit$vartheta)) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MVR_MRBEE")
   }
-  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
+  res.summary[which(res.summary$se > 1),"pvalue"] <- 1
   return(res.summary)
 }

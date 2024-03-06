@@ -117,13 +117,13 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     if (!exists("notConverge")) {
       notConverge <- FALSE
     }
-    res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+    res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                               b = res_and_warning$beta.hat,
                               se = sqrt(diag(res_and_warning$beta.var)),
                               pvalue = res_and_warning$beta.p.value,
                               method = "MVMR_GRAPPLE",
                               converge = !notConverge)
   }
-  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
+  res.summary[which(res.summary$se > 1),"pvalue"] <- 1
   return(res.summary)
 }
