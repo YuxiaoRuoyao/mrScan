@@ -39,6 +39,9 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,type,
     se.norm <- se.norm[,o]
     #i <- ncol(beta_hat)
     i <- ncol(z.norm)
+    res.summary <- data.frame(exposure = colnames(z.norm)[-1],
+                              b = NA, se = NA, pvalue = NA,
+                              method = paste0("ESMR_",pval_threshold))
     tryCatch({
       fit <- esmr(beta_hat_Y = z.norm[,1],
                   se_Y = se.norm[,1],
@@ -51,10 +54,7 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,type,
         mutate(pvalue = 2*pnorm(-abs(b/se)),
                method = paste0("ESMR_",pval_threshold))
     }, error = function(e){
-      message("Error in MR_ESMR: ", e$message)
-      res.summary <- data.frame(exposure = colnames(z.norm)[-1],
-                                b = NA, se = NA, pvalue = NA,
-                                method = paste0("ESMR_",pval_threshold))
+      message("Error in MVMR_ESMR: ", e$message)
     })
   }
   if(type == "IEU"){
@@ -71,6 +71,9 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,type,
     names(ss.exposure) <- id.exposure
     se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
       as.matrix()
+    res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
+                              b = NA, se = NA, pvalue = NA,
+                              method = "MVMR_ESMR")
     tryCatch({
       fit <- esmr(beta_hat_Y = (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome),
                   se_Y = rep(1/sqrt(ss.outcome),length(dat$outcome_se)),
@@ -81,9 +84,6 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,type,
         mutate(pvalue = 2 * pnorm(-abs(b / se)), method = "MVMR_ESMR")
     }, error = function(e){
       message("Error in MVMR_ESMR: ", e$message)
-      res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-                                b = NA, se = NA, pvalue = NA,
-                                method = "MVMR_ESMR")
     })
   }
   return(res.summary)
