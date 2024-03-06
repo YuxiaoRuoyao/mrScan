@@ -6,7 +6,7 @@
 #'
 #' @import TwoSampleMR
 #' @import dplyr
-#' @import GRAPPLE
+#' @import ieugwasr
 #' @export
 bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3){
   ID1 <- unique(ex_dat1$id.exposure)
@@ -18,12 +18,19 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3){
   }else{
     out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2)
     out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1)
-    dat_1_2 <- harmonise_data(ex_dat1, out_dat1) %>% filter(mr_keep == TRUE) %>%
+    dat_1_2 <- harmonise_data(ex_dat1, out_dat1) %>% filter(mr_keep == TRUE)
+    dat_2_1 <- harmonise_data(ex_dat2, out_dat2) %>% filter(mr_keep == TRUE)
+    if(sum(is.na(dat_1_2$samplesize.exposure)) != 0){
+      dat_1_2$samplesize.exposure <- dat_2_1$samplesize.outcome <- gwasinfo(ID1)$sample_size
+    }else if(sum(is.na(dat_1_2$samplesize.outcome)) != 0){
+      dat_1_2$samplesize.outcome <- dat_2_1$samplesize.exposure <- gwasinfo(ID2)$sample_size
+    }
+    dat_1_2 <- dat_1_2 %>%
       mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
              se.norm.exposure = 1/sqrt(samplesize.exposure),
              z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
              se.norm.outcome = 1/sqrt(samplesize.outcome))
-    dat_2_1 <- harmonise_data(ex_dat2, out_dat2) %>% filter(mr_keep == TRUE) %>%
+    dat_2_1 <- dat_2_1 %>%
       mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
              se.norm.exposure = 1/sqrt(samplesize.exposure),
              z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
