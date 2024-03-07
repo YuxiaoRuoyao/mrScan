@@ -19,16 +19,16 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,sig_level = 0.05,M
     filter(method == MR_method) %>%
     mutate(exposure = if_else(id.exposure == id_exposure, "X", "Y"))
   setDT(df_YtoZ)
-  data_wide1 <- dcast(df_YtoZ,id ~ exposure, value.var=c("b","se")) %>%
+  data_wide1 <- dcast(df_YtoZ,id ~ exposure, value.var=c("b","se","pvalue")) %>%
     select_if(~sum(!is.na(.)) > 0)
-  colnames(data_wide1)<-c("id","b_XtoZ","b_YtoZ","se_XtoZ","se_YtoZ")
+  colnames(data_wide1)<-c("id","b_XtoZ","b_YtoZ","se_XtoZ","se_YtoZ","p_XtoZ","p_YtoZ")
   df_ZtoY <- left_join(df_summary,res$mr21,by=c("id"="id.exposure")) %>%
     filter(method == MR_method) %>%
     mutate(outcome = if_else(id.outcome == id_exposure, "X", "Y"))
   setDT(df_ZtoY)
-  data_wide2 <- dcast(df_ZtoY,id ~ outcome, value.var=c("b","se")) %>%
+  data_wide2 <- dcast(df_ZtoY,id ~ outcome, value.var=c("b","se","pvalue")) %>%
     select_if(~sum(!is.na(.)) > 0)
-  colnames(data_wide2)<-c("id","b_ZtoX","b_ZtoY","se_ZtoX","se_ZtoY")
+  colnames(data_wide2)<-c("id","b_ZtoX","b_ZtoY","se_ZtoX","se_ZtoY","p_ZtoX","p_ZtoY")
   df_final<-left_join(data_wide1,data_wide2,by="id")
   df_final<- df_final %>%
     mutate(t_Z_X = (abs(b_ZtoX)-abs(b_XtoZ))/sqrt(se_ZtoX^2+se_XtoZ^2),
