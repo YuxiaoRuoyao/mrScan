@@ -4,7 +4,14 @@
 \alias{downstream_filter}
 \title{Filter downstream traits}
 \usage{
-downstream_filter(id_exposure, id.list, df_info, res, sig_level = 0.05, method)
+downstream_filter(
+  id_exposure,
+  id.list,
+  df_info,
+  res,
+  sig_level = 0.05,
+  MR_method
+)
 }
 \arguments{
 \item{id_exposure}{GWAS ID of the main exposure}
@@ -17,7 +24,7 @@ downstream_filter(id_exposure, id.list, df_info, res, sig_level = 0.05, method)
 
 \item{sig_level}{One-sided t-test significant level. Default=0.05}
 
-\item{method}{Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
+\item{MR_method}{Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
 MR_ESMR, MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_ESMR, MVMR_MRBEE}
 }
 \value{
