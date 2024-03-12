@@ -4,7 +4,12 @@
 \alias{bidirection_mr}
 \title{Conduct bidirection MR between traits}
 \usage{
-bidirection_mr(ex_dat1, ex_dat2, min_instruments = 3)
+bidirection_mr(
+  ex_dat1,
+  ex_dat2,
+  min_instruments = 3,
+  effect_size_cutoff = 0.05
+)
 }
 \arguments{
 \item{ex_dat1}{Dataframe of instruments for the main exposure or outcome. Output from TwoSampleMR::extract_instruments()}
@@ -12,6 +17,8 @@ bidirection_mr(ex_dat1, ex_dat2, min_instruments = 3)
 \item{ex_dat2}{Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()}
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
+
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
 }
 \value{
 A list contain bidirection estimates and traits correlation

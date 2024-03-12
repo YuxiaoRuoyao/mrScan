@@ -2,13 +2,14 @@
 #' @param ex_dat1 Dataframe of instruments for the main exposure or outcome. Output from TwoSampleMR::extract_instruments()
 #' @param ex_dat2 Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
 #' @import dplyr
 #' @import ieugwasr
 #' @export
-bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3){
+bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.05){
   ID1 <- unique(ex_dat1$id.exposure)
   ID2 <- unique(ex_dat2$id.exposure)
   if(is.null(ex_dat2)){
@@ -29,14 +30,19 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3){
       mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
              se.norm.exposure = 1/sqrt(samplesize.exposure),
              z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
-             se.norm.outcome = 1/sqrt(samplesize.outcome))
+             se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
+      filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
+      steiger_filtering() %>%
+      filter(steiger_pval < 0.05 & steiger_dir == TRUE)
     dat_2_1 <- dat_2_1 %>%
       mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
              se.norm.exposure = 1/sqrt(samplesize.exposure),
              z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
-             se.norm.outcome = 1/sqrt(samplesize.outcome))
-    methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE,
-                    MR_ESMR = MR_ESMR)
+             se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
+      filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
+      steiger_filtering() %>%
+      filter(steiger_pval < 0.05 & steiger_dir == TRUE)
+    methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE)
     params1 <- list(id.exposure = unique(dat_1_2$id.exposure),
                     id.outcome = unique(dat_1_2$id.outcome),
                     z.norm.exposure = dat_1_2$z.norm.exposure,

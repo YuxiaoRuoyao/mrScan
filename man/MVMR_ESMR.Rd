@@ -4,31 +4,16 @@
 \alias{MVMR_ESMR}
 \title{Use ESMR to do MVMR analysis by locally data}
 \usage{
-MVMR_ESMR(
-  dat,
-  R_matrix,
-  pval_threshold = 5e-08,
-  type,
-  ss.exposure = NULL,
-  ss.outcome = NULL
-)
+MVMR_ESMR(dat, R_matrix, pval_threshold = 5e-08)
 }
 \arguments{
-\item{dat}{If type == "local", it's a data frame of combined GWAS summary data after LD pruning.
-The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
-If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning.
+The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
+`trait_ID.se` for standard errors, `trait_ID.z` for z-values, `trait_ID.ss` for sample sizes.}
 
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
-
-\item{type}{Input data type. It could be either "local" for local GWAS summary data after LD pruning or
-"IEU" for output from TwoSampleMR::mv_harmonise_data().}
-
-\item{ss.exposure}{A vector of sample size for exposures. You can provide it when type = "IEU".
-The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
-
-\item{ss.outcome}{A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL}
 }
 \value{
 A dataframe of result summary
