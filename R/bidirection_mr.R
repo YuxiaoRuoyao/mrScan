@@ -50,12 +50,12 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
                se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
         filter(abs(z.norm.exposure) < effect_size_cutoff)
-      if(nrow(dat_1_2) == 0 | nrow(dat_2_1) == 0){
+      if(nrow(dat_1_2) < min_instruments | nrow(dat_2_1) < min_instruments){
         return(NULL)
       }else{
         dat_1_2 <- dat_1_2 %>% steiger_filtering() %>% filter(steiger_dir == TRUE)
         dat_2_1 <- dat_2_1 %>% steiger_filtering() %>% filter(steiger_dir == TRUE)
-        if(nrow(dat_1_2) == 0 | nrow(dat_2_1) == 0){
+        if(nrow(dat_1_2) < min_instruments | nrow(dat_2_1) < min_instruments){
           return(NULL)
         }else{
           methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE)
