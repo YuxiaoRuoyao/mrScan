@@ -26,40 +26,6 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
     }else if(sum(is.na(dat_1_2$samplesize.outcome)) != 0){
       dat_1_2$samplesize.outcome <- dat_2_1$samplesize.exposure <- gwasinfo(ID2)$sample_size
     }
-    dat_1_2 <- dat_1_2 %>%
-      mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
-             se.norm.exposure = 1/sqrt(samplesize.exposure),
-             z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
-             se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
-      filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
-      steiger_filtering() %>%
-      filter(steiger_pval < 0.05 & steiger_dir == TRUE)
-    dat_2_1 <- dat_2_1 %>%
-      mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
-             se.norm.exposure = 1/sqrt(samplesize.exposure),
-             z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
-             se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
-      filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
-      steiger_filtering() %>%
-      filter(steiger_pval < 0.05 & steiger_dir == TRUE)
-    methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE)
-    params1 <- list(id.exposure = unique(dat_1_2$id.exposure),
-                    id.outcome = unique(dat_1_2$id.outcome),
-                    z.norm.exposure = dat_1_2$z.norm.exposure,
-                    z.norm.outcome = dat_1_2$z.norm.outcome,
-                    se.norm.exposure = dat_1_2$se.norm.exposure,
-                    se.norm.outcome = dat_1_2$se.norm.outcome)
-    params2 <- list(id.exposure = unique(dat_2_1$id.exposure),
-                    id.outcome = unique(dat_2_1$id.outcome),
-                    z.norm.exposure = dat_2_1$z.norm.exposure,
-                    z.norm.outcome = dat_2_1$z.norm.outcome,
-                    se.norm.exposure = dat_2_1$se.norm.exposure,
-                    se.norm.outcome = dat_2_1$se.norm.outcome)
-    res_1_2 <- lapply(methods, function(f, params) {
-      do.call(f, params)}, params = params1) %>% bind_rows()
-    res_2_1 <- lapply(methods, function(f, params) {
-      do.call(f, params)}, params = params2) %>% bind_rows()
-
     X_1_2 <- dat_1_2 %>%
       rename(beta1 = beta.exposure, beta2 = beta.outcome) %>%
       select(SNP, beta1, beta2)
@@ -68,6 +34,43 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
       select(SNP, beta1, beta2) %>% filter(!SNP %in% X_1_2$SNP)
     X <- bind_rows(X_1_2, X_2_1)
     cor_vals<- data.frame(id1 = ID1,id2 = ID2, cor = with(X, cor(beta1, beta2)))
-    return(list(mr12 = res_1_2, mr21 = res_2_1, cor = cor_vals))
+    if(abs(cor_vals$cor) > R2_cutoff){
+      return(list(mr12 = NULL, mr21 = NULL, cor = cor_vals))
+    }else{
+      dat_1_2 <- dat_1_2 %>%
+        mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
+               se.norm.exposure = 1/sqrt(samplesize.exposure),
+               z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
+               se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
+        filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
+        steiger_filtering() %>%
+        filter(steiger_pval < 0.05 & steiger_dir == TRUE)
+      dat_2_1 <- dat_2_1 %>%
+        mutate(z.norm.exposure = (beta.exposure/se.exposure)/sqrt(samplesize.exposure),
+               se.norm.exposure = 1/sqrt(samplesize.exposure),
+               z.norm.outcome = (beta.outcome/se.outcome)/sqrt(samplesize.outcome),
+               se.norm.outcome = 1/sqrt(samplesize.outcome)) %>%
+        filter(abs(z.norm.exposure) < effect_size_cutoff) %>%
+        steiger_filtering() %>%
+        filter(steiger_pval < 0.05 & steiger_dir == TRUE)
+      methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE)
+      params1 <- list(id.exposure = unique(dat_1_2$id.exposure),
+                      id.outcome = unique(dat_1_2$id.outcome),
+                      z.norm.exposure = dat_1_2$z.norm.exposure,
+                      z.norm.outcome = dat_1_2$z.norm.outcome,
+                      se.norm.exposure = dat_1_2$se.norm.exposure,
+                      se.norm.outcome = dat_1_2$se.norm.outcome)
+      params2 <- list(id.exposure = unique(dat_2_1$id.exposure),
+                      id.outcome = unique(dat_2_1$id.outcome),
+                      z.norm.exposure = dat_2_1$z.norm.exposure,
+                      z.norm.outcome = dat_2_1$z.norm.outcome,
+                      se.norm.exposure = dat_2_1$se.norm.exposure,
+                      se.norm.outcome = dat_2_1$se.norm.outcome)
+      res_1_2 <- lapply(methods, function(f, params) {
+        do.call(f, params)}, params = params1) %>% bind_rows()
+      res_2_1 <- lapply(methods, function(f, params) {
+        do.call(f, params)}, params = params2) %>% bind_rows()
+      return(list(mr12 = res_1_2, mr21 = res_2_1, cor = cor_vals))
+    }
   }
 }

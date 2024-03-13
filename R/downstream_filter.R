@@ -5,7 +5,7 @@
 #' @param res Bidirection MR results for selected traits
 #' @param sig_level One-sided t-test significant level. Default=0.05
 #' @param MR_method Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
-#' MR_ESMR, MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_ESMR, MVMR_MRBEE
+#' MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_MRBEE
 #' @returns A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
 #' estimate and t-test results
 #'
