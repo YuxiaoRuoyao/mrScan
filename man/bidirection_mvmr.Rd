@@ -10,6 +10,8 @@ bidirection_mvmr(
   ex_dat3,
   ex_dat4,
   min_instruments = 3,
+  effect_size_cutoff = 0.05,
+  R2_cutoff = 0.85,
   df_info = NULL
 )
 }
@@ -23,6 +25,10 @@ bidirection_mvmr(
 \item{ex_dat4}{Dataframe of instruments for the main exposure or outcome (X/Y). Output from TwoSampleMR::extract_instruments()}
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
+
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
+
+\item{R2_cutoff}{R2 cutoff for duplicated traits with X or Y. Default = 0.85}
 
 \item{df_info}{Dataframe of trait info containing sample sizes. The required columns include
 `id` for trait ID, `sample_size` for sample sizes. Default = NULL}

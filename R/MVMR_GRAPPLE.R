@@ -11,6 +11,7 @@
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
 #' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @returns A dataframe of result summary
 #'
 #' @import GRAPPLE
@@ -20,7 +21,7 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
-                         ss.exposure = NULL, ss.outcome = NULL){
+                         ss.exposure = NULL, ss.outcome = NULL, effect_size_cutoff=0.05){
   if(type == "local"){
     #beta_hat <- dat %>% select(ends_with(".beta"))
     #se <- dat %>% select(ends_with(".se"))
@@ -96,9 +97,12 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     names(ss.exposure) <- id.exposure
     se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
       as.matrix()
-    grapple_dat<-cbind(z.norm.exposure,se.norm.exposure,
-                       (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome),
-                       rep(1/sqrt(ss.outcome),length(dat$outcome_se)))
+    z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
+    se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
+    filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
+
+    grapple_dat<-cbind(z.norm.exposure[filtered_idx,],se.norm.exposure[filtered_idx,],
+                       z.norm.outcome[filtered_idx],se.norm.outcome[filtered_idx])
     i <- length(id.exposure)
     colnames(grapple_dat)<-c(paste0("gamma_exp",seq(1,i)),
                               paste0("se_exp",seq(1,i)),"gamma_out1","se_out1")

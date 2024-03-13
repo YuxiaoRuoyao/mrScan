@@ -10,6 +10,7 @@
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
 #' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @returns A dataframe of result summary
 #'
 #' @import TwoSampleMR
@@ -18,7 +19,7 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
-                     ss.exposure = NULL, ss.outcome = NULL){
+                     ss.exposure = NULL, ss.outcome = NULL,effect_size_cutoff = 0.05){
   if(type == "local"){
     #beta_hat <- dat %>% select(ends_with(".beta"))
     #se <- dat %>% select(ends_with(".se"))
@@ -77,15 +78,20 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       ss.outcome <- gwasinfo(id.outcome)$sample_size
     }
     z.exposure<- dat$exposure_beta/dat$exposure_se
-    z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`)
+    z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`) %>%
     names(ss.exposure) <- id.exposure
     se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
       as.matrix()
-    dat_norm <- list(exposure_beta = z.norm.exposure, exposure_pval = dat$exposure_pval,
-                     exposure_se = se.norm.exposure,
-                     outcome_beta = (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome),
-                     outcome_pval = dat$outcome_pval,
-                     outcome_se = rep(1/sqrt(ss.outcome),length(dat$outcome_se)),
+    z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
+    se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
+    filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
+
+    dat_norm <- list(exposure_beta = z.norm.exposure[filtered_idx, ],
+                     exposure_pval = dat$exposure_pval[filtered_idx, ],
+                     exposure_se = se.norm.exposure[filtered_idx, ],
+                     outcome_beta = z.norm.outcome[filtered_idx],
+                     outcome_pval = dat$outcome_pval[filtered_idx],
+                     outcome_se = se.norm.outcome[filtered_idx],
                      expname = dat$expname, outname = dat$outname)
     res <- mv_multiple(dat_norm)$result %>% select(id.exposure,id.outcome,b,se,pval) %>%
       rename("pvalue" = "pval") %>% mutate(method = "MVMR_IVW")

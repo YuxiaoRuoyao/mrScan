@@ -11,6 +11,7 @@
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
 #' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Dafault = NULL
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @returns A dataframe of result summary
 #'
 #' @import MRBEE
@@ -19,7 +20,7 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,type,
-                       ss.exposure = NULL, ss.outcome = NULL){
+                       ss.exposure = NULL, ss.outcome = NULL, effect_size_cutoff=0.05){
   if(type == "local"){
     z <- dat %>% select(ends_with(".z"))
     p <- dat %>% select(ends_with(".p"))
@@ -87,10 +88,14 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     names(ss.exposure) <- id.exposure
     se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
       as.matrix()
-    fit <- MRBEE.IMRP(by = (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome),
-                      bX = z.norm.exposure,
-                      byse = rep(1/sqrt(ss.outcome),length(dat$outcome_se)),
-                      bXse = se.norm.exposure,
+    z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
+    se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
+    filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
+
+    fit <- MRBEE.IMRP(by = z.norm.outcome[filtered_idx],
+                      bX = z.norm.exposure[filtered_idx, ],
+                      byse = se.norm.outcome[filtered_idx],
+                      bXse = se.norm.exposure[filtered_idx, ],
                       Rxy = diag(nrow = length(id.exposure)+1),
                       pv.thres = pleio_threshold, var.est = "variance")
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,

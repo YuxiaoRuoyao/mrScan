@@ -10,7 +10,8 @@ MVMR_GRAPPLE(
   pval_threshold = 1e-05,
   type,
   ss.exposure = NULL,
-  ss.outcome = NULL
+  ss.outcome = NULL,
+  effect_size_cutoff = 0.05
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().
 The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
 
 \item{ss.outcome}{A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL}
+
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
 }
 \value{
 A dataframe of result summary
