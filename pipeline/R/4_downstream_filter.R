@@ -8,7 +8,6 @@ id_file <- read.csv(snakemake@input[["id_list"]])
 df_info <- read.csv(snakemake@input[["trait_info"]])
 id_exposure <- snakemake@params[["id_exposure"]]
 sig_level <- as.numeric(snakemake@params[["sig_level"]])
-R2_cutoff <- as.numeric(snakemake@params[["R2_cutoff"]])
 extra_trait <- snakemake@params[["extra_trait"]]
 method <- snakemake@params[["method"]]
 out_id_list <- snakemake@output[["out_id_list"]]

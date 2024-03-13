@@ -3,13 +3,14 @@
 #' @param ex_dat2 Dataframe of instruments for a candidate confounder trait. Output from TwoSampleMR::extract_instruments()
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
 #' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
+#' @param R2_cutoff R2 cutoff for duplicated traits with X or Y. Default = 0.85
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
 #' @import dplyr
 #' @import ieugwasr
 #' @export
-bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.05){
+bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.05,R2_cutoff=0.85){
   ID1 <- unique(ex_dat1$id.exposure)
   ID2 <- unique(ex_dat2$id.exposure)
   if(is.null(ex_dat2)){

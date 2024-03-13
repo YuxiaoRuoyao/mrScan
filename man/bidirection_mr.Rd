@@ -8,7 +8,8 @@ bidirection_mr(
   ex_dat1,
   ex_dat2,
   min_instruments = 3,
-  effect_size_cutoff = 0.05
+  effect_size_cutoff = 0.05,
+  R2_cutoff = 0.85
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ bidirection_mr(
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
 
 \item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
+
+\item{R2_cutoff}{R2 cutoff for duplicated traits with X or Y. Default = 0.85}
 }
 \value{
 A list contain bidirection estimates and traits correlation
