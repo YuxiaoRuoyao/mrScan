@@ -43,7 +43,7 @@ res <- do.call(Map, c(f = rbind, res_mr))
 
 res_downstream <- downstream_filter(id_exposure = id_exposure,id.list = id.list,
                                     df_info = df_info,res = res, sig_level = sig_level,
-                                    method = method)
+                                    MR_method = method)
 select_trait <- res_downstream$id.list
 df_info <- res_downstream$trait.info
 if(extra_trait != "None"){
