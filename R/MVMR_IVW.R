@@ -78,7 +78,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       ss.outcome <- gwasinfo(id.outcome)$sample_size
     }
     z.exposure<- dat$exposure_beta/dat$exposure_se
-    z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`) %>%
+    z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`)
     names(ss.exposure) <- id.exposure
     se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
       as.matrix()
