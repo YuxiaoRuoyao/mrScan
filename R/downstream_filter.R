@@ -29,6 +29,13 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,sig_level = 0.05,M
     df_info[df_info$id %in% notconverge_traits, "status"] <- paste0("delete due to not converge by ", MR_method)
     df_YtoZ <- df_YtoZ %>% filter(converge == TRUE)
     df_ZtoY <- df_ZtoY %>% filter(converge == TRUE)
+  }else{
+    id_notconverge1 <- df_YtoZ[df_YtoZ$pvalue == 1,"id"]
+    id_notconverge2 <- df_ZtoY[df_ZtoY$pvalue == 1,"id"]
+    notconverge_traits <- union(id_notconverge1,id_notconverge2)
+    df_info[df_info$id %in% notconverge_traits, "status"] <- paste0("delete due to large SE by ", MR_method)
+    df_YtoZ <- df_YtoZ %>% filter(pvalue != 1)
+    df_ZtoY <- df_ZtoY %>% filter(pvalue != 1)
   }
   setDT(df_YtoZ)
   data_wide1 <- dcast(df_YtoZ,id ~ exposure, value.var=c("b","se","pvalue")) %>%
@@ -38,7 +45,7 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,sig_level = 0.05,M
   data_wide2 <- dcast(df_ZtoY,id ~ outcome, value.var=c("b","se","pvalue")) %>%
     select_if(~sum(!is.na(.)) > 0)
   colnames(data_wide2)<-c("id","b_ZtoX","b_ZtoY","se_ZtoX","se_ZtoY","p_ZtoX","p_ZtoY")
-  df_final<-left_join(data_wide1,data_wide2,by="id")
+  df_final<-full_join(data_wide1,data_wide2,by="id")
   df_final<- df_final %>%
     mutate(t_Z_X = (abs(b_ZtoX)-abs(b_XtoZ))/sqrt(se_ZtoX^2+se_XtoZ^2),
            t_Z_Y = (abs(b_ZtoY)-abs(b_YtoZ))/sqrt(se_ZtoY^2+se_YtoZ^2)) %>%
