@@ -306,12 +306,12 @@ download_gwas <- function(id_list,df_harmonise = NULL,data_path = NULL,
     if(length(nf_list) > 0){
       cat(paste0("Cannot find correct download link of ",nf_list,". Please input manually!"))
     }
-    f3 <- paste0("wget -N -P ",data_path," https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/",GCST_file)
+    f3 <- paste0("wget -c -P ",data_path," https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/",GCST_file)
   }else{
     f3 <- NULL
   }
-  f1 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz")
-  f2 <- paste0("wget -N -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz.tbi")
+  f1 <- paste0("wget -c -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz")
+  f2 <- paste0("wget -c -P ",data_path," https://gwas.mrcieu.ac.uk/files/",regular_list,"/",regular_list,".vcf.gz.tbi")
   checkpoint <- paste0("echo 'all done!' > ",path_checkpoint)
   f <- data.frame(c(f1,f2,f3,checkpoint))
   return(f)
