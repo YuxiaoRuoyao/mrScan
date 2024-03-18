@@ -43,7 +43,7 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
       out_3_4 <- extract_outcome_data(snps = ex_dat3$SNP,outcomes = ID1)
       mvdat_1 <- mv_harmonise_data(ex_dat1,out_1_2) # ID1 + ID3 to ID2
       mvdat_2 <- mv_harmonise_data(ex_dat3,out_3_4) # ID2 + ID3 to ID1
-      if(!is.null(df_info)){
+      if(!is.null(df_info) & sum(c(ID1, ID2, ID3) %in% df_info$id) == 3){
         ss <- df_info %>% filter(id %in% c(ID1, ID2, ID3)) %>%
           arrange(match(id, c(ID1, ID2, ID3))) %>% pull(sample_size)
         params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2], ss.outcome = ss[2],
