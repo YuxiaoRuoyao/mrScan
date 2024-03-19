@@ -21,8 +21,7 @@ quality_control <- function(dat,nsnp_cutoff=1e6,pop="European",gender="Males and
                                            TRUE ~ "delete in QC"))
   # delete menarche trait with sex males and females
   dat <- dat %>%
-    mutate(status = ifelse(grepl('menarche', trait) == TRUE & sex == "Males and Females",
-                           "delete in QC",status))
+    mutate(status = ifelse(grepl('menarche', trait, ignore.case = TRUE), "delete in QC", status))
   # delete trait-adjusted traits
   dat <- dat %>%
     mutate(status = ifelse(grepl('adjust', trait) == TRUE,
