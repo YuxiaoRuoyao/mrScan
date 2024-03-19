@@ -17,10 +17,10 @@ unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
     clusters <- greedy_cluster(id.list = id.list,R = R_matrix,
                                R2_cutoff = R2_cutoff)
     df_info <- dplyr::left_join(df_info,clusters,by = c("id" = "id"))
-    df_cluster <- dplyr::left_join(clusters,df_info[,c("id","sample_size")],
+    df_cluster <- dplyr::left_join(clusters,df_info[,c("id","n_inst")],
                                    by=c("id" = "id")) %>% dplyr::arrange(cluster)
     df_select <- df_cluster %>% dplyr::group_by(cluster) %>%
-      dplyr::slice_max(sample_size, with_ties = FALSE) %>% dplyr::ungroup()
+      dplyr::slice_max(n_inst, with_ties = FALSE) %>% dplyr::ungroup()
     if(extra_traits != "None"){
       ids.final <- df_cluster %>% filter(id %in% extra_traits) %>% bind_rows(df_select) %>%
         distinct(cluster, .keep_all = T) %>% arrange(cluster) %>% dplyr::pull(id)
