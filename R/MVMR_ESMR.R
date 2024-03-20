@@ -4,13 +4,14 @@
 #' `trait_ID.se` for standard errors, `trait_ID.z` for z-values, `trait_ID.ss` for sample sizes.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @returns A dataframe of result summary
 #'
 #' @import dplyr
 #' @import esmr
 #' @importFrom purrr map_dfc
 #' @export
-MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8){
+MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,effect_size_cutoff=0.05){
   #beta_hat <- dat %>% dplyr::select(ends_with(".beta"))
   #se <- dat %>% dplyr::select(ends_with(".se"))
   z <- dat %>% select(ends_with(".z"))

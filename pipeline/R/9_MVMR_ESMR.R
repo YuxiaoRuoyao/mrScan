@@ -8,6 +8,7 @@ beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])
 R <- readRDS(snakemake@input[["R"]])
 R_type <- snakemake@params[["R_type"]]
+effect_size_cutoff <- as.numeric(snakemake@params[["effect_size_cutoff"]])
 out <- snakemake@output[["out"]]
 
 if(R_type == "pval"){
@@ -17,5 +18,5 @@ if(R_type == "pval"){
 }
 dat <- purrr::map_dfr(beta_files, readRDS)
 res <- MVMR_ESMR(dat = dat, R_matrix =  R_matrix,
-                 pval_threshold = pval_threshold)
+                 pval_threshold = pval_threshold, effect_size_cutoff = effect_size_cutoff)
 saveRDS(res, file = out)
