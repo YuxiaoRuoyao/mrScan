@@ -17,5 +17,5 @@ if(R_type == "pval"){
 }
 dat <- purrr::map_dfr(beta_files, readRDS)
 res <- MVMR_ESMR(dat = dat, R_matrix =  R_matrix,
-                 pval_threshold = pval_threshold, type = "local")
+                 pval_threshold = pval_threshold)
 saveRDS(res, file = out)

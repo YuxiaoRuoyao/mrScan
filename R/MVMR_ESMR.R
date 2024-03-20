@@ -33,11 +33,12 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8){
   res.summary <- data.frame(exposure = colnames(z.norm)[-1],
                             b = NA, se = NA, pvalue = NA,
                             method = paste0("ESMR_",pval_threshold))
+  filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
   tryCatch({
-    fit <- esmr(beta_hat_Y = z.norm[,1],
-                se_Y = se.norm[,1],
-                beta_hat_X = z.norm[,2:i],
-                se_X = se.norm[, 2:i],
+    fit <- esmr(beta_hat_Y = z.norm[filtered_idx,1],
+                se_Y = se.norm[filtered_idx,1],
+                beta_hat_X = z.norm[filtered_idx,2:i],
+                se_X = se.norm[filtered_idx, 2:i],
                 R = R_matrix,
                 pval_thresh = pval_threshold)
     res.summary <- data.frame(exposure = colnames(z.norm)[-1],

@@ -40,31 +40,23 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     i <- ncol(z.norm)
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
+    filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
+    final_ix <- intersect(ix,filtered_idx)
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
     if(i>2){
-      # fit <- MRBEE.IMRP(by=z[ix,1],bX=as.matrix(z[ix,-1]),
-      #                   byse=rep(1,length(ix)),
-      #                   bXse=matrix(1,length(ix),i-1),
-      #                   Rxy=R_matrix,
-      #                   pv.thres = pleio_threshold, var.est = "variance")
-      fit <- MRBEE.IMRP(by=z.norm[ix,1],bX=as.matrix(z.norm[ix,-1]),
-                        byse=se.norm[ix,1],
-                        bXse=as.matrix(se.norm[ix,-1]),
+      fit <- MRBEE.IMRP(by=z.norm[final_ix,1],bX=as.matrix(z.norm[final_ix,-1]),
+                        byse=se.norm[final_ix,1],
+                        bXse=as.matrix(se.norm[final_ix,-1]),
                         Rxy=R_matrix,
                         pv.thres = pleio_threshold, var.est = "variance")
       res.summary <- data.frame(exposure = names(fit$theta),
                                 b = fit$theta,
                                 se = sqrt(diag(fit$covtheta)))
     }else{
-      # fit <- MRBEE.IMRP.UV(by = z[ix,1],bx = z[ix,-1],
-      #                      byse = rep(1,length(ix)),
-      #                      bxse = rep(1,length(ix)),
-      #                      Rxy=R_matrix,
-      #                      pv.thres = pleio_threshold, var.est="variance")
-      fit <- MRBEE.IMRP.UV(by = z.norm[ix,1],bx = z.norm[ix,-1],
-                           byse = se.norm[ix,1],
-                           bxse = se.norm[ix,-1],
+      fit <- MRBEE.IMRP.UV(by = z.norm[final_ix,1],bx = z.norm[final_ix,-1],
+                           byse = se.norm[final_ix,1],
+                           bxse = se.norm[final_ix,-1],
                            Rxy=R_matrix,
                            pv.thres = pleio_threshold, var.est="variance")
       res.summary <- data.frame(exposure = nms[-1],

@@ -44,10 +44,11 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     #i <- ncol(beta_hat)
     i <- ncol(z.norm)
     #grapple_dat <- data.frame(cbind(beta_hat, se))
-    grapple_dat <- data.frame(cbind(z.norm, se.norm))
+    filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
+    grapple_dat <- data.frame(cbind(z.norm[filtered_idx,], se.norm[filtered_idx,]))
     names(grapple_dat) <- c("gamma_out", paste0("gamma_exp", 1:(i-1)),
                             "se_out", paste0("se_exp", 1:(i-1)))
-    grapple_dat$selection_pvals <- apply(p[,-1, drop = F],1, min)
+    grapple_dat$selection_pvals <- apply(p[filtered_idx,-1, drop = F],1, min)
     res_and_warning <- withCallingHandlers({
       res <- grappleRobustEst(
         data = grapple_dat,

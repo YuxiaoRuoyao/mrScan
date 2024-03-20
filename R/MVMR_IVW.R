@@ -31,20 +31,21 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
     #names(beta_hat)<-names(se)<-names(p)<-nms
     names(z)<-names(p)<-names(ss)<-nms
     N <- apply(ss, 2, median, na.rm = TRUE)
-    z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
-    se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
-      data.frame(check.names = F)
+    z.norm <- sweep(z,2,sqrt(N),`/`)
+    se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z)))
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
+    filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
+    final_ix <- intersect(ix,filtered_idx)
     #i <- ncol(beta_hat)
     i <- ncol(z.norm)
     if(i>2){
-      hdat <-  list(exposure_beta = as.matrix(z.norm[ix, 2:i]),
-                    exposure_pval = as.matrix(p[ix, 2:i]),
-                    exposure_se = as.matrix(se.norm[ix,2:i]),
-                    outcome_beta = data.frame(z.norm)[ix,1],
-                    outcome_pval = data.frame(p)[ix,1],
-                    outcome_se = data.frame(se.norm)[ix,1],
+      hdat <-  list(exposure_beta = as.matrix(z.norm[final_ix, 2:i,drop=FALSE]),
+                    exposure_pval = as.matrix(p[final_ix, 2:i,drop = FALSE]),
+                    exposure_se = as.matrix(se.norm[final_ix,2:i],drop=FALSE),
+                    outcome_beta = data.frame(z.norm)[final_ix,1],
+                    outcome_pval = data.frame(p)[final_ix,1],
+                    outcome_se = data.frame(se.norm)[final_ix,1],
                     expname = data.frame(id.exposure = nms[-1], exposure = nms[-1]),
                     outname = data.frame(id.outcome = nms[1], outcome = nms[1]))
       res_F <- mv_multiple(hdat)$result
@@ -54,12 +55,12 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       res <- rbind(res_F,res_T) %>% select(exposure,b,se,pval,method) %>%
         rename("pvalue" = "pval")
     }else{
-      hdat <-  list(exposure_beta = as.matrix(z.norm[ix, 2:i]),
-                    exposure_pval = as.matrix(p[ix, 2:i]),
-                    exposure_se = as.matrix(se.norm[ix,2:i]),
-                    outcome_beta = data.frame(z.norm)[ix,1],
-                    outcome_pval = data.frame(p)[ix,1],
-                    outcome_se = data.frame(se.norm)[ix,1],
+      hdat <-  list(exposure_beta = as.matrix(z.norm[final_ix, 2:i,drop=FALSE]),
+                    exposure_pval = as.matrix(p[final_ix, 2:i,drop = FALSE]),
+                    exposure_se = as.matrix(se.norm[final_ix,2:i],drop=FALSE),
+                    outcome_beta = data.frame(z.norm)[final_ix,1],
+                    outcome_pval = data.frame(p)[final_ix,1],
+                    outcome_se = data.frame(se.norm)[final_ix,1],
                     expname = data.frame(id.exposure = nms[-1], exposure = nms[-1]),
                     outname = data.frame(id.outcome = nms[1], outcome = nms[1]))
       res_F <- mv_multiple(hdat)$result
