@@ -10,9 +10,11 @@ bidirection_mvmr(
   ex_dat3,
   ex_dat4,
   min_instruments = 3,
-  effect_size_cutoff = 0.05,
+  effect_size_cutoff = 0.1,
   R2_cutoff = 0.85,
-  df_info = NULL
+  df_info = NULL,
+  type_list = c("continuous", "continuous"),
+  prevalence_list = NULL
 )
 }
 \arguments{
@@ -26,12 +28,18 @@ bidirection_mvmr(
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
 
-\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
 
 \item{R2_cutoff}{R2 cutoff for duplicated traits with X or Y. Default = 0.85}
 
 \item{df_info}{Dataframe of trait info containing sample sizes. The required columns include
 `id` for trait ID, `sample_size` for sample sizes. Default = NULL}
+
+\item{type_list}{A vector for the type of traits (X/Y + M). The order should be exactly matched
+with traits. eg. c("binary","continuous") for the first exposure is a binary trait}
+
+\item{prevalence_list}{A vector for prevalence of traits (X/Y + M). The order should
+be exactly matched with exposures. For continuous trait, just write NA. eg. c(0.1, NA)}
 }
 \value{
 A list contain bidirection estimates and traits correlation

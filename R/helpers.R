@@ -480,3 +480,43 @@ MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
                method = "MR_ESMR")
   })
 }
+#' @export
+general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
+                                      exposure_beta, exposure_pval, exposure_se,
+                                      outcome_beta, outcome_pval, outcome_se,
+                                      type_outcome = "continuous", type_exposure = "continuous",
+                                      prevalence_outcome = NA, prevalence_exposure = NA) {
+  filtered_SNPs_list <- lapply(id.exposure, function(id) {
+    dat <- data.frame(SNP = SNP, beta.exposure = exposure_beta[,id],
+               pval.exposure = exposure_pval[,id], se.exposure = exposure_se[,id],
+               beta.outcome = outcome_beta, pval.outcome = outcome_pval, se.outcome = outcome_se,
+               id.exposure = id, exposure = id, id.outcome = id.outcome,outcome = id.outcome)
+    colnames(dat) <- c("SNP", "beta.exposure", "pval.exposure", "se.exposure",
+                       "beta.outcome", "pval.outcome", "se.outcome",
+                       "id.exposure", "exposure", "id.outcome", "outcome")
+    dat <- dat %>% TwoSampleMR::add_metadata()
+    if(all(grepl("SD", dat$units.exposure))){
+      dat$eaf.exposure <- ieugwasr::associations(dat$SNP,id,proxies = 0) %>% pull(eaf)
+    }
+    if(type_outcome == "binary"){
+      dat$units.outcome <- "log odds"
+      dat$prevalence.outcome <- prevalence_outcome
+      if(all(is.na(dat$eaf.outcome))){
+        dat$eaf.outcome <- ieugwasr::associations(dat$SNP,id.outcome,proxies = 0) %>% pull(eaf)
+      }
+    }
+    if(type_exposure == "binary"){
+      dat$units.exposure <- "log odds"
+      dat$prevalence.exposure <- prevalence_exposure
+      if(all(is.na(dat$eaf.exposure))){
+        dat$eaf.exposure <- ieugwasr::associations(dat$SNP,id.exposure,proxies = 0) %>% pull(eaf)
+      }
+    }
+    TwoSampleMR::steiger_filtering(dat) %>% filter(steiger_dir == TRUE) %>% pull(SNP)
+  })
+  union_SNPs <- Reduce(union, filtered_SNPs_list)
+  return(union_SNPs)
+}
+convert_liability <- function(k,p){
+  k*(1-k)/(dnorm(qnorm(k))*sqrt(p*(1-p)))
+}

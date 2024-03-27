@@ -4,7 +4,7 @@
 \alias{MVMR_ESMR}
 \title{Use ESMR to do MVMR analysis by locally data}
 \usage{
-MVMR_ESMR(dat, R_matrix, pval_threshold = 5e-08, effect_size_cutoff = 0.05)
+MVMR_ESMR(dat, R_matrix, pval_threshold = 5e-08, effect_size_cutoff = 0.1)
 }
 \arguments{
 \item{dat}{A data frame of combined GWAS summary data after LD pruning.
@@ -15,7 +15,7 @@ The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
 
-\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
 }
 \value{
 A dataframe of result summary

@@ -11,7 +11,9 @@ unique_traits(
   df_pairs,
   R2_cutoff = 0.9,
   method = "cluster",
-  extra_traits = "None"
+  cluster_selection_method = "n_inst",
+  extra_traits = "None",
+  df_bidirection = NULL
 )
 }
 \arguments{
@@ -25,9 +27,14 @@ unique_traits(
 
 \item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
 
-\item{method}{filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"}
+\item{method}{Filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"}
+
+\item{cluster_selection_method}{Trait selection method in each cluster: n_inst (select traits with
+the largest number of instruments), pvalue (-log10(p) mean for X and Y). Default = "n_inst"}
 
 \item{extra_traits}{trait ID which is adjusted for in bidirection MR. Default = "None"}
+
+\item{df_bidirection}{Dataframe of bidirection result. It should be input if you choose pvalue method for cluster selection.}
 }
 \value{
 A GWAS ID vector and a trait info dataframe

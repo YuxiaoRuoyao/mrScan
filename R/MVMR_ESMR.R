@@ -4,22 +4,22 @@
 #' `trait_ID.se` for standard errors, `trait_ID.z` for z-values, `trait_ID.ss` for sample sizes.
 #' @param R_matrix Pairwise sample overlap matrix among traits
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
-#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
 #' @returns A dataframe of result summary
 #'
 #' @import dplyr
 #' @import esmr
 #' @importFrom purrr map_dfc
 #' @export
-MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,effect_size_cutoff=0.05){
-  #beta_hat <- dat %>% dplyr::select(ends_with(".beta"))
-  #se <- dat %>% dplyr::select(ends_with(".se"))
+MVMR_ESMR <- function(dat,R_matrix,pval_threshold=5e-8,effect_size_cutoff=0.1){
+  snp <- dat$snp
+  beta_hat <- dat %>% select(ends_with(".beta"))
+  se <- dat %>% select(ends_with(".se"))
   z <- dat %>% select(ends_with(".z"))
+  p <- dat %>% select(ends_with(".p"))
   ss <- dat %>% select(ends_with(".ss"))
-  #nms <- stringr::str_replace(names(beta_hat), ".beta", "")
   nms <- stringr::str_replace(names(z), ".z", "")
-  #names(beta_hat)<-names(se)<-names(p)<-nms
-  names(z)<-names(ss)<-nms
+  names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-nms
   N <- apply(ss, 2, median, na.rm = TRUE)
   z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
   se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%

@@ -4,10 +4,14 @@
 #' @param ex_dat3 Dataframe of instruments for a candidate confounder trait and extra trait (Z + M). Output from TwoSampleMR::mv_extract_exposures()
 #' @param ex_dat4 Dataframe of instruments for the main exposure or outcome (X/Y). Output from TwoSampleMR::extract_instruments()
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
-#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
 #' @param R2_cutoff R2 cutoff for duplicated traits with X or Y. Default = 0.85
 #' @param df_info Dataframe of trait info containing sample sizes. The required columns include
 #' `id` for trait ID, `sample_size` for sample sizes. Default = NULL
+#' @param type_list A vector for the type of traits (X/Y + M). The order should be exactly matched
+#' with traits. eg. c("binary","continuous") for the first exposure is a binary trait
+#' @param prevalence_list A vector for prevalence of traits (X/Y + M). The order should
+#' be exactly matched with exposures. For continuous trait, just write NA. eg. c(0.1, NA)
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
@@ -15,7 +19,8 @@
 #' @import GRAPPLE
 #' @export
 bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3,
-                             effect_size_cutoff = 0.05,R2_cutoff=0.85,df_info = NULL){
+                             effect_size_cutoff = 0.1,R2_cutoff=0.85,df_info = NULL,
+                             type_list = c("continuous","continuous"), prevalence_list = NULL){
   ID1 <- unique(ex_dat4$id.exposure) # X/Y
   ID2 <- unique(ex_dat2$id.exposure) # Z
   ID3 <- unique(ex_dat1$id.exposure)[-1] # M
@@ -47,12 +52,16 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
         ss <- df_info %>% filter(id %in% c(ID1, ID2, ID3)) %>%
           arrange(match(id, c(ID1, ID2, ID3))) %>% pull(sample_size)
         params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2], ss.outcome = ss[2],
-                        effect_size_cutoff = effect_size_cutoff)
+                        effect_size_cutoff = effect_size_cutoff,
+                        type_exposure = type_list, prevalence_exposure = prevalence_list)
         params2 <- list(dat = mvdat_2, type = "IEU", ss.exposure = ss[-1], ss.outcome = ss[1],
-                        effect_size_cutoff = effect_size_cutoff)
+                        effect_size_cutoff = effect_size_cutoff,
+                        type_outcome = type_list[1], prevalence_outcome = prevalence_list[1])
       }else{
-        params1 <- list(dat = mvdat_1, type = "IEU",effect_size_cutoff = effect_size_cutoff)
-        params2 <- list(dat = mvdat_2, type = "IEU",effect_size_cutoff = effect_size_cutoff)
+        params1 <- list(dat = mvdat_1, type = "IEU",effect_size_cutoff = effect_size_cutoff,
+                        type_exposure = type_list, prevalence_exposure = prevalence_list)
+        params2 <- list(dat = mvdat_2, type = "IEU",effect_size_cutoff = effect_size_cutoff,
+                        type_outcome = type_list[1], prevalence_outcome = prevalence_list[1])
       }
       methods <- list(MVMR_IVW = MVMR_IVW, MVMR_GRAPPLE = MVMR_GRAPPLE,
                       MVMR_MRBEE = MVMR_MRBEE)

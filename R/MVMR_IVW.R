@@ -10,7 +10,13 @@
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
 #' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL
-#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
+#' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
+#' @param type_outcome It could be either "continuous" or "binary". Default = "continuous"
+#' @param prevalence_outcome Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL
+#' @param type_exposure A vector for the type of exposures. The order should be exactly matched
+#' with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait
+#' @param prevalence_exposure A vector for prevalence of exposures. The order should
+#' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
 #' @returns A dataframe of result summary
 #'
 #' @import TwoSampleMR
@@ -19,25 +25,31 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
-                     ss.exposure = NULL, ss.outcome = NULL,effect_size_cutoff = 0.05){
+                     ss.exposure = NULL, ss.outcome = NULL,effect_size_cutoff = 0.1,
+                     type_outcome = "continuous", prevalence_outcome = NULL,
+                     type_exposure = NULL, prevalence_exposure = NULL){
   if(type == "local"){
-    #beta_hat <- dat %>% select(ends_with(".beta"))
-    #se <- dat %>% select(ends_with(".se"))
+    snp <- dat$snp
+    beta_hat <- dat %>% select(ends_with(".beta"))
+    se <- dat %>% select(ends_with(".se"))
     z <- dat %>% select(ends_with(".z"))
     p <- dat %>% select(ends_with(".p"))
     ss <- dat %>% select(ends_with(".ss"))
-    #nms <- stringr::str_replace(names(beta_hat), ".beta", "")
     nms <- stringr::str_replace(names(z), ".z", "")
-    #names(beta_hat)<-names(se)<-names(p)<-nms
-    names(z)<-names(p)<-names(ss)<-nms
+    names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-nms
     N <- apply(ss, 2, median, na.rm = TRUE)
     z.norm <- sweep(z,2,sqrt(N),`/`)
     se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z)))
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
-    final_ix <- intersect(ix,filtered_idx)
-    #i <- ncol(beta_hat)
+    new_ix <- intersect(ix,filtered_idx)
+    filtered_SNP <- general_steiger_filtering(SNP = snp[new_ix],id.exposure = nms[-1],id.outcome = nms[1],
+                                              exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
+                                              exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
+                                              outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
+                                              type_outcome = type_outcome, prevalence_outcome = prevalence_outcome)
+    final_ix <- which(snp %in% filtered_SNP)
     i <- ncol(z.norm)
     if(i>2){
       hdat <-  list(exposure_beta = as.matrix(z.norm[final_ix, 2:i,drop=FALSE]),
@@ -85,6 +97,25 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       as.matrix()
     z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
     se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
+    if(type_outcome == "binary"){
+      ncases <- gwasinfo(id.outcome)$ncase
+      convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
+      z.norm.outcome <- z.norm.outcome*convert_ratio
+      se.norm.outcome <- se.norm.outcome*convert_ratio
+    }
+    if("binary" %in% type_exposure){
+      ix_binary <- which(type_exposure %in% "binary")
+      ncases <- gwasinfo(id.exposure[ix_binary])$ncase
+      convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
+                                         p = ncases/ss.exposure[ix_binary])
+      if(length(ix_binary) == 1) {
+        z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
+        se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
+      } else {
+        z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
+        se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
+      }
+    }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
 
     dat_norm <- list(exposure_beta = z.norm.exposure[filtered_idx, ],
