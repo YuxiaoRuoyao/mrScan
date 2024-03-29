@@ -515,6 +515,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
     dat_outcome$units.outcome <- "log odds"
     dat_outcome$prevalence.outcome <- prevalence_outcome
     dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome)
+    dat_outcome <- dat_outcome %>% tidyr::drop_na(eaf.outcome)
   }
   filtered_SNPs_list <- lapply(1:length(id.exposure), function(i) {
     dat_exposure <- data.frame(SNP = SNP, beta.exposure = exposure_beta[,i],
@@ -530,6 +531,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
       dat_exposure$units.exposure <- "log odds"
       dat_exposure$prevalence.exposure <- prevalence_exposure[i]
       dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
+      dat_exposure <- dat_exposure %>% tidyr::drop_na(eaf.exposure)
     }
     dat <- left_join(dat_exposure,dat_outcome) %>%
       TwoSampleMR::steiger_filtering() %>% filter(steiger_dir == TRUE)
