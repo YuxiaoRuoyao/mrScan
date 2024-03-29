@@ -31,6 +31,7 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                        type_exposure = NULL, prevalence_exposure = NULL){
   if(type == "local"){
     snp <- dat$snp
+    info <- dat %>% select(snp,REF,ALT)
     beta_hat <- dat %>% select(ends_with(".beta"))
     se <- dat %>% select(ends_with(".se"))
     z <- dat %>% select(ends_with(".z"))
@@ -56,7 +57,9 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
                                               exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
                                               outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
-                                              type_outcome = type_outcome, prevalence_outcome = prevalence_outcome)
+                                              type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
+                                              type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
+                                              snp_info = info[new_ix,])
     final_ix <- which(snp %in% filtered_SNP)
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]

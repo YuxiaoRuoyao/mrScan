@@ -481,38 +481,57 @@ MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
   })
 }
 #' @export
+get_eaf <- function(SNP_set, id, snp_info = NULL){
+  association_data <- ieugwasr::associations(SNP_set, id, proxies = 0)
+  if (!is.null(snp_info)) {
+    association_data <- merge(association_data, snp_info, by.x = "rsid", by.y = "snp", all.x = TRUE)
+  }
+  association_data <- split(association_data, association_data$rsid) %>%
+    lapply(function(df){
+      if(nrow(df) > 1){
+        df <- df %>%
+          filter((ea == ALT & nea == REF) | (ea == REF & nea == ALT))
+      }
+      df
+    }) %>%
+    do.call(rbind, .)
+  return(association_data$eaf)
+}
+#' @export
 general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                       exposure_beta, exposure_pval, exposure_se,
                                       outcome_beta, outcome_pval, outcome_se,
-                                      type_outcome = "continuous", type_exposure = "continuous",
-                                      prevalence_outcome = NA, prevalence_exposure = NA) {
-  filtered_SNPs_list <- lapply(id.exposure, function(id) {
-    dat <- data.frame(SNP = SNP, beta.exposure = exposure_beta[,id],
-               pval.exposure = exposure_pval[,id], se.exposure = exposure_se[,id],
-               beta.outcome = outcome_beta, pval.outcome = outcome_pval, se.outcome = outcome_se,
-               id.exposure = id, exposure = id, id.outcome = id.outcome,outcome = id.outcome)
-    colnames(dat) <- c("SNP", "beta.exposure", "pval.exposure", "se.exposure",
-                       "beta.outcome", "pval.outcome", "se.outcome",
-                       "id.exposure", "exposure", "id.outcome", "outcome")
-    dat <- dat %>% TwoSampleMR::add_metadata()
-    if(all(grepl("SD", dat$units.exposure))){
-      dat$eaf.exposure <- ieugwasr::associations(dat$SNP,id,proxies = 0) %>% pull(eaf)
+                                      type_outcome = "continuous", type_exposure = NULL,
+                                      prevalence_outcome = NULL, prevalence_exposure = NULL,
+                                      snp_info = NULL) {
+  dat_outcome <- data.frame(SNP = SNP, beta.outcome = outcome_beta, pval.outcome = outcome_pval,
+                            se.outcome = outcome_se,id.outcome = id.outcome,outcome = id.outcome)
+  colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
+  dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
+  if(type_outcome == "binary"){
+    dat_outcome$units.outcome <- "log odds"
+    dat_outcome$prevalence.outcome <- prevalence_outcome
+    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome)
+  }
+  filtered_SNPs_list <- lapply(1:length(id.exposure), function(i) {
+    dat_exposure <- data.frame(SNP = SNP, beta.exposure = exposure_beta[,i],
+                               pval.exposure = exposure_pval[,i], se.exposure = exposure_se[,i],
+                               id.exposure = id.exposure[i], exposure = id.exposure[i])
+    colnames(dat_exposure) <- c("SNP", "beta.exposure", "pval.exposure", "se.exposure",
+                       "id.exposure", "exposure")
+    dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
+    if(all(grepl("SD", dat_exposure$units.exposure))){
+      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
     }
-    if(type_outcome == "binary"){
-      dat$units.outcome <- "log odds"
-      dat$prevalence.outcome <- prevalence_outcome
-      if(all(is.na(dat$eaf.outcome))){
-        dat$eaf.outcome <- ieugwasr::associations(dat$SNP,id.outcome,proxies = 0) %>% pull(eaf)
-      }
+    if(!is.null(type_exposure) && type_exposure[i] == "binary"){
+      dat_exposure$units.exposure <- "log odds"
+      dat_exposure$prevalence.exposure <- prevalence_exposure[i]
+      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
     }
-    if(type_exposure == "binary"){
-      dat$units.exposure <- "log odds"
-      dat$prevalence.exposure <- prevalence_exposure
-      if(all(is.na(dat$eaf.exposure))){
-        dat$eaf.exposure <- ieugwasr::associations(dat$SNP,id.exposure,proxies = 0) %>% pull(eaf)
-      }
-    }
-    TwoSampleMR::steiger_filtering(dat) %>% filter(steiger_dir == TRUE) %>% pull(SNP)
+    dat <- left_join(dat_exposure,dat_outcome) %>%
+      TwoSampleMR::steiger_filtering() %>% filter(steiger_dir == TRUE)
+    print(paste0("Finish Steiger Filtering for ",id.exposure[i]))
+    return(dat$SNP)
   })
   union_SNPs <- Reduce(union, filtered_SNPs_list)
   return(union_SNPs)

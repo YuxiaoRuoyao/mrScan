@@ -32,6 +32,7 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                          type_exposure = NULL, prevalence_exposure = NULL){
   if(type == "local"){
     snp <- dat$snp
+    info <- dat %>% select(snp,REF,ALT)
     beta_hat <- dat %>% select(ends_with(".beta"))
     se <- dat %>% select(ends_with(".se"))
     z <- dat %>% select(ends_with(".z"))
@@ -55,7 +56,9 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
                                               exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
                                               outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
-                                              type_outcome = type_outcome, prevalence_outcome = prevalence_outcome)
+                                              type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
+                                              type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
+                                              snp_info = info[new_ix,])
     final_ix <- which(snp %in% filtered_SNP)
     grapple_dat <- data.frame(cbind(z.norm[final_ix,], se.norm[final_ix,]))
     names(grapple_dat) <- c("gamma_out", paste0("gamma_exp", 1:(i-1)),
