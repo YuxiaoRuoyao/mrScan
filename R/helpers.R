@@ -495,7 +495,10 @@ get_eaf <- function(SNP_set, id, snp_info = NULL){
       df
     }) %>%
     do.call(rbind, .)
-  return(association_data$eaf)
+  eaf_vector <- setNames(rep(NA, length(SNP_set)), SNP_set)
+  matched_snps <- association_data$rsid[association_data$rsid %in% names(eaf_vector)]
+  eaf_vector[matched_snps] <- association_data$eaf[match(matched_snps, association_data$rsid)]
+  return(eaf_vector)
 }
 #' @export
 general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
@@ -518,7 +521,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                pval.exposure = exposure_pval[,i], se.exposure = exposure_se[,i],
                                id.exposure = id.exposure[i], exposure = id.exposure[i])
     colnames(dat_exposure) <- c("SNP", "beta.exposure", "pval.exposure", "se.exposure",
-                       "id.exposure", "exposure")
+                                "id.exposure", "exposure")
     dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
     if(all(grepl("SD", dat_exposure$units.exposure))){
       dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
