@@ -10,6 +10,6 @@ ld_files <- unlist(snakemake@input[["l2"]])
 m_files <- unlist(snakemake@input[["m"]])
 out <- snakemake@output[["out"]]
 
-res <- ldsc_full(beta_files = beta_files, ld_files = ld_files, m_files = m_files)
+res <- ldsc_full(dat = beta_files, ld_files = ld_files, m_files = m_files)
 
 saveRDS(res,file=out)

@@ -13,8 +13,7 @@ format_ldsc_prune(
   pthresh,
   ref_path,
   ld_files,
-  m_files,
-  name_label = NULL
+  m_files
 )
 }
 \arguments{
@@ -35,8 +34,6 @@ format_ldsc_prune(
 \item{ld_files}{Paths of reference LD score files}
 
 \item{m_files}{Paths of reference M files}
-
-\item{name_label}{Unique name label for temporarly save the formatted data. Default = NULL}
 }
 \value{
 A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info

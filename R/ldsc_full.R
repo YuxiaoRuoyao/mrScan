@@ -1,5 +1,8 @@
 #' @title Estimate genetic correlation matrix by LDSC method
-#' @param beta_files Paths of combined GWAS data without LD pruning
+#' @param dat Combined GWAS data without LD pruning. You have two options:
+#' 1. One dataframe of combined data
+#' 2. A vector for paths of combined data in each chromosome. It should have 22 elements.
+#' eg: c("beta.1.RDS","beta.2.RDS",....,"beta.22.RDS")
 #' @param ld_files Paths of reference LD score files
 #' @param m_files Paths of reference M files
 #' @returns A list contain sample overlap matrix (Re) and genetic correlation matrix (Rg)
@@ -12,17 +15,23 @@
 #' @import sumstatFactors
 #' @importFrom purrr map_dfr map
 #' @export
-ldsc_full<-function(beta_files, ld_files, m_files){
+ldsc_full<-function(dat, ld_files, m_files){
   ld <- purrr::map_dfr(1:22, function(c){
     read_table(ld_files[c])
   })
   M <- purrr:::map(1:22, function(c){
     read_lines(m_files[c])
   }) %>% unlist() %>% as.numeric() %>% sum()
-  X <- map_dfr(beta_files, function(f){
-    readRDS(f) %>%
+  if(is.vector(dat) & length(dat) == 22){
+    X <- map_dfr(dat, function(f){
+      readRDS(f) %>%
+        rename(SNP = snp) %>%
+        inner_join(., ld)})
+  }else if(is.data.frame(dat)){
+    X <- dat %>%
       rename(SNP = snp) %>%
-      inner_join(., ld)})
+      inner_join(., ld)
+  }
   Z_hat <- X %>%
     select(ends_with(".z")) %>%
     as.matrix()

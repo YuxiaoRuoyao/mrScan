@@ -6,6 +6,7 @@ id_exposure <- snakemake@params[["id_exposure"]]
 id_outcome <- snakemake@params[["id_outcome"]]
 trait_id <- snakemake@params[["trait_id"]]
 trait_info <- read.csv(snakemake@input[["trait_info"]])
+file_path <- snakemake@params[["path"]]
 df_info_exposure_outcome <- read.csv(snakemake@input[["file_info_exposure_outcome"]])
 df_download <- read.csv(snakemake@input[["download"]],header=F)
 r2_thresh <- as.numeric(snakemake@params[["r2_thresh"]])
@@ -32,7 +33,7 @@ file_list$location <- paste0(file_path,file_list$location)
 df_file <- data.frame(id=id_list) %>% left_join(file_list)
 res <- format_ldsc_prune(df_file = df_file,df_info = df_info,r2_thresh = r2_thresh,
                          clump_kb = clump_kb,type = type,pthresh = pthresh,ref_path = ref_path,
-                         ld_files = ld_files,m_files = m_files,name_label = trait_id)
+                         ld_files = ld_files,m_files = m_files)
 
 saveRDS(res$R,file = out_R)
 saveRDS(res$dat,file = out_dat)

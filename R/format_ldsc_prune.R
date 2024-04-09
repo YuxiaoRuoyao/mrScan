@@ -12,7 +12,6 @@
 #' @param ref_path Path for the LD reference panel.
 #' @param ld_files Paths of reference LD score files
 #' @param m_files Paths of reference M files
-#' @param name_label Unique name label for temporarly save the formatted data. Default = NULL
 #' @returns A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info
 #'
 #' @import dplyr
@@ -20,24 +19,18 @@
 #' @importFrom purrr map_dfr
 #' @export
 format_ldsc_prune <- function(df_file,df_info,r2_thresh,clump_kb,type,
-                              pthresh,ref_path,ld_files,m_files,name_label = NULL){
-  temp_dir <- tempfile()
-  dir.create(temp_dir)
+                              pthresh,ref_path,ld_files,m_files){
   formatted_dats <- list()
   pruned_dats <- list()
-  formatted_dat_paths <- character(22)
-  for (c in 1:22) {
+  for (c in 20:22) {
     formatted_dat <- format_combine_gwas(df_file = df_file, c = c, df_info = df_info)
     pruned_dat <- ld_prune_plink(X = formatted_dat, r2_thresh = r2_thresh, clump_kb = clump_kb,
                                  ref_path = ref_path, type = type, pthresh = pthresh)
     pruned_dats[[c]] <- pruned_dat
-    formatted_dat_path <- file.path(temp_dir, paste0(name_label, "_", c, "_formatted_data.rds"))
-    saveRDS(formatted_dat, formatted_dat_path)
-    formatted_dat_paths[c] <- formatted_dat_path
+    formatted_dats[[c]] <- formatted_dat
   }
-  R <- ldsc_full(beta_files = formatted_dat_paths, ld_files = ld_files, m_files = m_files)
-  file.remove(formatted_dat_paths)
-  dat <- do.call(rbind, pruned_dats)
-  unlink(temp_dir, recursive = TRUE)
-  return(list(R = R, dat = dat))
+  combine_formatted <- do.call(rbind, formatted_dats)
+  R <- ldsc_full(dat = combine_formatted, ld_files = ld_files, m_files = m_files)
+  combine_pruned <- do.call(rbind, pruned_dats)
+  return(list(R = R, dat = combine_pruned))
 }
