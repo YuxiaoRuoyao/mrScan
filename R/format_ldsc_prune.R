@@ -22,7 +22,7 @@ format_ldsc_prune <- function(df_file,df_info,r2_thresh,clump_kb,type,
                               pthresh,ref_path,ld_files,m_files){
   formatted_dats <- list()
   pruned_dats <- list()
-  for (c in 20:22) {
+  for (c in 1:22) {
     formatted_dat <- format_combine_gwas(df_file = df_file, c = c, df_info = df_info)
     pruned_dat <- ld_prune_plink(X = formatted_dat, r2_thresh = r2_thresh, clump_kb = clump_kb,
                                  ref_path = ref_path, type = type, pthresh = pthresh)
