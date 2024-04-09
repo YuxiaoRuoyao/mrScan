@@ -16,12 +16,14 @@
 #' @importFrom purrr map_dfr map
 #' @export
 ldsc_full<-function(dat, ld_files, m_files){
-  ld <- purrr::map_dfr(1:22, function(c){
+  ld <- map_dfr(1:22, function(c){
     read_table(ld_files[c])
   })
-  M <- purrr:::map(1:22, function(c){
+  print("Finish ld reading!")
+  M <- map(1:22, function(c){
     read_lines(m_files[c])
   }) %>% unlist() %>% as.numeric() %>% sum()
+  print("Finish M reading!")
   if(is.vector(dat) & length(dat) == 22){
     X <- map_dfr(dat, function(f){
       readRDS(f) %>%
