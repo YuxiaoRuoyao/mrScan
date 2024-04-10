@@ -481,16 +481,23 @@ MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
   })
 }
 #' @export
-get_eaf <- function(SNP_set, id, snp_info = NULL){
-  association_data <- ieugwasr::associations(SNP_set, id, proxies = 0)
+get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0){
+  association_data <- ieugwasr::associations(SNP_set, id, proxies = proxies)
   if (!is.null(snp_info)) {
     association_data <- merge(association_data, snp_info, by.x = "rsid", by.y = "snp", all.x = TRUE)
   }
+  if(!is.null(dat)){
+    association_data <- merge(association_data, dat, by.x = "rsid", by.y = "SNP", all.x = TRUE)
+  }
   association_data <- split(association_data, association_data$rsid) %>%
-    lapply(function(df){
-      if(nrow(df) > 1){
-        df <- df %>%
-          filter((ea == ALT & nea == REF) | (ea == REF & nea == ALT))
+    lapply(function(df) {
+      if (nrow(df) > 1) {
+        if (!is.null(snp_info)) {
+          df <- df %>%
+            filter((ea == ALT & nea == REF) | (ea == REF & nea == ALT))
+        }else if(is.null(snp_info) && !is.null(dat)){
+          df <- df[which.min(abs(df$beta - df$BETA)), ]
+        }
       }
       df
     }) %>%
@@ -506,7 +513,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                       outcome_beta, outcome_pval, outcome_se,
                                       type_outcome = "continuous", type_exposure = NULL,
                                       prevalence_outcome = NULL, prevalence_exposure = NULL,
-                                      snp_info = NULL) {
+                                      snp_info = NULL,proxies = 0) {
   dat_outcome <- data.frame(SNP = SNP, beta.outcome = outcome_beta, pval.outcome = outcome_pval,
                             se.outcome = outcome_se,id.outcome = id.outcome,outcome = id.outcome)
   colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
@@ -514,7 +521,11 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
   if(type_outcome == "binary"){
     dat_outcome$units.outcome <- "log odds"
     dat_outcome$prevalence.outcome <- prevalence_outcome
-    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome)
+    dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
+      rename(BETA = beta.outcome)
+    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
+                                       snp_info = snp_info,dat = dat_input_out,
+                                       proxies = proxies)
     dat_outcome <- dat_outcome %>% tidyr::drop_na(eaf.outcome)
   }
   filtered_SNPs_list <- lapply(1:length(id.exposure), function(i) {
@@ -525,12 +536,20 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                 "id.exposure", "exposure")
     dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
     if(all(grepl("SD", dat_exposure$units.exposure))){
-      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
+      dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
+        rename(BETA = beta.exposure)
+      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
+                                           snp_info = snp_info,dat = dat_input_exp,
+                                           proxies = proxies)
     }
     if(!is.null(type_exposure) && type_exposure[i] == "binary"){
       dat_exposure$units.exposure <- "log odds"
       dat_exposure$prevalence.exposure <- prevalence_exposure[i]
-      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i])
+      dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
+        rename(BETA = beta.exposure)
+      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
+                                           snp_info = snp_info, dat = dat_input_exp,
+                                           proxies = proxies)
       dat_exposure <- dat_exposure %>% tidyr::drop_na(eaf.exposure)
     }
     dat <- left_join(dat_exposure,dat_outcome) %>%

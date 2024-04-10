@@ -121,11 +121,26 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
       }
     }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
-
-    fit <- MRBEE.IMRP(by = z.norm.outcome[filtered_idx],
-                      bX = z.norm.exposure[filtered_idx, ],
-                      byse = se.norm.outcome[filtered_idx],
-                      bXse = se.norm.exposure[filtered_idx, ],
+    snp <- rownames(dat$exposure_beta)
+    filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
+                                              id.exposure = id.exposure,
+                                              id.outcome = id.outcome,
+                                              exposure_beta = dat$exposure_beta[filtered_idx,],
+                                              exposure_pval = dat$exposure_pval[filtered_idx,],
+                                              exposure_se = dat$exposure_se[filtered_idx,],
+                                              outcome_beta = dat$outcome_beta[filtered_idx],
+                                              outcome_pval = dat$outcome_pval[filtered_idx],
+                                              outcome_se = dat$outcome_se[filtered_idx],
+                                              type_outcome = type_outcome,
+                                              prevalence_outcome = prevalence_outcome,
+                                              type_exposure = type_exposure,
+                                              prevalence_exposure = prevalence_exposure,
+                                              proxies = 1)
+    final_ix <- which(snp %in% filtered_SNP)
+    fit <- MRBEE.IMRP(by = z.norm.outcome[final_ix],
+                      bX = z.norm.exposure[final_ix, ],
+                      byse = se.norm.outcome[final_ix],
+                      bXse = se.norm.exposure[final_ix, ],
                       Rxy = diag(nrow = length(id.exposure)+1),
                       pv.thres = pleio_threshold, var.est = "variance")
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,

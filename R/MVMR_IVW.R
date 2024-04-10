@@ -120,13 +120,28 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       }
     }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
-
-    dat_norm <- list(exposure_beta = z.norm.exposure[filtered_idx, ],
-                     exposure_pval = dat$exposure_pval[filtered_idx, ],
-                     exposure_se = se.norm.exposure[filtered_idx, ],
-                     outcome_beta = z.norm.outcome[filtered_idx],
-                     outcome_pval = dat$outcome_pval[filtered_idx],
-                     outcome_se = se.norm.outcome[filtered_idx],
+    snp <- rownames(dat$exposure_beta)
+    filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
+                                              id.exposure = id.exposure,
+                                              id.outcome = id.outcome,
+                                              exposure_beta = dat$exposure_beta[filtered_idx,],
+                                              exposure_pval = dat$exposure_pval[filtered_idx,],
+                                              exposure_se = dat$exposure_se[filtered_idx,],
+                                              outcome_beta = dat$outcome_beta[filtered_idx],
+                                              outcome_pval = dat$outcome_pval[filtered_idx],
+                                              outcome_se = dat$outcome_se[filtered_idx],
+                                              type_outcome = type_outcome,
+                                              prevalence_outcome = prevalence_outcome,
+                                              type_exposure = type_exposure,
+                                              prevalence_exposure = prevalence_exposure,
+                                              proxies = 1)
+    final_ix <- which(snp %in% filtered_SNP)
+    dat_norm <- list(exposure_beta = z.norm.exposure[final_ix, ],
+                     exposure_pval = dat$exposure_pval[final_ix, ],
+                     exposure_se = se.norm.exposure[final_ix, ],
+                     outcome_beta = z.norm.outcome[final_ix],
+                     outcome_pval = dat$outcome_pval[final_ix],
+                     outcome_se = se.norm.outcome[final_ix],
                      expname = dat$expname, outname = dat$outname)
     res <- mv_multiple(dat_norm)$result %>% select(id.exposure,id.outcome,b,se,pval) %>%
       rename("pvalue" = "pval") %>% mutate(method = "MVMR_IVW")

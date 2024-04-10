@@ -58,7 +58,7 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                                               outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
                                               type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
-                                              snp_info = info[new_ix,])
+                                              snp_info = info[new_ix,],proxies = 0)
     final_ix <- which(snp %in% filtered_SNP)
     grapple_dat <- data.frame(cbind(z.norm[final_ix,], se.norm[final_ix,]))
     names(grapple_dat) <- c("gamma_out", paste0("gamma_exp", 1:(i-1)),
@@ -132,8 +132,24 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
       }
     }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
-    grapple_dat<-cbind(z.norm.exposure[filtered_idx,],se.norm.exposure[filtered_idx,],
-                       z.norm.outcome[filtered_idx],se.norm.outcome[filtered_idx])
+    snp <- rownames(dat$exposure_beta)
+    filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
+                                              id.exposure = id.exposure,
+                                              id.outcome = id.outcome,
+                                              exposure_beta = dat$exposure_beta[filtered_idx,],
+                                              exposure_pval = dat$exposure_pval[filtered_idx,],
+                                              exposure_se = dat$exposure_se[filtered_idx,],
+                                              outcome_beta = dat$outcome_beta[filtered_idx],
+                                              outcome_pval = dat$outcome_pval[filtered_idx],
+                                              outcome_se = dat$outcome_se[filtered_idx],
+                                              type_outcome = type_outcome,
+                                              prevalence_outcome = prevalence_outcome,
+                                              type_exposure = type_exposure,
+                                              prevalence_exposure = prevalence_exposure,
+                                              proxies = 1)
+    final_ix <- which(snp %in% filtered_SNP)
+    grapple_dat<-cbind(z.norm.exposure[final_ix,],se.norm.exposure[final_ix,],
+                       z.norm.outcome[final_ix],se.norm.outcome[final_ix])
     i <- length(id.exposure)
     colnames(grapple_dat)<-c(paste0("gamma_exp",seq(1,i)),
                               paste0("se_exp",seq(1,i)),"gamma_out1","se_out1")

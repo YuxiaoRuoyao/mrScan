@@ -19,11 +19,9 @@ ldsc_full<-function(dat, ld_files, m_files){
   ld <- map_dfr(1:22, function(c){
     read_table(ld_files[c])
   })
-  print("Finish ld reading!")
   M <- map(1:22, function(c){
     read_lines(m_files[c])
   }) %>% unlist() %>% as.numeric() %>% sum()
-  print("Finish M reading!")
   if(is.vector(dat) & length(dat) == 22){
     X <- map_dfr(dat, function(f){
       readRDS(f) %>%
