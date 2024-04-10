@@ -20,7 +20,7 @@ unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
                           extra_traits = "None",df_bidirection = NULL){
   if(method=="cluster"){
     clusters <- greedy_cluster(id.list = id.list,R = R_matrix,
-                               R2_cutoff = R2_cutoff)
+                               R2_cutoff = R2_cutoff,df_info = df_info)
     df_info <- left_join(df_info,clusters,by = c("id" = "id"))
     if(cluster_selection_method == "n_inst"){
       df_cluster <- left_join(clusters,df_info[,c("id","n_inst")],

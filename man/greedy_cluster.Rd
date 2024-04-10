@@ -2,17 +2,23 @@
 % Please edit documentation in R/greedy_cluster.R
 \name{greedy_cluster}
 \alias{greedy_cluster}
-\title{Greedy algorithem to get clusters}
+\title{Greedy algorithm to get clusters.}
 \usage{
-greedy_cluster(id.list, R, R2_cutoff = 0.9)
+greedy_cluster(id.list, R, df_info, R2_cutoff = 0.9)
 }
 \arguments{
 \item{id.list}{GWAS ID list of traits based on previous steps}
 
 \item{R}{Dataframe of pairwise correlation matrix. The colnames and rownames are trait IDs.}
 
+\item{df_info}{Dataframe of trait ID info. It requires to contain `id`: trait ID,
+`n_inst`: the number of instruments.}
+
 \item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
 }
 \description{
-Greedy algorithem to get clusters
+Hierarchically clusters traits using a greedy algorithm.
+Initially, traits are clustered according to the highest pairwise correlations
+above a cutoff threshold. Then, within each cluster, traits are subclustered
+based on descending order of instrument numbers with high correlations grouped together.
 }
