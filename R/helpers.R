@@ -518,6 +518,13 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                             se.outcome = outcome_se,id.outcome = id.outcome,outcome = id.outcome)
   colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
   dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
+  if(all(grepl("SD", dat_outcome$units.outcome))){
+    dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
+      rename(BETA = beta.outcome)
+    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
+                                       snp_info = snp_info,dat = dat_input_out,
+                                       proxies = proxies)
+  }
   if(type_outcome == "binary"){
     dat_outcome$units.outcome <- "log odds"
     dat_outcome$prevalence.outcome <- prevalence_outcome
