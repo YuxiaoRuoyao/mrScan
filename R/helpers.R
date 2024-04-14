@@ -525,9 +525,11 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                        snp_info = snp_info,dat = dat_input_out,
                                        proxies = proxies)
   }
-  if(type_outcome == "binary"){
+  if(all(grepl("log odds", dat_outcome$units.outcome)) | type_outcome == "binary"){
     dat_outcome$units.outcome <- "log odds"
-    dat_outcome$prevalence.outcome <- prevalence_outcome
+    if(!is.null(prevalence_outcome)){
+      dat_outcome$prevalence.outcome <- prevalence_outcome
+    }
     dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
       rename(BETA = beta.outcome)
     dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
