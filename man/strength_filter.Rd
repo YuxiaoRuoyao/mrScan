@@ -6,7 +6,8 @@
 \usage{
 strength_filter(
   dat,
-  R_matrix,
+  dat_type = "local",
+  R_matrix = NULL,
   df_info,
   pval_threshold = 5e-08,
   F_threshold = 5,
@@ -15,9 +16,14 @@ strength_filter(
 )
 }
 \arguments{
-\item{dat}{A data frame of combined GWAS summary data after LD pruning. The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats, `trait_ID.se` for standard errors, `trait_ID.p` for pvalues.}
+\item{dat}{A data frame of combined GWAS summary data after LD pruning.
+For local data, the required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
+`trait_ID.se` for standard errors, `trait_ID.p` for pvalues.
+For IEU data, it should be output from TwoSampleMR::mv_harmonise_data().}
 
-\item{R_matrix}{Pairwise sample overlap matrix among traits}
+\item{dat_type}{Either "local" or "IEU". Default  = "local"}
+
+\item{R_matrix}{Pairwise sample overlap matrix among traits. Default = NULL}
 
 \item{df_info}{Dataframe of trait info from previous step}
 
