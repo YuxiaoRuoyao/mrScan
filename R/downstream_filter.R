@@ -53,8 +53,8 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.05,p2 = 0.0
   df_final<-full_join(data_wide1,data_wide2,by="id") %>%
     mutate(across(c("p_ZtoX","p_XtoZ","p_ZtoY","p_YtoZ"),
                   ~ p.adjust(.x, method = "fdr", n = length(.x)), .names="{.col}_adj"))
-  sig_trait <- df_bidirection %>% filter(p_ZtoX_adj < p1 | p_ZtoY_adj < p1) %>% pull(id)
-  down_trait <- df_bidirection %>% filter(p_XtoZ_adj < p2 | p_YtoZ_adj < p2) %>% pull(id)
+  sig_trait <- df_final %>% filter(p_ZtoX_adj < p1 | p_ZtoY_adj < p1) %>% pull(id)
+  down_trait <- df_final %>% filter(p_XtoZ_adj < p2 | p_YtoZ_adj < p2) %>% pull(id)
   select_trait <- sig_traits[!sig_traits %in% c(down_traits,notconverge_traits)]
   df_info[df_info$id %in% select_trait,"status"] <- paste0("select after downstream filtering by ",MR_method)
   filter.trait <- id.list[!id.list %in% c(select_trait,notconverge_traits)]

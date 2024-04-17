@@ -27,15 +27,21 @@ for (f in mr_files) {
   }
 }
 
-empty_id <- empty_files %>% strsplit("_") %>% sapply(tail, 1) %>%
-  strsplit(".RDS") %>% sapply(tail, 1) %>% unique()
-high_corr_id <- high_corr_files %>% strsplit("_") %>% sapply(tail, 1) %>%
-  strsplit(".RDS") %>% sapply(tail, 1) %>% unique()
+if(!is.null(empty_files)){
+  empty_id <- empty_files %>% strsplit("_") %>% sapply(tail, 1) %>%
+    strsplit(".RDS") %>% sapply(tail, 1) %>% unique()
+}else{
+  empty_id <- c()
+}
+if(!is.null(high_corr_files)){
+  high_corr_id <- high_corr_files %>% strsplit("_") %>% sapply(tail, 1) %>%
+    strsplit(".RDS") %>% sapply(tail, 1) %>% unique()
+}else{
+  high_corr_id <- c()
+}
 df_info[df_info$id %in% empty_id,"status"] <- "delete due to not enough instruments"
 df_info[df_info$id %in% high_corr_id,"status"] <- "delete since high cor with X or Y"
 id.list <- id.list[!id.list %in% c(empty_id,high_corr_id)]
-
-
 mr_files <- mr_files[!mr_files %in% c(empty_files,high_corr_files)]
 res_mr <- map(mr_files, function(f){
   readRDS(f)
