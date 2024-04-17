@@ -26,19 +26,19 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.05,p2 = 0.0
   df_ZtoY <- left_join(df_summary,res$mr21,by=c("id"="id.exposure")) %>%
     filter(method == MR_method) %>%
     mutate(outcome = if_else(id.outcome == id_exposure, "X", "Y"))
-  notconverge_traits <- character(0)
+  notconverge_trait <- character(0)
   if(MR_method == "MR_GRAPPLE" | MR_method == "MVMR_GRAPPLE"){
     id_notconverge1 <- df_YtoZ[df_YtoZ$converge == FALSE,"id"]
     id_notconverge2 <- df_ZtoY[df_ZtoY$converge == FALSE,"id"]
-    notconverge_traits <- union(id_notconverge1,id_notconverge2)
-    df_info[df_info$id %in% notconverge_traits, "status"] <- paste0("delete due to not converge by ", MR_method)
+    notconverge_trait <- union(id_notconverge1,id_notconverge2)
+    df_info[df_info$id %in% notconverge_trait, "status"] <- paste0("delete due to not converge by ", MR_method)
     df_YtoZ <- df_YtoZ %>% filter(converge == TRUE)
     df_ZtoY <- df_ZtoY %>% filter(converge == TRUE)
   }else{
     id_notconverge1 <- df_YtoZ[df_YtoZ$pvalue == 1,"id"]
     id_notconverge2 <- df_ZtoY[df_ZtoY$pvalue == 1,"id"]
-    notconverge_traits <- union(id_notconverge1,id_notconverge2)
-    df_info[df_info$id %in% notconverge_traits, "status"] <- paste0("delete due to large SE by ", MR_method)
+    notconverge_trait <- union(id_notconverge1,id_notconverge2)
+    df_info[df_info$id %in% notconverge_trait, "status"] <- paste0("delete due to large SE by ", MR_method)
     df_YtoZ <- df_YtoZ %>% filter(pvalue != 1)
     df_ZtoY <- df_ZtoY %>% filter(pvalue != 1)
   }
@@ -55,9 +55,9 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.05,p2 = 0.0
                   ~ p.adjust(.x, method = "fdr", n = length(.x)), .names="{.col}_adj"))
   sig_trait <- df_final %>% filter(p_ZtoX_adj < p1 | p_ZtoY_adj < p1) %>% pull(id)
   down_trait <- df_final %>% filter(p_XtoZ_adj < p2 | p_YtoZ_adj < p2) %>% pull(id)
-  select_trait <- sig_traits[!sig_traits %in% c(down_traits,notconverge_traits)]
+  select_trait <- sig_trait[!sig_trait %in% c(down_trait,notconverge_trait)]
   df_info[df_info$id %in% select_trait,"status"] <- paste0("select after downstream filtering by ",MR_method)
-  filter.trait <- id.list[!id.list %in% c(select_trait,notconverge_traits)]
+  filter.trait <- id.list[!id.list %in% c(select_trait,notconverge_trait)]
   df_info[df_info$id %in% filter.trait,"status"] <- paste0("delete in downstream filtering by ",MR_method)
   return(list(id.list=select_trait,trait.info=df_info,df_bidirection = df_final))
 }
