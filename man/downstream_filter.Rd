@@ -9,7 +9,8 @@ downstream_filter(
   id.list,
   df_info,
   res,
-  sig_level = 0.05,
+  p1 = 0.05,
+  p2 = 0.01,
   MR_method
 )
 }
@@ -22,7 +23,9 @@ downstream_filter(
 
 \item{res}{Bidirection MR results for selected traits}
 
-\item{sig_level}{One-sided t-test significant level. Default=0.05}
+\item{p1}{p-value cutoff for adjusted pval to select upstream traits. Default=0.05}
+
+\item{p2}{p-value cutoff for adjusted pval to select downstream traits. Default=0.01}
 
 \item{MR_method}{Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
 MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_MRBEE}
@@ -32,5 +35,8 @@ A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
 estimate and t-test results
 }
 \description{
-Filter downstream traits
+Use Bidirectional MR or MVMR results to filter out downstream traits.
+It's based on FDR-adjusted pvalue on four directions. Select either upstream traits
+for exposure or outcome direction (p_ZtoX_adj < p1 | p_ZtoY_adj < p1) and
+exclude all downstream traits for both directions (p_XtoZ_adj < p2 | p_YtoZ_adj < p2).
 }
