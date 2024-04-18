@@ -50,13 +50,7 @@ res <- do.call(Map, c(f = rbind, res_mr))
 
 res_downstream <- downstream_filter(id_exposure = id_exposure,id.list = id.list,
                                     df_info = df_info,res = res, p1 = p1, p2 = p2,
-                                    MR_method = method)
-select_trait <- res_downstream$id.list
-df_info <- res_downstream$trait.info
-if(extra_trait != "None"){
-  select_trait <- c(select_trait,extra_trait)
-  df_info[df_info$id %in% extra_trait,"status"] <- "select after downstream filtering"
-}
+                                    MR_method = method,extra_traits = extra_trait)
 write.csv(data.frame(id = select_trait),file = out_id_list,row.names = F)
 write.csv(df_info,file = out_trait_info,row.names = F)
 write.csv(res_downstream$df_bidirection, file = out_df_bidirection,row.names = F)

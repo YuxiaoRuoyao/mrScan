@@ -9,8 +9,9 @@ downstream_filter(
   id.list,
   df_info,
   res,
-  p1 = 0.05,
-  p2 = 0.01,
+  p1 = 0.01,
+  p2 = 0.05,
+  extra_traits = "None",
   MR_method
 )
 }
@@ -23,9 +24,11 @@ downstream_filter(
 
 \item{res}{Bidirection MR results for selected traits}
 
-\item{p1}{p-value cutoff for adjusted pval to select upstream traits. Default=0.05}
+\item{p1}{p-value cutoff for adjusted pval to select upstream traits. Default=0.01}
 
-\item{p2}{p-value cutoff for adjusted pval to select downstream traits. Default=0.01}
+\item{p2}{p-value cutoff for adjusted pval to select downstream traits. Default=0.05}
+
+\item{extra_traits}{trait ID which is adjusted for in bidirection MR. Default = "None"}
 
 \item{MR_method}{Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
 MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_MRBEE}

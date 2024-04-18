@@ -7,10 +7,11 @@
 #' @param id.list GWAS ID list of traits based on previous steps
 #' @param df_info Dataframe of trait info from previous steps
 #' @param res Bidirection MR results for selected traits
-#' @param p1 p-value cutoff for adjusted pval to select upstream traits. Default=0.05
-#' @param p2 p-value cutoff for adjusted pval to select downstream traits. Default=0.01
+#' @param p1 p-value cutoff for adjusted pval to select upstream traits. Default=0.01
+#' @param p2 p-value cutoff for adjusted pval to select downstream traits. Default=0.05
 #' @param MR_method Bidirection MR or MVMR methods. Options: MR_IVW, MR_GRAPPLE,
 #' MR_MRBEE, MVMR_IVW, MVMR_GRAPPLE, MVMR_MRBEE
+#' @param extra_traits trait ID which is adjusted for in bidirection MR. Default = "None"
 #' @returns A GWAS ID vector, a trait info dataframe, a trait dataframe with four direction
 #' estimate and t-test results
 #'
@@ -18,7 +19,8 @@
 #' @import dplyr
 #' @importFrom data.table dcast setDT
 #' @export
-downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.05,p2 = 0.01,MR_method){
+downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.01,p2 = 0.05,
+                              extra_traits = "None",MR_method){
   df_summary<-data.frame(id=id.list) %>% left_join(df_info[,c("id","trait")],by="id")
   df_YtoZ <- left_join(df_summary,res$mr12,by=c("id"="id.outcome")) %>%
     filter(method == MR_method) %>%
@@ -59,5 +61,9 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.05,p2 = 0.0
   df_info[df_info$id %in% select_trait,"status"] <- paste0("select after downstream filtering by ",MR_method)
   filter.trait <- id.list[!id.list %in% c(select_trait,notconverge_trait)]
   df_info[df_info$id %in% filter.trait,"status"] <- paste0("delete in downstream filtering by ",MR_method)
+  if(extra_traits != "None"){
+    select_trait <- c(select_trait,extra_traits)
+    df_info[df_info$id %in% extra_traits,"status"] <- "select after downstream filtering"
+  }
   return(list(id.list=select_trait,trait.info=df_info,df_bidirection = df_final))
 }
