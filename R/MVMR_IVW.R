@@ -100,25 +100,25 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
       as.matrix()
     z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
     se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
-    if(type_outcome == "binary"){
-      ncases <- gwasinfo(id.outcome)$ncase
-      convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
-      z.norm.outcome <- z.norm.outcome*convert_ratio
-      se.norm.outcome <- se.norm.outcome*convert_ratio
-    }
-    if("binary" %in% type_exposure){
-      ix_binary <- which(type_exposure %in% "binary")
-      ncases <- gwasinfo(id.exposure[ix_binary])$ncase
-      convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
-                                         p = ncases/ss.exposure[ix_binary])
-      if(length(ix_binary) == 1) {
-        z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
-        se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
-      } else {
-        z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
-        se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
-      }
-    }
+    # if(type_outcome == "binary"){
+    #   ncases <- gwasinfo(id.outcome)$ncase
+    #   convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
+    #   z.norm.outcome <- z.norm.outcome*convert_ratio
+    #   se.norm.outcome <- se.norm.outcome*convert_ratio
+    # }
+    # if("binary" %in% type_exposure){
+    #   ix_binary <- which(type_exposure %in% "binary")
+    #   ncases <- gwasinfo(id.exposure[ix_binary])$ncase
+    #   convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
+    #                                      p = ncases/ss.exposure[ix_binary])
+    #   if(length(ix_binary) == 1) {
+    #     z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
+    #     se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
+    #   } else {
+    #     z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
+    #     se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
+    #   }
+    # }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],

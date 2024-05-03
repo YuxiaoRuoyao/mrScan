@@ -574,3 +574,21 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
 convert_liability <- function(k,p){
   k*(1-k)/(dnorm(qnorm(k))*sqrt(p*(1-p)))
 }
+WarningAndGrappleEst <- function(data, cor.mat = NULL) {
+  result <- list(
+    est = NULL,
+    notConverge = FALSE,
+    warnings = character()
+  )
+  environment <- environment()
+  result$est <- withCallingHandlers({
+    grappleRobustEst(data = data, cor.mat = cor.mat, plot.it = FALSE)
+  }, warning = function(w) {
+    environment$result$warnings <- c(environment$result$warnings, w$message)
+    if (grepl("Did not converge", w$message)) {
+      environment$result$notConverge <- TRUE
+    }
+    invokeRestart("muffleWarning")
+  })
+  return(result)
+}

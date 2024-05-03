@@ -63,37 +63,21 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     grapple_dat <- data.frame(cbind(z.norm[final_ix,], se.norm[final_ix,]))
     names(grapple_dat) <- c("gamma_out", paste0("gamma_exp", 1:(i-1)),
                             "se_out", paste0("se_exp", 1:(i-1)))
-    res_and_warning <- withCallingHandlers({
-      res <- grappleRobustEst(
-        data = grapple_dat,
-        plot.it = FALSE,
-        cor.mat = R_matrix)
-      res
-    }, warning = function(w) {
-      if (grepl("Did not converge", w$message)) {
-        notConverge <<- TRUE
-      } else {
-        notConverge <<- FALSE
-      }
-      invokeRestart("muffleWarning")
-    })
-    if (!exists("notConverge")) {
-      notConverge <- FALSE
-    }
+    res_and_warning <- WarningAndGrappleEst(data = grapple_dat, cor.mat = R_matrix)
     if(i > 2){
       res.summary <- data.frame(exposure=colnames(z.norm)[-1],
-                                b=res_and_warning$beta.hat,
-                                se=sqrt(diag(res_and_warning$beta.var)),
-                                pvalue=res_and_warning$beta.p.value,
+                                b=res_and_warning$est$beta.hat,
+                                se=sqrt(diag(res_and_warning$est$beta.var)),
+                                pvalue=res_and_warning$est$beta.p.value,
                                 method = paste0("GRAPPLE_",pval_threshold),
-                                converge = !notConverge)
+                                converge = !res_and_warning$notConverge)
     }else{
       res.summary <- data.frame(exposure=colnames(z.norm)[-1],
-                                b=res_and_warning$beta.hat,
-                                se=sqrt(res_and_warning$beta.var),
-                                pvalue=res_and_warning$beta.p.value,
+                                b=res_and_warning$est$beta.hat,
+                                se=sqrt(res_and_warning$est$beta.var),
+                                pvalue=res_and_warning$est$beta.p.value,
                                 method = paste0("GRAPPLE_",pval_threshold),
-                                converge = !notConverge)
+                                converge = !res_and_warning$notConverge)
     }
   }
   if(type == "IEU"){
@@ -112,25 +96,25 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
       as.matrix()
     z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
     se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
-    if(type_outcome == "binary"){
-      ncases <- gwasinfo(id.outcome)$ncase
-      convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
-      z.norm.outcome <- z.norm.outcome*convert_ratio
-      se.norm.outcome <- se.norm.outcome*convert_ratio
-    }
-    if("binary" %in% type_exposure){
-      ix_binary <- which(type_exposure %in% "binary")
-      ncases <- gwasinfo(id.exposure[ix_binary])$ncase
-      convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
-                                         p = ncases/ss.exposure[ix_binary])
-      if(length(ix_binary) == 1) {
-        z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
-        se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
-      } else {
-        z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
-        se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
-      }
-    }
+    # if(type_outcome == "binary"){
+    #   ncases <- gwasinfo(id.outcome)$ncase
+    #   convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
+    #   z.norm.outcome <- z.norm.outcome*convert_ratio
+    #   se.norm.outcome <- se.norm.outcome*convert_ratio
+    # }
+    # if("binary" %in% type_exposure){
+    #   ix_binary <- which(type_exposure %in% "binary")
+    #   ncases <- gwasinfo(id.exposure[ix_binary])$ncase
+    #   convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
+    #                                      p = ncases/ss.exposure[ix_binary])
+    #   if(length(ix_binary) == 1) {
+    #     z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
+    #     se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
+    #   } else {
+    #     z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
+    #     se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
+    #   }
+    # }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
@@ -153,29 +137,13 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     i <- length(id.exposure)
     colnames(grapple_dat)<-c(paste0("gamma_exp",seq(1,i)),
                               paste0("se_exp",seq(1,i)),"gamma_out1","se_out1")
-    res_and_warning <- withCallingHandlers({
-      res <- grappleRobustEst(
-        data = grapple_dat,
-        plot.it = FALSE
-      )
-      res
-    }, warning = function(w) {
-      if (grepl("Did not converge", w$message)) {
-        notConverge <<- TRUE
-      } else {
-        notConverge <<- FALSE
-      }
-      invokeRestart("muffleWarning")
-    })
-    if (!exists("notConverge")) {
-      notConverge <- FALSE
-    }
+    res_and_warning <- WarningAndGrappleEst(data = grapple_dat)
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-                              b = res_and_warning$beta.hat,
-                              se = sqrt(diag(res_and_warning$beta.var)),
-                              pvalue = res_and_warning$beta.p.value,
+                              b = res_and_warning$est$beta.hat,
+                              se = sqrt(diag(res_and_warning$est$beta.var)),
+                              pvalue = res_and_warning$est$beta.p.value,
                               method = "MVMR_GRAPPLE",
-                              converge = !notConverge)
+                              converge = !res_and_warning$notConverge)
   }
   res.summary[which(res.summary$se > 1),"pvalue"] <- 1
   return(res.summary)
