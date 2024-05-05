@@ -30,8 +30,8 @@ downstream_filter <- function(id_exposure,id.list,df_info,res,p1 = 0.01,p2 = 0.0
     mutate(outcome = if_else(id.outcome == id_exposure, "X", "Y"))
   notconverge_trait <- character(0)
   if(MR_method == "MR_GRAPPLE" | MR_method == "MVMR_GRAPPLE"){
-    id_notconverge1 <- df_YtoZ[df_YtoZ$converge == FALSE,"id"]
-    id_notconverge2 <- df_ZtoY[df_ZtoY$converge == FALSE,"id"]
+    id_notconverge1 <- df_YtoZ[df_YtoZ$converge == FALSE | df_YtoZ$pvalue == 1,"id"]
+    id_notconverge2 <- df_ZtoY[df_ZtoY$converge == FALSE | df_ZtoY$pvalue == 1,"id"]
     notconverge_trait <- intersect(id_notconverge1,id_notconverge2)
     df_info[df_info$id %in% notconverge_trait, "status"] <- paste0("delete due to not converge by ", MR_method)
     df_YtoZ <- df_YtoZ %>% filter(converge == TRUE & pvalue != 1)
