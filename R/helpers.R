@@ -324,6 +324,7 @@ format_ieu_chrom <- function(file, chrom){
   dat <- GFA::gwas_format(dat, "ID", "ES", "SE", "ALT",
                           "REF", "seqnames", "start",
                           p_value = "p_value",
+                          AF = "AF",
                           sample_size = "SS",
                           compute_pval = TRUE)
   return(dat)
@@ -370,8 +371,6 @@ format_flat_chrom <- function(file, chrom,
                        beta_hat_name , "`='d', `", se_name, "`='d', `",
                        chrom_name, "`='c' ", posstring,
                        pstring,  sstring, afstring, ")")
-
-
   if(str_ends(file, "gz") ){
     h <- read_table(pipe(paste0("gzip -cd ", file, " | head -2")))
     n <- which(names(h) == chrom_name)
@@ -390,6 +389,7 @@ format_flat_chrom <- function(file, chrom,
   dat <- gwas_format(X, snp_name, beta_hat_name, se_name, A1_name,
                      A2_name, chrom_name, pos_name,
                      p_value = p_value_name,
+                     AF = af_name,
                      sample_size = sample_size_name,
                      compute_pval = TRUE)
   return(dat)
