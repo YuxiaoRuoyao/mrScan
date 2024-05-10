@@ -12,7 +12,7 @@
 #' @import readr
 #' @import bigsnpr
 #' @import stringr
-#' @import sumstatFactors
+#' @import GFA
 #' @importFrom purrr map_dfr map
 #' @export
 ldsc_full<-function(dat, ld_files, m_files){

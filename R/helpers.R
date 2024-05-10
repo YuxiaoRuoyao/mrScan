@@ -3,7 +3,7 @@
 #' @import ieugwasr
 #' @import mr.raps
 #' @import stringr
-#' @import sumstatFactors
+#' @import GFA
 #' @import gwasvcf
 #' @import rlang
 #' @import readr
@@ -321,11 +321,11 @@ format_ieu_chrom <- function(file, chrom){
   dat <- query_chrompos_file(paste0(chrom, ":1-536870911"), file) %>%
     vcf_to_tibble() %>%
     mutate(p_value = 10^{-1*LP})
-  dat <- sumstatFactors::gwas_format(dat, "ID", "ES", "SE", "ALT",
-                                     "REF", "seqnames", "start",
-                                     p_value = "p_value",
-                                     sample_size = "SS",
-                                     compute_pval = TRUE)
+  dat <- GFA::gwas_format(dat, "ID", "ES", "SE", "ALT",
+                          "REF", "seqnames", "start",
+                          p_value = "p_value",
+                          sample_size = "SS",
+                          compute_pval = TRUE)
   return(dat)
 }
 #' @export

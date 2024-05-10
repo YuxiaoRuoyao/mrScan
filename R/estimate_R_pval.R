@@ -5,7 +5,7 @@
 #'
 #' @import dplyr
 #' @import stringr
-#' @import sumstatFactors
+#' @import GFA
 #' @importFrom purrr map_dfr
 #' @export
 estimate_R_pval <- function(beta_files,p_thresh=0.05){
