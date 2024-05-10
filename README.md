@@ -30,7 +30,7 @@ remotes::install_github("MRCIEU/TwoSampleMR")
 devtools::install_github("mrcieu/ieugwasr")
 devtools::install_github("qingyuanzhao/mr.raps")
 devtools::install_github("noahlorinczcomi/MRBEE")
-devtools::install_github("jean997/sumstatFactors")
+devtools::install_github("jean997/GFA")
 devtools::install_github("jingshuw/grapple")
 devtools::install_github("jean997/esmr")
 ```
