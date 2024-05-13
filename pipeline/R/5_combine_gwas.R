@@ -7,7 +7,7 @@ library(stringr)
 library(dplyr)
 library(ieugwasr)
 library(mrScan)
-library(sumstatFactors)
+library(GFA)
 
 id_list <- read.csv(snakemake@input[["id_list"]])$id
 df_info <- read.csv(snakemake@input[["trait_info"]])

@@ -511,6 +511,7 @@ get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0){
 general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                       exposure_beta, exposure_pval, exposure_se,
                                       outcome_beta, outcome_pval, outcome_se,
+                                      exposure_af = NULL, outcome_af = NULL,
                                       type_outcome = "continuous", type_exposure = NULL,
                                       prevalence_outcome = NULL, prevalence_exposure = NULL,
                                       snp_info = NULL,proxies = 0) {
@@ -519,23 +520,31 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
   colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
   dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
   if(all(grepl("SD", dat_outcome$units.outcome))){
-    dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
-      rename(BETA = beta.outcome)
-    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
-                                       snp_info = snp_info,dat = dat_input_out,
-                                       proxies = proxies)
+    if(!is.null(outcome_af)) {
+      dat_outcome$eaf.outcome <- outcome_af
+    }else{
+      dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
+        rename(BETA = beta.outcome)
+      dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
+                                         snp_info = snp_info,dat = dat_input_out,
+                                         proxies = proxies)
+    }
   }
   if(all(grepl("log odds", dat_outcome$units.outcome)) | type_outcome == "binary"){
     dat_outcome$units.outcome <- "log odds"
     if(!is.null(prevalence_outcome)){
       dat_outcome$prevalence.outcome <- prevalence_outcome
     }
-    dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
-      rename(BETA = beta.outcome)
-    dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
-                                       snp_info = snp_info,dat = dat_input_out,
-                                       proxies = proxies)
-    dat_outcome <- dat_outcome %>% tidyr::drop_na(eaf.outcome)
+    if(!is.null(outcome_af)) {
+      dat_outcome$eaf.outcome <- outcome_af
+    }else{
+      dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
+        rename(BETA = beta.outcome)
+      dat_outcome$eaf.outcome <- get_eaf(SNP_set = dat_outcome$SNP, id = id.outcome,
+                                         snp_info = snp_info,dat = dat_input_out,
+                                         proxies = proxies)
+      dat_outcome <- dat_outcome %>% tidyr::drop_na(eaf.outcome)
+    }
   }
   filtered_SNPs_list <- lapply(1:length(id.exposure), function(i) {
     dat_exposure <- data.frame(SNP = SNP, beta.exposure = exposure_beta[,i],
@@ -545,23 +554,31 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                 "id.exposure", "exposure")
     dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
     if(all(grepl("SD", dat_exposure$units.exposure))){
-      dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
-        rename(BETA = beta.exposure)
-      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
-                                           snp_info = snp_info,dat = dat_input_exp,
-                                           proxies = proxies)
+      if(!is.null(exposure_af)) {
+        dat_exposure$eaf.exposure <- exposure_af[,i]
+      }else{
+        dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
+          rename(BETA = beta.exposure)
+        dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
+                                             snp_info = snp_info,dat = dat_input_exp,
+                                             proxies = proxies)
+      }
     }
     if(!is.null(type_exposure) && type_exposure[i] == "binary" | all(grepl("log odds", dat_exposure$units.exposure))){
       dat_exposure$units.exposure <- "log odds"
       if(!is.null(prevalence_exposure[i])){
         dat_exposure$prevalence.exposure <- prevalence_exposure[i]
       }
-      dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
-        rename(BETA = beta.exposure)
-      dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
-                                           snp_info = snp_info, dat = dat_input_exp,
-                                           proxies = proxies)
-      dat_exposure <- dat_exposure %>% tidyr::drop_na(eaf.exposure)
+      if(!is.null(exposure_af)) {
+        dat_exposure$eaf.exposure <- exposure_af[,i]
+      }else{
+        dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
+          rename(BETA = beta.exposure)
+        dat_exposure$eaf.exposure <- get_eaf(SNP_set = dat_exposure$SNP, id = id.exposure[i],
+                                             snp_info = snp_info, dat = dat_input_exp,
+                                             proxies = proxies)
+        dat_exposure <- dat_exposure %>% tidyr::drop_na(eaf.exposure)
+      }
     }
     dat <- left_join(dat_exposure,dat_outcome) %>%
       TwoSampleMR::steiger_filtering() %>% filter(steiger_dir == TRUE)

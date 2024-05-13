@@ -1,7 +1,7 @@
 library(dplyr)
 library(purrr)
 library(readr)
-library(sumstatFactors)
+library(GFA)
 library(stringr)
 library(mrScan)
 

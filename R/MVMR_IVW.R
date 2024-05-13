@@ -36,8 +36,9 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
     z <- dat %>% select(ends_with(".z"))
     p <- dat %>% select(ends_with(".p"))
     ss <- dat %>% select(ends_with(".ss"))
+    af <- dat %>% select(ends_with(".af"))
     nms <- stringr::str_replace(names(z), ".z", "")
-    names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-nms
+    names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
     N <- apply(ss, 2, median, na.rm = TRUE)
     z.norm <- sweep(z,2,sqrt(N),`/`)
     se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z)))
@@ -49,6 +50,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
                                               exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
                                               outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
+                                              exposure_af = af[new_ix,-1],outcome_af = af[new_ix,1],
                                               type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
                                               snp_info = info[new_ix,])

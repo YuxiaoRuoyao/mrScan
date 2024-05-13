@@ -7,7 +7,7 @@ library(stringr)
 library(dplyr)
 library(ieugwasr)
 library(mrScan)
-library(sumstatFactors)
+library(GFA)
 
 res_name <- snakemake@input[["file"]]
 df_download <- read.csv(snakemake@input[["download"]],header=F)

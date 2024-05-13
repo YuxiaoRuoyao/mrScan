@@ -40,6 +40,7 @@ format_combine_gwas <- function(df_file,c,df_info){
     }
     n <- df_file$id[i]
     pos_name <- as_name(paste0(n, ".pos"))
+    af_name <- as_name(paste0(n, ".af"))
     beta_name <- as_name(paste0(n, ".beta"))
     se_name <- as_name(paste0(n, ".se"))
     p_name <- as_name(paste0(n, ".p"))
@@ -49,15 +50,16 @@ format_combine_gwas <- function(df_file,c,df_info){
     dat$sample_size[is.na(dat$sample_size)] <- df_info[df_info$id == n,"sample_size"]
     dat <-dat %>% dplyr::mutate(Z = beta_hat/se) %>%
       dplyr::rename(REF = A2, ALT = A1) %>%
-      dplyr::select(chrom, snp, REF, ALT,AF,
+      dplyr::select(chrom, snp, REF, ALT,
                     !!pos_name := pos,
+                    !!af_name := AF,
                     !!beta_name := beta_hat,
                     !!se_name := se,
                     !!p_name := p_value,
                     !!z_name := Z,
                     !!ss_name := sample_size)
   }) %>%
-    purrr::reduce(full_join, by = c("chrom", "snp", "REF", "ALT","AF"))
+    purrr::reduce(full_join, by = c("chrom", "snp", "REF", "ALT"))
   dup_snps <- fulldat$snp[duplicated(fulldat$snp)]
   if(length(dup_snps) > 0){
     fulldat <- filter(fulldat, !snp %in% dup_snps)

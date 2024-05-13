@@ -1,7 +1,7 @@
 library(dplyr)
 library(purrr)
 library(stringr)
-library(sumstatFactors)
+library(GFA)
 library(mrScan)
 
 beta_files <- unlist(snakemake@input[["beta"]])

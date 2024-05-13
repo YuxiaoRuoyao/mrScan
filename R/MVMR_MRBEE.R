@@ -37,17 +37,16 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     z <- dat %>% select(ends_with(".z"))
     p <- dat %>% select(ends_with(".p"))
     ss <- dat %>% select(ends_with(".ss"))
+    af <- dat %>% select(ends_with(".af"))
     nms <- stringr::str_replace(names(z), ".z", "")
-    names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-nms
+    names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
     N <- apply(ss, 2, median, na.rm = TRUE)
     z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
     se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
       data.frame(check.names = F)
     o <- match(colnames(R_matrix), nms)
-    #z <- data.frame(z[, o],check.names = F)
     z.norm <- z.norm[,o]
     se.norm <- se.norm[,o]
-    #i <- ncol(z)
     i <- ncol(z.norm)
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
@@ -57,6 +56,7 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
                                               exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
                                               outcome_pval = p[new_ix,1],outcome_se = se[new_ix,1],
+                                              exposure_af = af[new_ix,-1],outcome_af = af[new_ix,1],
                                               type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
                                               snp_info = info[new_ix,])
