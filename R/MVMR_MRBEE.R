@@ -59,7 +59,7 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                                               exposure_af = af[new_ix,-1],outcome_af = af[new_ix,1],
                                               type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
-                                              snp_info = info[new_ix,])
+                                              snp_info = info[new_ix,],proxies = 0)
     final_ix <- which(snp %in% filtered_SNP)
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]

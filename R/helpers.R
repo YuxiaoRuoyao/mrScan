@@ -521,7 +521,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
   dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
   if(all(grepl("SD", dat_outcome$units.outcome))){
     if(!is.null(outcome_af)) {
-      dat_outcome$eaf.outcome <- outcome_af
+      dat_outcome <- cbind(dat_outcome,data.frame(eaf.outcome = outcome_af[[1]]))
     }else{
       dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
         rename(BETA = beta.outcome)
@@ -536,7 +536,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
       dat_outcome$prevalence.outcome <- prevalence_outcome
     }
     if(!is.null(outcome_af)) {
-      dat_outcome$eaf.outcome <- outcome_af
+      dat_outcome <- cbind(dat_outcome,data.frame(eaf.outcome = outcome_af[[1]]))
     }else{
       dat_input_out <- dat_outcome %>% select(SNP,beta.outcome) %>%
         rename(BETA = beta.outcome)
@@ -555,7 +555,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
     dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
     if(all(grepl("SD", dat_exposure$units.exposure))){
       if(!is.null(exposure_af)) {
-        dat_exposure$eaf.exposure <- exposure_af[,i]
+        dat_exposure <- cbind(dat_exposure,data.frame(eaf.exposure = exposure_af[[i]]))
       }else{
         dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
           rename(BETA = beta.exposure)
@@ -570,7 +570,7 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
         dat_exposure$prevalence.exposure <- prevalence_exposure[i]
       }
       if(!is.null(exposure_af)) {
-        dat_exposure$eaf.exposure <- exposure_af[,i]
+        dat_exposure <- cbind(dat_exposure,data.frame(eaf.exposure = exposure_af[[i]]))
       }else{
         dat_input_exp <- dat_exposure %>% select(SNP,beta.exposure) %>%
           rename(BETA = beta.exposure)

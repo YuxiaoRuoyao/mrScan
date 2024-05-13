@@ -53,7 +53,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
                                               exposure_af = af[new_ix,-1],outcome_af = af[new_ix,1],
                                               type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
-                                              snp_info = info[new_ix,])
+                                              snp_info = info[new_ix,],proxies = 0)
     final_ix <- which(snp %in% filtered_SNP)
     i <- ncol(z.norm)
     if(i>2){
