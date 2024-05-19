@@ -59,7 +59,7 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                             b = NA, se = NA, pvalue = NA,
                             method = paste0("ESMR_",pval_threshold))
   tryCatch({
-    fit1 <- esmr(beta_hat_Y = z.norm[,1],
+    fit <- esmr(beta_hat_Y = z.norm[,1],
                 se_Y = se.norm[,1],
                 beta_hat_X = z.norm[,2:i],
                 se_X = se.norm[, 2:i],
