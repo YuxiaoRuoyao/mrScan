@@ -4,7 +4,18 @@
 \alias{MVMR_ESMR}
 \title{Use ESMR to do MVMR analysis by locally data}
 \usage{
-MVMR_ESMR(dat, R_matrix, pval_threshold = 5e-08, effect_size_cutoff = 0.1)
+MVMR_ESMR(
+  dat,
+  R_matrix,
+  pval_threshold = 5e-08,
+  ss.exposure = NULL,
+  ss.outcome = NULL,
+  effect_size_cutoff = 0.1,
+  type_outcome = "continuous",
+  prevalence_outcome = NULL,
+  type_exposure = NULL,
+  prevalence_exposure = NULL
+)
 }
 \arguments{
 \item{dat}{A data frame of combined GWAS summary data after LD pruning.
@@ -15,7 +26,22 @@ The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
 
+\item{ss.exposure}{A vector of sample size for exposures.
+The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
+
+\item{ss.outcome}{A numeric number of sample size for the outcome. Default = NULL}
+
 \item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
+
+\item{type_outcome}{It could be either "continuous" or "binary". Default = "continuous"}
+
+\item{prevalence_outcome}{Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL}
+
+\item{type_exposure}{A vector for the type of exposures. The order should be exactly matched
+with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait}
+
+\item{prevalence_exposure}{A vector for prevalence of exposures. The order should
+be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
 }
 \value{
 A dataframe of result summary
