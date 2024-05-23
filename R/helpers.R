@@ -422,29 +422,12 @@ MR_GRAPPLE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
                             gamma_out1 = z.norm.outcome,
                             se_exp1 = se.norm.exposure,
                             se_out1 = se.norm.outcome)
-  res_and_warning <- withCallingHandlers({
-    res <- grappleRobustEst(
-      data = grapple_dat,
-      plot.it = FALSE,
-      diagnosis = FALSE
-    )
-    res
-  }, warning = function(w) {
-    if (grepl("Did not converge", w$message)) {
-      notConverge <<- TRUE
-    } else {
-      notConverge <<- FALSE
-    }
-    invokeRestart("muffleWarning")
-  })
-  if (!exists("notConverge")) {
-    notConverge <- FALSE
-  }
+  res_and_warning <- WarningAndGrappleEst(data = grapple_dat)
   res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-                            b = res_and_warning$beta.hat,
-                            se = sqrt(res_and_warning$beta.var),
-                            pvalue = res_and_warning$beta.p.value,method = "MR_GRAPPLE",
-                            converge = !notConverge)
+                            b = res_and_warning$est$beta.hat,
+                            se = sqrt(res_and_warning$est$beta.var),
+                            pvalue = res_and_warning$est$beta.p.value,method = "MR_GRAPPLE",
+                            converge = !res_and_warning$notConverge)
   res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   return(res_summary)
 }
@@ -461,24 +444,6 @@ MR_MRBEE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
     mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MR_MRBEE")
   res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   return(res_summary)
-}
-#' @export
-MR_ESMR <- function(id.exposure, id.outcome, z.norm.exposure, z.norm.outcome,
-                    se.norm.exposure, se.norm.outcome) {
-  tryCatch({
-    fit <- esmr(beta_hat_Y = z.norm.outcome,
-                se_Y = se.norm.exposure,
-                beta_hat_X = z.norm.exposure,
-                se_X = se.norm.exposure)
-    data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-               b = fit$beta$beta_m, se = fit$beta$beta_s) %>%
-      mutate(pvalue = 2 * pnorm(-abs(b / se)), method = "MR_ESMR")
-  }, error = function(e){
-    message("Error in MR_ESMR: ", e$message)
-    data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
-               b = NA, se = NA, pvalue = NA,
-               method = "MR_ESMR")
-  })
 }
 #' @export
 get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0){

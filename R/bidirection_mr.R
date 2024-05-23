@@ -4,13 +4,19 @@
 #' @param min_instruments minimum number of instruments for candidate traits. Default = 3
 #' @param effect_size_cutoff Standardized effect size threshold. Default = 0.05
 #' @param R2_cutoff R2 cutoff for duplicated traits with X or Y. Default = 0.85
+#' @param type_list A vector for the type of traits. The order should be exactly matched
+#' with `ID1`, `ID2`. ID1 is the exposure of ex_dat1 and ID2 is the exposure of ex_dat2.
+#' eg. c("binary","continuous") means that ID1 is a binary trait.
+#' @param prevalence_list A vector for prevalence of traits. The order should
+#' be exactly matched with `ID1`, `ID2`. For continuous trait, just write NA. eg. c(0.1, NA)
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
 #' @import dplyr
 #' @import ieugwasr
 #' @export
-bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.05,R2_cutoff=0.85){
+bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.1,R2_cutoff=0.85,
+                           type_list = c("continuous","continuous"), prevalence_list = NULL){
   ID1 <- unique(ex_dat1$id.exposure)
   ID2 <- unique(ex_dat2$id.exposure)
   if(is.null(ex_dat2)){
@@ -53,20 +59,48 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
       if(nrow(dat_1_2) < min_instruments | nrow(dat_2_1) < min_instruments){
         return(NULL)
       }else{
-        dat_1_2 <- dat_1_2 %>% steiger_filtering() %>% filter(steiger_dir == TRUE)
-        dat_2_1 <- dat_2_1 %>% steiger_filtering() %>% filter(steiger_dir == TRUE)
+        filtered_SNP_1_2 <- general_steiger_filtering(SNP = dat_1_2$SNP,
+                                                      id.exposure = ID1,id.outcome = ID2,
+                                                      exposure_beta = data.frame(dat_1_2$beta.exposure),
+                                                      exposure_pval = data.frame(dat_1_2$pval.exposure),
+                                                      exposure_se = data.frame(dat_1_2$se.exposure),
+                                                      exposure_af = data.frame(dat_1_2$eaf.exposure),
+                                                      outcome_beta = dat_1_2$beta.outcome,
+                                                      outcome_pval = dat_1_2$pval.outcome,
+                                                      outcome_se = dat_1_2$se.outcome,
+                                                      outcome_af = data.frame(dat_1_2$eaf.outcome),
+                                                      type_outcome = type_list[2],
+                                                      prevalence_outcome = prevalence_list[2],
+                                                      type_exposure = type_list[1],
+                                                      prevalence_exposure = prevalence_exposure[1],
+                                                      proxies = 1)
+        filtered_SNP_2_1 <- general_steiger_filtering(SNP = dat_2_1$SNP,
+                                                      id.exposure = ID2,id.outcome = ID1,
+                                                      exposure_beta = data.frame(dat_2_1$beta.exposure),
+                                                      exposure_pval = data.frame(dat_2_1$pval.exposure),
+                                                      exposure_se = data.frame(dat_2_1$se.exposure),
+                                                      exposure_af = data.frame(dat_2_1$eaf.exposure),
+                                                      outcome_beta = dat_2_1$beta.outcome,
+                                                      outcome_pval = dat_2_1$pval.outcome,
+                                                      outcome_se = dat_2_1$se.outcome,
+                                                      outcome_af = data.frame(dat_2_1$eaf.outcome),
+                                                      type_outcome = type_list[1],
+                                                      prevalence_outcome = prevalence_list[1],
+                                                      type_exposure = type_list[2],
+                                                      prevalence_exposure = prevalence_list[2],
+                                                      proxies = 1)
+        dat_1_2 <- dat_1_2 %>% filter(SNP %in% filtered_SNP_1_2)
+        dat_2_1 <- dat_2_1 %>% filter(SNP %in% filtered_SNP_2_1)
         if(nrow(dat_1_2) < min_instruments | nrow(dat_2_1) < min_instruments){
           return(NULL)
         }else{
           methods <- list(MR_IVW = MR_IVW, MR_GRAPPLE = MR_GRAPPLE, MR_MRBEE = MR_MRBEE)
-          params1 <- list(id.exposure = unique(dat_1_2$id.exposure),
-                          id.outcome = unique(dat_1_2$id.outcome),
+          params1 <- list(id.exposure = ID1,id.outcome = ID2,
                           z.norm.exposure = dat_1_2$z.norm.exposure,
                           z.norm.outcome = dat_1_2$z.norm.outcome,
                           se.norm.exposure = dat_1_2$se.norm.exposure,
                           se.norm.outcome = dat_1_2$se.norm.outcome)
-          params2 <- list(id.exposure = unique(dat_2_1$id.exposure),
-                          id.outcome = unique(dat_2_1$id.outcome),
+          params2 <- list(id.exposure = ID2,id.outcome = ID1,
                           z.norm.exposure = dat_2_1$z.norm.exposure,
                           z.norm.outcome = dat_2_1$z.norm.outcome,
                           se.norm.exposure = dat_2_1$se.norm.exposure,
