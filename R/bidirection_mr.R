@@ -72,7 +72,7 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                                                       type_outcome = type_list[2],
                                                       prevalence_outcome = prevalence_list[2],
                                                       type_exposure = type_list[1],
-                                                      prevalence_exposure = prevalence_exposure[1],
+                                                      prevalence_exposure = prevalence_list[1],
                                                       proxies = 1)
         filtered_SNP_2_1 <- general_steiger_filtering(SNP = dat_2_1$SNP,
                                                       id.exposure = ID2,id.outcome = ID1,

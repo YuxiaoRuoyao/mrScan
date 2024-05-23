@@ -16,9 +16,6 @@ out <- snakemake@output[["out"]]
 if(unique(ex_dat1$id.exposure) == id_outcome & type_outcome == "binary"){
   type_list <- c("binary","continuous")
   prevalence_list <- c(prevalence, NA)
-}else if(unique(ex_dat2$id.exposure) == id_outcome & type_outcome == "binary"){
-  type_list <- c("continuous","binary")
-  prevalence_list <- c(NA,prevalence)
 }else{
   type_list <- c("continuous","continuous")
   prevalence_list <- c(NA, NA)
