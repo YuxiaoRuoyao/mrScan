@@ -17,7 +17,8 @@ string_filter(
 
 \item{df_info}{Dataframe of trait info from previous steps}
 
-\item{df_inst_counts}{Dataframe of the number of instruments for each trait. The required columns include `id` for trait ID, `n` for the number of instruments.}
+\item{df_inst_counts}{Dataframe of the number of instruments for each trait.
+The required columns include `id` for trait ID, `n_inst` for the number of instruments.}
 
 \item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
 
