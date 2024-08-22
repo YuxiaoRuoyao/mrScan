@@ -21,7 +21,7 @@ string_filter <- function(id.list,df_info,df_inst_counts,R2_cutoff = 0.9,
     slice_max(n_inst, with_ties = FALSE) %>% ungroup()
   if(extra_traits != "None"){
     ids.final <- res_cluster %>% filter(id %in% extra_traits) %>% bind_rows(df_select) %>%
-      distinct(cluster, .keep_all = T) %>% arrange(cluster) %>% pull(id)
+      distinct(cluster, subcluster, .keep_all = T) %>% arrange(cluster) %>% pull(id)
   }else{
     ids.final <- df_select %>% pull(id)
   }
