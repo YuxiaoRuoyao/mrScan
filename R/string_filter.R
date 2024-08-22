@@ -27,7 +27,7 @@ string_filter <- function(id.list,df_info,df_inst_counts,R2_cutoff = 0.9,
   }
   filter.trait <- id.list[!id.list %in% ids.final]
   df_info <- left_join(df_info,res_cluster,by = c("id" = "id")) %>%
-    rename(string_cluster = cluster, n_inst = n)
+    rename(string_cluster = cluster)
   df_info[df_info$id %in% filter.trait,"status"] <- "delete due to string similarity"
   df_info[df_info$id %in% ids.final,"status"] <- "select after string similarity filtering"
   return(list(id.list=ids.final,trait.info=df_info))
