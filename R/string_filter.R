@@ -15,7 +15,7 @@ string_filter <- function(id.list,df_info,df_inst_counts,R2_cutoff = 0.9,
   res_string <- string_sim(id.list = id.list,df_info = df_info)
   res_cluster <- greedy_cluster(id.list = id.list, R = res_string$R_matrix,
                                 df_info = df_inst_counts,
-                                R2_cutoff = R2_cutoff) %>% select(-subcluster) %>%
+                                R2_cutoff = R2_cutoff) %>%
     left_join(df_inst_counts) %>% arrange(cluster)
   df_select <- res_cluster %>% group_by(cluster) %>%
     slice_max(n_inst, with_ties = FALSE) %>% ungroup()
