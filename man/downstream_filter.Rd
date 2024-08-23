@@ -9,8 +9,7 @@ downstream_filter(
   id.list,
   df_info,
   res,
-  p1 = 0.01,
-  p2 = 0.05,
+  p = 0.05,
   extra_traits = "None",
   MR_method
 )
@@ -24,9 +23,7 @@ downstream_filter(
 
 \item{res}{Bidirection MR results for selected traits}
 
-\item{p1}{p-value cutoff for adjusted pval to select upstream traits. Default=0.01}
-
-\item{p2}{p-value cutoff for adjusted pval to select downstream traits. Default=0.05}
+\item{p}{p-value cutoff for adjusted pval to select upstream or downstream traits. Default=0.05}
 
 \item{extra_traits}{trait ID which is adjusted for in bidirection MR. Default = "None"}
 
@@ -40,6 +37,6 @@ estimate and t-test results
 \description{
 Use Bidirectional MR or MVMR results to filter out downstream traits.
 It's based on FDR-adjusted pvalue on four directions. Select either upstream traits
-for exposure or outcome direction (p_ZtoX_adj < p1 | p_ZtoY_adj < p1) and
-exclude all downstream traits for both directions (p_XtoZ_adj < p2 | p_YtoZ_adj < p2).
+for exposure or outcome direction (p_ZtoX_adj < p | p_ZtoY_adj < p) and
+exclude all downstream traits for both directions (p_XtoZ_adj < p | p_YtoZ_adj < p).
 }

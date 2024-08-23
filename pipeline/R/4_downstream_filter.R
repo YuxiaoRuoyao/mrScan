@@ -7,8 +7,7 @@ mr_files <- unlist(snakemake@input[["mr_files"]])
 id_file <- read.csv(snakemake@input[["id_list"]])
 df_info <- read.csv(snakemake@input[["trait_info"]])
 id_exposure <- snakemake@params[["id_exposure"]]
-p1 <- as.numeric(snakemake@params[["p1"]])
-p2 <- as.numeric(snakemake@params[["p2"]])
+p <- as.numeric(snakemake@params[["p"]])
 extra_trait <- snakemake@params[["extra_trait"]]
 method <- snakemake@params[["method"]]
 out_id_list <- snakemake@output[["out_id_list"]]
@@ -49,7 +48,7 @@ res_mr <- map(mr_files, function(f){
 res <- do.call(Map, c(f = rbind, res_mr))
 
 res_downstream <- downstream_filter(id_exposure = id_exposure,id.list = id.list,
-                                    df_info = df_info,res = res, p1 = p1, p2 = p2,
+                                    df_info = df_info,res = res, p = p,
                                     MR_method = method,extra_traits = extra_trait)
 write.csv(data.frame(id = res_downstream$id.list),file = out_id_list,row.names = F)
 write.csv(res_downstream$df_info,file = out_trait_info,row.names = F)
