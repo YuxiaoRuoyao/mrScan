@@ -29,8 +29,8 @@ bidirection_mr(
 with `ID1`, `ID2`. ID1 is the exposure of ex_dat1 and ID2 is the exposure of ex_dat2.
 eg. c("binary","continuous") means that ID1 is a binary trait.}
 
-\item{prevalence_list}{A vector for prevalence of traits. The order should
-be exactly matched with `ID1`, `ID2`. For continuous trait, just write NA. eg. c(0.1, NA)}
+\item{prevalence_list}{A list for prevalence of traits. The order should
+be exactly matched with `ID1`, `ID2`. For continuous trait, just write NULL. eg. list(0.1, NULL)}
 }
 \value{
 A list contain bidirection estimates and traits correlation

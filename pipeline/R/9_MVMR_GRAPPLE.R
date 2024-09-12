@@ -3,6 +3,7 @@ library(GRAPPLE)
 library(purrr)
 library(stringr)
 suppressWarnings(library(mrScan))
+library(ieugwasr)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 pval_threshold <- as.numeric(snakemake@params[["pval_threshold"]])

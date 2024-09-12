@@ -7,8 +7,8 @@
 #' @param type_list A vector for the type of traits. The order should be exactly matched
 #' with `ID1`, `ID2`. ID1 is the exposure of ex_dat1 and ID2 is the exposure of ex_dat2.
 #' eg. c("binary","continuous") means that ID1 is a binary trait.
-#' @param prevalence_list A vector for prevalence of traits. The order should
-#' be exactly matched with `ID1`, `ID2`. For continuous trait, just write NA. eg. c(0.1, NA)
+#' @param prevalence_list A list for prevalence of traits. The order should
+#' be exactly matched with `ID1`, `ID2`. For continuous trait, just write NULL. eg. list(0.1, NULL)
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
@@ -70,9 +70,9 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                                                       outcome_se = dat_1_2$se.outcome,
                                                       outcome_af = data.frame(dat_1_2$eaf.outcome),
                                                       type_outcome = type_list[2],
-                                                      prevalence_outcome = prevalence_list[2],
+                                                      prevalence_outcome = prevalence_list[[2]],
                                                       type_exposure = type_list[1],
-                                                      prevalence_exposure = prevalence_list[1],
+                                                      prevalence_exposure = prevalence_list[[1]],
                                                       proxies = 1)
         filtered_SNP_2_1 <- general_steiger_filtering(SNP = dat_2_1$SNP,
                                                       id.exposure = ID2,id.outcome = ID1,
@@ -85,9 +85,9 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                                                       outcome_se = dat_2_1$se.outcome,
                                                       outcome_af = data.frame(dat_2_1$eaf.outcome),
                                                       type_outcome = type_list[1],
-                                                      prevalence_outcome = prevalence_list[1],
+                                                      prevalence_outcome = prevalence_list[[1]],
                                                       type_exposure = type_list[2],
-                                                      prevalence_exposure = prevalence_list[2],
+                                                      prevalence_exposure = prevalence_list[[2]],
                                                       proxies = 1)
         dat_1_2 <- dat_1_2 %>% filter(SNP %in% filtered_SNP_1_2)
         dat_2_1 <- dat_2_1 %>% filter(SNP %in% filtered_SNP_2_1)
