@@ -111,9 +111,6 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
         res_2_1 <- lapply(methods, function(f, params) {
           do.call(f, params)}, params = params2) %>% bind_rows()
       }
-      if (is.null(res_1_2) && is.null(res_2_1)) {
-        return(NULL)
-      }
       return(list(mr12 = res_1_2, mr21 = res_2_1, cor = cor_vals))
     }
   }
