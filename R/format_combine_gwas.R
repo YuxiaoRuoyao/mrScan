@@ -52,7 +52,7 @@ format_combine_gwas <- function(df_file,c,df_info){
       dplyr::rename(REF = A2, ALT = A1) %>%
       dplyr::select(chrom, snp, REF, ALT,
                     !!pos_name := pos,
-                    !!af_name := AF,
+                    !!af_name := allele_freq,
                     !!beta_name := beta_hat,
                     !!se_name := se,
                     !!p_name := p_value,

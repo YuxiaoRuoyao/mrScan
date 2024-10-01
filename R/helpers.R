@@ -324,7 +324,7 @@ format_ieu_chrom <- function(file, chrom){
   dat <- GFA::gwas_format(dat, "ID", "ES", "SE", "ALT",
                           "REF", "seqnames", "start",
                           p_value = "p_value",
-                          AF = "AF",
+                          allele_freq = "AF",
                           sample_size = "SS",
                           compute_pval = TRUE)
   return(dat)
@@ -389,7 +389,7 @@ format_flat_chrom <- function(file, chrom,
   dat <- gwas_format(X, snp_name, beta_hat_name, se_name, A1_name,
                      A2_name, chrom_name, pos_name,
                      p_value = p_value_name,
-                     AF = af_name,
+                     allele_freq = af_name,
                      sample_size = sample_size_name,
                      compute_pval = TRUE)
   return(dat)
