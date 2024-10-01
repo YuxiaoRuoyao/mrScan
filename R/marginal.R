@@ -12,9 +12,11 @@ marginal <- function(id.list,df_info,df_bidirection,extra_traits = "None",
                      p_cutoff = 0.05){
   df_bidirection <- df_bidirection %>%
     mutate(p_ZtoX = 2*(1-pnorm(abs(b_ZtoX/se_ZtoX))),
-           p_ZtoY = 2*(1-pnorm(abs(b_ZtoY/se_ZtoY))))
+           p_ZtoY = 2*(1-pnorm(abs(b_ZtoY/se_ZtoY)))) %>%
+    mutate(across(c("p_ZtoX","p_ZtoY"),
+                  ~ p.adjust(.x, method = "fdr", n = length(.x)), .names="{.col}_adj"))
   id.select <- df_bidirection %>% filter(id %in% id.list) %>%
-    filter(p_ZtoX < p_cutoff & p_ZtoY < p_cutoff) %>% pull(id)
+    filter(p_ZtoX_adj < p_cutoff & p_ZtoY_adj < p_cutoff) %>% pull(id)
   if(extra_traits != "None"){
     id.select <- c(id.select,extra_traits)
   }
