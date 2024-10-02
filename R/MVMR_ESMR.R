@@ -66,7 +66,11 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                 se_X = se.norm[, 2:i],
                 R = R_matrix,
                 variant_ix= final_ix)
-    esmr_res <- esmr:::optimize_lpy2(fit)
+    if(i <= 16){
+      esmr_res <- esmr:::optimize_lpy2(fit)
+    }else{
+      esmr_res <- esmr:::optimize_lpy2(fit,max_prob = 0.99)
+    }
     res.summary <- data.frame(exposure = colnames(z.norm)[-1],
                               b = esmr_res$beta$beta_m, se = esmr_res$beta$beta_s) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)),
