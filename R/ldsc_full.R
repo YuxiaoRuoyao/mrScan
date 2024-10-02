@@ -45,15 +45,17 @@ ldsc_full<-function(dat, ld_files, m_files){
     N <- as.numeric(N_int)
     names(N) <- names(N_int)
   }
-  R <- R_ldsc(Z_hat = Z_hat,
-              ldscores = X$L2,
-              ld_size = M,
-              N = N,
-              return_gencov = TRUE,
-              return_cor = TRUE,
-              make_well_conditioned = TRUE)
-  Re <- abs(R$Re)
-  Rg <- abs(R$Rg)
-  colnames(Re) <- rownames(Re) <- colnames(Rg) <- rownames(Rg) <- nms
-  return(list(Re = Re, Rg = Rg))
+  R_estimate <- R_ldsc(Z_hat = Z_hat,
+                       ldscores = X$L2,
+                       ld_size = M,
+                       N = N,
+                       return_gencov = TRUE,
+                       make_well_conditioned = FALSE,
+                       cond_num = 100)
+  Re <- condition(R_estimate$Se, corr = TRUE)
+  Rg <- abs(R_estimate$Rg)
+  d <- diag(R_estimate$Se)
+  Re_esmr <- diag(sqrt(d)) %*% Re %*% diag(sqrt(d))
+  colnames(Re) <- rownames(Re) <- colnames(Rg) <- rownames(Rg) <- colnames(Re_esmr) <- rownames(Re_esmr) <- nms
+  return(list(Re = Re, Rg = Rg, Re_esmr = Re_esmr))
 }

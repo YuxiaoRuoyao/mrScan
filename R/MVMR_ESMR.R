@@ -55,6 +55,7 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                                             type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
                                             snp_info = info[new_ix,],proxies = 0)
   final_ix <- which(snp %in% filtered_SNP)
+  rownames(R_matrix) <- colnames(R_matrix) <- NULL
   res.summary <- data.frame(exposure = colnames(z.norm)[-1],
                             b = NA, se = NA, pvalue = NA,
                             method = paste0("ESMR_",pval_threshold))
@@ -64,10 +65,10 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                 beta_hat_X = z.norm[,2:i],
                 se_X = se.norm[, 2:i],
                 R = R_matrix,
-                pval_thresh = 1,
                 variant_ix= final_ix)
+    esmr_res <- esmr:::optimize_lpy2(fit)
     res.summary <- data.frame(exposure = colnames(z.norm)[-1],
-                              b = fit$beta$beta_m, se = fit$beta$beta_s) %>%
+                              b = esmr_res$beta$beta_m, se = esmr_res$beta$beta_s) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)),
              method = paste0("ESMR_",pval_threshold))
   }, error = function(e){

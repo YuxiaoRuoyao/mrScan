@@ -16,7 +16,7 @@ out <- snakemake@output[["out"]]
 if(R_type == "pval"){
   R_matrix <- as.matrix(R)
 }else if(R_type == "ldsc"){
-  R_matrix <- as.matrix(R$Re)
+  R_matrix <- as.matrix(R$Re_esmr)
 }
 dat <- purrr::map_dfr(beta_files, readRDS)
 res <- MVMR_ESMR(dat = dat, R_matrix = R_matrix,
