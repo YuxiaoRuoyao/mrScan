@@ -36,8 +36,10 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
   names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
   N <- apply(ss, 2, median, na.rm = TRUE)
   z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
-  se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
-    data.frame(check.names = F)
+  # se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
+  #   data.frame(check.names = F)
+  se.norm <- matrix(1/sqrt(N), nrow = nrow(z), ncol = length(N), byrow = TRUE) %>%
+    data.frame() %>% setNames(nms)
   o <- match(colnames(R_matrix), nms)
   z.norm <- z.norm[,o]
   se.norm <- se.norm[,o]
