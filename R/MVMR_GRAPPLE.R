@@ -49,6 +49,7 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
+    outlier_snp <- snp[-filtered_idx]
     new_ix <- intersect(ix,filtered_idx)
     filtered_SNP <- general_steiger_filtering(SNP = snp[new_ix],id.exposure = nms[-1],id.outcome = nms[1],
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
@@ -90,6 +91,7 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     names(ss.exposure) <- id.exposure
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
+    outlier_snp <- snp[-filtered_idx]
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
                                               id.exposure = id.exposure,
                                               id.outcome = id.outcome,
@@ -118,5 +120,5 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                               method = "MVMR_GRAPPLE",
                               converge = !res_and_warning$notConverge)
   }
-  return(res.summary)
+  return(list(res.summary = res.summary, outlier_SNP = outlier_snp))
 }

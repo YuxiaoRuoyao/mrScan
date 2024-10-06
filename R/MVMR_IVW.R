@@ -42,6 +42,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
+    outlier_snp <- snp[-filtered_idx]
     new_ix <- intersect(ix,filtered_idx)
     filtered_SNP <- general_steiger_filtering(SNP = snp[new_ix],id.exposure = nms[-1],id.outcome = nms[1],
                                               exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
@@ -75,7 +76,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
         message("Error in IVW Instrument Specific: ", e$message)
       })
       res_F$method <- paste0("IVW_",pval_threshold)
-      res <- bind_rows(res_F,res_T) %>% select(exposure,b,se,pval,method) %>%
+      res.summary <- bind_rows(res_F,res_T) %>% select(exposure,b,se,pval,method) %>%
         rename("pvalue" = "pval")
     }else{
       hdat <-  list(exposure_beta = as.matrix(beta_hat[final_ix, 2:i,drop=FALSE]),
@@ -88,7 +89,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
                     outname = data.frame(id.outcome = nms[1], outcome = nms[1]))
       res_F <- mv_multiple(hdat)$result
       res_F$method <- paste0("IVW_",pval_threshold)
-      res <- res_F %>% select(exposure,b,se,pval,method) %>%
+      res.summary <- res_F %>% select(exposure,b,se,pval,method) %>%
         rename("pvalue" = "pval")
     }
   }
@@ -103,6 +104,7 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
     names(ss.exposure) <- id.exposure
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
+    outlier_snp <- snp[-filtered_idx]
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
                                               id.exposure = id.exposure,
                                               id.outcome = id.outcome,
@@ -125,8 +127,8 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
                        outcome_pval = dat$outcome_pval[final_ix],
                        outcome_se = dat$outcome_se[final_ix],
                        expname = dat$expname, outname = dat$outname)
-    res <- mv_multiple(dat_filter)$result %>% select(id.exposure,id.outcome,b,se,pval) %>%
+    res.summary <- mv_multiple(dat_filter)$result %>% select(id.exposure,id.outcome,b,se,pval) %>%
       rename("pvalue" = "pval") %>% mutate(method = "MVMR_IVW")
   }
-  return(res)
+  return(list(res.summary = res.summary, outlier_SNP = outlier_snp))
 }

@@ -51,10 +51,10 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
       if(!is.null(df_info) & sum(c(ID1, ID2, ID3) %in% df_info$id) == 3){
         ss <- df_info %>% filter(id %in% c(ID1, ID2, ID3)) %>%
           arrange(match(id, c(ID1, ID2, ID3))) %>% pull(sample_size)
-        params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2], ss.outcome = ss[2],
+        params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2],
                         effect_size_cutoff = effect_size_cutoff,
                         type_exposure = type_list, prevalence_exposure = prevalence_list)
-        params2 <- list(dat = mvdat_2, type = "IEU", ss.exposure = ss[-1], ss.outcome = ss[1],
+        params2 <- list(dat = mvdat_2, type = "IEU", ss.exposure = ss[-1],
                         effect_size_cutoff = effect_size_cutoff,
                         type_outcome = type_list[1], prevalence_outcome = prevalence_list[1])
       }else{
@@ -65,13 +65,20 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
       }
       methods <- list(MVMR_IVW = MVMR_IVW, MVMR_GRAPPLE = MVMR_GRAPPLE,
                       MVMR_MRBEE = MVMR_MRBEE)
-      res1 <- lapply(methods, function(f, params) {
-        do.call(f, params)}, params = params1) %>% bind_rows() %>%
-        filter(id.exposure == ID1)
-      res2 <- lapply(methods, function(f, params) {
-        do.call(f, params)}, params = params2) %>% bind_rows() %>%
-        filter(id.exposure == ID2)
-      return(list(mr12 = res1, mr21 = res2, cor = cor_vals))
+      mr12_results <- lapply(methods, function(f, params) {
+        res <- do.call(f, params)
+        return(list(summary = res[[1]], outlier_SNP = res[[2]]))
+      }, params = params1)
+      mr21_results <- lapply(methods, function(f, params) {
+        res <- do.call(f, params)
+        return(list(summary = res[[1]], outlier_SNP = res[[2]]))
+      }, params = params2)
+      res1 <- lapply(mr12_results, `[[`, "summary") %>% bind_rows() %>% filter(id.exposure == ID1)
+      mr12_outliers <- lapply(mr12_results, `[[`, "outlier_SNP") %>% unlist() %>% unique()
+      res2 <- lapply(mr21_results, `[[`, "summary") %>% bind_rows() %>% filter(id.exposure == ID2)
+      mr21_outliers <- lapply(mr21_results, `[[`, "outlier_SNP") %>% unlist() %>% unique()
+      return(list(mr12 = res1, mr21 = res2, cor = cor_vals,
+                  mr12_outlier_SNP = mr12_outliers, mr21_outlier_SNP = mr21_outliers))
     }
   }
 }
