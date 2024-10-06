@@ -9,7 +9,6 @@ MVMR_IVW(
   pval_threshold = 5e-08,
   type,
   ss.exposure = NULL,
-  ss.outcome = NULL,
   effect_size_cutoff = 0.1,
   type_outcome = "continuous",
   prevalence_outcome = NULL,
@@ -31,8 +30,6 @@ If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().
 
 \item{ss.exposure}{A vector of sample size for exposures. You can provide it when type = "IEU".
 The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
-
-\item{ss.outcome}{A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL}
 
 \item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
 

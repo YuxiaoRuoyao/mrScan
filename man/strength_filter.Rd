@@ -11,8 +11,13 @@ strength_filter(
   df_info,
   pval_threshold = 5e-08,
   F_threshold = 5,
+  effect_size_cutoff = 0.1,
   Filter = FALSE,
-  extra_traits = "None"
+  extra_traits = "None",
+  type_outcome = "continuous",
+  prevalence_outcome = NULL,
+  type_exposure = NULL,
+  prevalence_exposure = NULL
 )
 }
 \arguments{
@@ -31,9 +36,21 @@ For IEU data, it should be output from TwoSampleMR::mv_harmonise_data().}
 
 \item{F_threshold}{F-statistic cutoff. Default = 5}
 
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
+
 \item{Filter}{Whether perform trait filtering based on F-stats and F_threshold. Default = FALSE}
 
 \item{extra_traits}{trait ID you want to include no matter the instrument strength. Default = "None"}
+
+\item{type_outcome}{It could be either "continuous" or "binary". Default = "continuous"}
+
+\item{prevalence_outcome}{Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL}
+
+\item{type_exposure}{A vector for the type of exposures. The order should be exactly matched
+with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait}
+
+\item{prevalence_exposure}{A vector for prevalence of exposures. The order should
+be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
 }
 \value{
 A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info

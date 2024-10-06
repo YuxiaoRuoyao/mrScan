@@ -408,41 +408,39 @@ filter_high_cor_XY <- function(id_list,df_info,res_cor,id_exposure,R2_cutoff){
   return(list(id.list = select_trait, trait.info = df_info))
 }
 #' @export
-MR_IVW <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
-                   se.norm.exposure,se.norm.outcome){
-  res <- mr_ivw(b_exp = z.norm.exposure,se_exp = se.norm.exposure,
-                b_out = z.norm.outcome,se_out = se.norm.outcome)
+MR_IVW <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
+                   se.exposure,se.outcome){
+  res <- mr_ivw(b_exp = beta.exposure,se_exp = se.exposure,
+                b_out = beta.outcome,se_out = se.outcome)
   data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
              b = res$b, se = res$se, pvalue = res$pval, method = "MR_IVW")
 }
 #' @export
-MR_GRAPPLE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
-                       se.norm.exposure,se.norm.outcome){
-  grapple_dat <- data.frame(gamma_exp1 = z.norm.exposure,
-                            gamma_out1 = z.norm.outcome,
-                            se_exp1 = se.norm.exposure,
-                            se_out1 = se.norm.outcome)
+MR_GRAPPLE <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
+                       se.exposure,se.outcome){
+  grapple_dat <- data.frame(gamma_exp1 = beta.exposure,
+                            gamma_out1 = beta.outcome,
+                            se_exp1 = se.exposure,
+                            se_out1 = se.outcome)
   res_and_warning <- WarningAndGrappleEst(data = grapple_dat)
   res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                             b = res_and_warning$est$beta.hat,
                             se = sqrt(res_and_warning$est$beta.var),
                             pvalue = res_and_warning$est$beta.p.value,method = "MR_GRAPPLE",
                             converge = !res_and_warning$notConverge)
-  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   return(res_summary)
 }
 #' @export
-MR_MRBEE <- function(id.exposure,id.outcome,z.norm.exposure,z.norm.outcome,
-                     se.norm.exposure,se.norm.outcome){
-  fit <- MRBEE.IMRP.UV(by = z.norm.outcome,bx = z.norm.exposure,
-                       byse = se.norm.outcome,
-                       bxse = se.norm.exposure,
+MR_MRBEE <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
+                     se.exposure,se.outcome){
+  fit <- MRBEE.IMRP.UV(by = beta.outcome,bx = beta.exposure,
+                       byse = se.outcome,
+                       bxse = se.exposure,
                        Rxy= diag(1,nrow = 2),
-                       pv.thres = 0, var.est="variance")
+                       pv.thres = 0)
   res_summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                             b = fit$theta,se = sqrt(fit$vartheta)) %>%
     mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MR_MRBEE")
-  res_summary[which(res_summary$se > 1),"pvalue"] <- 1
   return(res_summary)
 }
 #' @export

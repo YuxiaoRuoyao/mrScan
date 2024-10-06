@@ -8,8 +8,6 @@ MVMR_ESMR(
   dat,
   R_matrix,
   pval_threshold = 5e-08,
-  ss.exposure = NULL,
-  ss.outcome = NULL,
   effect_size_cutoff = 0.1,
   type_outcome = "continuous",
   prevalence_outcome = NULL,
@@ -25,11 +23,6 @@ The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
 \item{R_matrix}{Pairwise sample overlap matrix among traits}
 
 \item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
-
-\item{ss.exposure}{A vector of sample size for exposures.
-The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
-
-\item{ss.outcome}{A numeric number of sample size for the outcome. Default = NULL}
 
 \item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
 

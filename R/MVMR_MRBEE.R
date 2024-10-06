@@ -10,7 +10,6 @@
 #' "IEU" for output from TwoSampleMR::mv_harmonise_data().
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
-#' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL
 #' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
 #' @param type_outcome It could be either "continuous" or "binary". Default = "continuous"
 #' @param prevalence_outcome Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL
@@ -26,7 +25,7 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,type,
-                       ss.exposure = NULL, ss.outcome = NULL, effect_size_cutoff=0.1,
+                       ss.exposure = NULL, effect_size_cutoff=0.1,
                        type_outcome = "continuous", prevalence_outcome = NULL,
                        type_exposure = NULL, prevalence_exposure = NULL){
   if(type == "local"){
@@ -40,14 +39,12 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     af <- dat %>% select(ends_with(".af"))
     nms <- stringr::str_replace(names(z), ".z", "")
     names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
-    N <- apply(ss, 2, median, na.rm = TRUE)
-    z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
-    se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
-      data.frame(check.names = F)
+    z.norm <- z/sqrt(ss)
     o <- match(colnames(R_matrix), nms)
+    beta_hat <- beta_hat[,o]
+    se <- se[,o]
     z.norm <- z.norm[,o]
-    se.norm <- se.norm[,o]
-    i <- ncol(z.norm)
+    i <- ncol(beta_hat)
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
@@ -64,20 +61,20 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
     if(i>2){
-      fit <- MRBEE.IMRP(by=z.norm[final_ix,1],bX=as.matrix(z.norm[final_ix,-1]),
-                        byse=se.norm[final_ix,1],
-                        bXse=as.matrix(se.norm[final_ix,-1]),
+      fit <- MRBEE.IMRP(by=beta_hat[final_ix,1],bX=as.matrix(beta_hat[final_ix,-1]),
+                        byse=se[final_ix,1],
+                        bXse=as.matrix(se[final_ix,-1]),
                         Rxy=R_matrix,
-                        pv.thres = pleio_threshold, var.est = "variance")
+                        pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = names(fit$theta),
                                 b = fit$theta,
                                 se = sqrt(diag(fit$covtheta)))
     }else{
-      fit <- MRBEE.IMRP.UV(by = z.norm[final_ix,1],bx = z.norm[final_ix,-1],
-                           byse = se.norm[final_ix,1],
-                           bxse = se.norm[final_ix,-1],
+      fit <- MRBEE.IMRP.UV(by = beta_hat[final_ix,1],bx = beta_hat[final_ix,-1],
+                           byse = se[final_ix,1],
+                           bxse = se[final_ix,-1],
                            Rxy=R_matrix,
-                           pv.thres = pleio_threshold, var.est="variance")
+                           pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = nms[-1],
                                 b = fit$theta,
                                 se = sqrt(fit$vartheta))
@@ -91,35 +88,9 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     if(is.null(ss.exposure)){
       ss.exposure <- gwasinfo(id.exposure)$sample_size
     }
-    if(is.null(ss.outcome)){
-      ss.outcome <- gwasinfo(id.outcome)$sample_size
-    }
     z.exposure<- dat$exposure_beta/dat$exposure_se
     z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`)
     names(ss.exposure) <- id.exposure
-    se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
-      as.matrix()
-    z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
-    se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
-    # if(type_outcome == "binary"){
-    #   ncases <- gwasinfo(id.outcome)$ncase
-    #   convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
-    #   z.norm.outcome <- z.norm.outcome*convert_ratio
-    #   se.norm.outcome <- se.norm.outcome*convert_ratio
-    # }
-    # if("binary" %in% type_exposure){
-    #   ix_binary <- which(type_exposure %in% "binary")
-    #   ncases <- gwasinfo(id.exposure[ix_binary])$ncase
-    #   convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
-    #                                      p = ncases/ss.exposure[ix_binary])
-    #   if(length(ix_binary) == 1) {
-    #     z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
-    #     se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
-    #   } else {
-    #     z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
-    #     se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
-    #   }
-    # }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
@@ -137,17 +108,16 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                                               prevalence_exposure = prevalence_exposure,
                                               proxies = 1)
     final_ix <- which(snp %in% filtered_SNP)
-    fit <- MRBEE.IMRP(by = z.norm.outcome[final_ix],
-                      bX = z.norm.exposure[final_ix, ],
-                      byse = se.norm.outcome[final_ix],
-                      bXse = se.norm.exposure[final_ix, ],
+    fit <- MRBEE.IMRP(by = dat$outcome_beta[final_ix],
+                      bX = dat$exposure_beta[final_ix, ],
+                      byse = dat$outcome_se[final_ix],
+                      bXse = dat$exposure_se[final_ix, ],
                       Rxy = diag(nrow = length(id.exposure)+1),
-                      pv.thres = pleio_threshold, var.est = "variance")
+                      pv.thres = pleio_threshold)
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                               b = fit$theta,se = sqrt(diag(fit$covtheta))) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)), method = "MVMR_MRBEE")
   }
-  res.summary[which(res.summary$se > 1),"pvalue"] <- 1
   rownames(res.summary) <- NULL
   return(res.summary)
 }

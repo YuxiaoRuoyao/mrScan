@@ -14,6 +14,7 @@
 #' @import stringr
 #' @import GFA
 #' @importFrom purrr map_dfr map
+#' @import Matrix
 #' @export
 ldsc_full<-function(dat, ld_files, m_files){
   ld <- map_dfr(1:22, function(c){
@@ -50,12 +51,10 @@ ldsc_full<-function(dat, ld_files, m_files){
                        ld_size = M,
                        N = N,
                        return_gencov = TRUE,
-                       make_well_conditioned = FALSE,
-                       cond_num = 100)
-  Re <- condition(R_estimate$Se, corr = TRUE)
-  Rg <- abs(R_estimate$Rg)
-  d <- diag(R_estimate$Se)
-  Re_esmr <- diag(sqrt(d)) %*% Re %*% diag(sqrt(d))
+                       make_well_conditioned = FALSE)
+  Re <- nearPD(R_estimate$Se, corr = TRUE)
+  Re_esmr <- nearPD(R_estimate$Se, keepDiag = TRUE)
+  Rg <- R_estimate$Rg
   colnames(Re) <- rownames(Re) <- colnames(Rg) <- rownames(Rg) <- colnames(Re_esmr) <- rownames(Re_esmr) <- nms
   return(list(Re = Re, Rg = Rg, Re_esmr = Re_esmr))
 }

@@ -10,7 +10,6 @@
 #' "IEU" for output from TwoSampleMR::mv_harmonise_data().
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
-#' @param ss.outcome A numeric number of sample size for the outcome. You can provide it when type = "IEU". Default = NULL
 #' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
 #' @param type_outcome It could be either "continuous" or "binary". Default = "continuous"
 #' @param prevalence_outcome Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL
@@ -27,7 +26,7 @@
 #' @importFrom purrr map_dfc
 #' @export
 MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
-                         ss.exposure = NULL, ss.outcome = NULL, effect_size_cutoff=0.1,
+                         ss.exposure = NULL, effect_size_cutoff=0.1,
                          type_outcome = "continuous", prevalence_outcome = NULL,
                          type_exposure = NULL, prevalence_exposure = NULL){
   if(type == "local"){
@@ -41,14 +40,12 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     af <- dat %>% select(ends_with(".af"))
     nms <- stringr::str_replace(names(z), ".z", "")
     names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
-    N <- apply(ss, 2, median, na.rm = TRUE)
-    z.norm <- sweep(z,2,sqrt(N),`/`) %>% data.frame(check.names = F)
-    se.norm <- purrr::map_dfc(ss, ~ rep(1/sqrt(.x),length.out = nrow(z))) %>%
-      data.frame(check.names = F)
+    z.norm <- z/sqrt(ss)
     o <- match(colnames(R_matrix), nms)
+    beta_hat <- beta_hat[,o]
+    se <- se[,o]
     z.norm <- z.norm[,o]
-    se.norm <- se.norm[,o]
-    i <- ncol(z.norm)
+    i <- ncol(beta_hat)
     pmin <- apply(p[,-1, drop = F], 1, min)
     ix <- which(pmin < pval_threshold)
     filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
@@ -62,19 +59,19 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                                               type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
                                               snp_info = info[new_ix,],proxies = 0)
     final_ix <- which(snp %in% filtered_SNP)
-    grapple_dat <- data.frame(cbind(z.norm[final_ix,], se.norm[final_ix,]))
+    grapple_dat <- data.frame(cbind(beta_hat[final_ix,], se[final_ix,]))
     names(grapple_dat) <- c("gamma_out", paste0("gamma_exp", 1:(i-1)),
                             "se_out", paste0("se_exp", 1:(i-1)))
     res_and_warning <- WarningAndGrappleEst(data = grapple_dat, cor.mat = R_matrix)
     if(i > 2){
-      res.summary <- data.frame(exposure=colnames(z.norm)[-1],
+      res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
                                 b=res_and_warning$est$beta.hat,
                                 se=sqrt(diag(res_and_warning$est$beta.var)),
                                 pvalue=res_and_warning$est$beta.p.value,
                                 method = paste0("GRAPPLE_",pval_threshold),
                                 converge = !res_and_warning$notConverge)
     }else{
-      res.summary <- data.frame(exposure=colnames(z.norm)[-1],
+      res.summary <- data.frame(exposure=colnames(beta_hat)[-1],
                                 b=res_and_warning$est$beta.hat,
                                 se=sqrt(res_and_warning$est$beta.var),
                                 pvalue=res_and_warning$est$beta.p.value,
@@ -88,35 +85,9 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
     if(is.null(ss.exposure)){
       ss.exposure <- gwasinfo(id.exposure)$sample_size
     }
-    if(is.null(ss.outcome)){
-      ss.outcome <- gwasinfo(id.outcome)$sample_size
-    }
     z.exposure<- dat$exposure_beta/dat$exposure_se
     z.norm.exposure <- sweep(z.exposure,2,sqrt(ss.exposure),`/`)
     names(ss.exposure) <- id.exposure
-    se.norm.exposure <- map_dfc(ss.exposure, ~ rep(1/sqrt(.x),length.out = nrow(dat$exposure_se))) %>%
-      as.matrix()
-    z.norm.outcome <- (dat$outcome_beta/dat$outcome_se)/sqrt(ss.outcome)
-    se.norm.outcome <- rep(1/sqrt(ss.outcome),length(dat$outcome_se))
-    # if(type_outcome == "binary"){
-    #   ncases <- gwasinfo(id.outcome)$ncase
-    #   convert_ratio <- convert_liability(k = prevalence_outcome, p = ncases/ss.outcome)
-    #   z.norm.outcome <- z.norm.outcome*convert_ratio
-    #   se.norm.outcome <- se.norm.outcome*convert_ratio
-    # }
-    # if("binary" %in% type_exposure){
-    #   ix_binary <- which(type_exposure %in% "binary")
-    #   ncases <- gwasinfo(id.exposure[ix_binary])$ncase
-    #   convert_ratio <- convert_liability(k = prevalence_exposure[ix_binary],
-    #                                      p = ncases/ss.exposure[ix_binary])
-    #   if(length(ix_binary) == 1) {
-    #     z.norm.exposure[, ix_binary] <- z.norm.exposure[, ix_binary]*convert_ratio
-    #     se.norm.exposure[, ix_binary] <- se.norm.exposure[, ix_binary]*convert_ratio
-    #   } else {
-    #     z.norm.exposure[, ix_binary] <- sweep(z.norm.exposure[, ix_binary], 2, convert_ratio, `*`)
-    #     se.norm.exposure[,ix_binary] <- sweep(se.norm.exposure[,ix_binary], 2, convert_ratio, `*`)
-    #   }
-    # }
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
@@ -134,11 +105,11 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                                               prevalence_exposure = prevalence_exposure,
                                               proxies = 1)
     final_ix <- which(snp %in% filtered_SNP)
-    grapple_dat<-cbind(z.norm.exposure[final_ix,],se.norm.exposure[final_ix,],
-                       z.norm.outcome[final_ix],se.norm.outcome[final_ix])
+    grapple_dat<-cbind(dat$exposure_beta[final_ix,],dat$exposure_se[final_ix,],
+                       dat$outcome_beta[final_ix],dat$outcome_se[final_ix])
     i <- length(id.exposure)
     colnames(grapple_dat)<-c(paste0("gamma_exp",seq(1,i)),
-                              paste0("se_exp",seq(1,i)),"gamma_out1","se_out1")
+                             paste0("se_exp",seq(1,i)),"gamma_out1","se_out1")
     res_and_warning <- WarningAndGrappleEst(data = grapple_dat)
     res.summary <- data.frame(id.exposure = id.exposure, id.outcome = id.outcome,
                               b = res_and_warning$est$beta.hat,
@@ -147,6 +118,5 @@ MVMR_GRAPPLE <- function(dat,R_matrix,pval_threshold = 1e-5,type,
                               method = "MVMR_GRAPPLE",
                               converge = !res_and_warning$notConverge)
   }
-  res.summary[which(res.summary$se > 1),"pvalue"] <- 1
   return(res.summary)
 }

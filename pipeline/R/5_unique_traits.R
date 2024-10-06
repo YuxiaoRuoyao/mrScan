@@ -15,7 +15,7 @@ out_id_list <- snakemake@output[["out_id_list"]]
 out_trait_info <- snakemake@output[["out_trait_info"]]
 
 
-Rg <- res_cor$Rg
+Rg <- abs(res_cor$Rg)
 df_pairs <- melt(Rg, value.name = "cor",varnames = c("id1","id2")) %>%
   filter(cor != 1)
 df_matrix <- data.frame(Rg,check.names = FALSE)
