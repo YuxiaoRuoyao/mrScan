@@ -17,7 +17,8 @@ strength_filter(
   type_outcome = "continuous",
   prevalence_outcome = NULL,
   type_exposure = NULL,
-  prevalence_exposure = NULL
+  prevalence_exposure = NULL,
+  ss.exposure = NULL
 )
 }
 \arguments{
@@ -51,6 +52,9 @@ with exposures. eg. c("continuous","binary","continuous") for the second exposur
 
 \item{prevalence_exposure}{A vector for prevalence of exposures. The order should
 be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
+
+\item{ss.exposure}{A vector of sample size for exposures. You can provide it when dat_type = "IEU".
+The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
 }
 \value{
 A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info

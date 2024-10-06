@@ -17,10 +17,13 @@
 #' with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait
 #' @param prevalence_exposure A vector for prevalence of exposures. The order should
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
+#' @param ss.exposure A vector of sample size for exposures. You can provide it when dat_type = "IEU".
+#' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
 #' @returns A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info
 #'
 #' @import dplyr
 #' @import MVMR
+#' @import ieugwasr
 #' @importFrom purrr map_dfr
 #' @export
 strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
@@ -28,7 +31,8 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                             effect_size_cutoff = 0.1,
                             Filter = FALSE, extra_traits = "None",
                             type_outcome = "continuous", prevalence_outcome = NULL,
-                            type_exposure = NULL, prevalence_exposure = NULL){
+                            type_exposure = NULL, prevalence_exposure = NULL,
+                            ss.exposure = NULL){
   if(dat_type == "local"){
     snp <- data.frame(dat$snp)
     info <- dat %>% select(snp,REF,ALT)

@@ -1,6 +1,7 @@
 library(dplyr)
 library(mrScan)
 library(MVMR)
+library(ieugwasr)
 
 dat_files <- unlist(snakemake@input[["dat"]])
 df_info <- read.csv(snakemake@input[["trait_info"]])
