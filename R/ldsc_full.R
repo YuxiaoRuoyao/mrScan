@@ -52,8 +52,8 @@ ldsc_full<-function(dat, ld_files, m_files){
                        N = N,
                        return_gencov = TRUE,
                        make_well_conditioned = FALSE)
-  Re <- nearPD(R_estimate$Se, corr = TRUE)
-  Re_esmr <- nearPD(R_estimate$Se, keepDiag = TRUE)
+  Re <- nearPD(R_estimate$Se, corr = TRUE)$mat
+  Re_esmr <- nearPD(R_estimate$Se, keepDiag = TRUE)$mat
   Rg <- R_estimate$Rg
   colnames(Re) <- rownames(Re) <- colnames(Rg) <- rownames(Rg) <- colnames(Re_esmr) <- rownames(Re_esmr) <- nms
   return(list(Re = Re, Rg = Rg, Re_esmr = Re_esmr))

@@ -4,6 +4,7 @@ library(readr)
 library(GFA)
 library(stringr)
 library(mrScan)
+library(Matrix)
 
 beta_files <- unlist(snakemake@input[["beta"]])
 ld_files <- unlist(snakemake@input[["l2"]])
