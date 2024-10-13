@@ -32,7 +32,7 @@ unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
         stop("Please input bidirection dataframe for pvalue method!")
       }else{
         df_cluster <- left_join(clusters,df_bidirection,by = c("id" = "id")) %>%
-          mutate(mean_logp = rowMeans(cbind(-log10(p_ZtoY), -log10(p_ZtoX)))) %>%
+          mutate(mean_logp = rowMeans(cbind(-log10(p_ZtoY_adj), -log10(p_ZtoX_adj)))) %>%
           arrange(cluster)
         df_select <- df_cluster %>% group_by(cluster) %>% slice_max(mean_logp,with_ties = FALSE) %>%
           ungroup()
