@@ -34,7 +34,7 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                             type_exposure = NULL, prevalence_exposure = NULL,
                             ss.exposure = NULL){
   if(dat_type == "local"){
-    snp <- data.frame(dat$snp)
+    snp <- dat$snp
     info <- dat %>% select(snp,REF,ALT)
     beta_hat <- dat %>% select(ends_with(".beta"))
     se <- dat %>% select(ends_with(".se"))
@@ -68,7 +68,7 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                          BYG = beta_hat[final_ix,1],
                          seBXGs = exp_se,
                          seBYG = se[final_ix,1],
-                         RSID = snp[final_ix,1])
+                         RSID = snp[final_ix])
     sigmalist <- vector("list", length(final_ix))
     if(!is.null(R_matrix)){
       omega <- R_matrix[2:i,2:i]
