@@ -71,9 +71,9 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
                                 b = fit$theta,
                                 se = sqrt(diag(fit$covtheta)))
     }else{
-      fit <- MRBEE.IMRP.UV(by = beta_hat[final_ix,1],bx = beta_hat[final_ix,-1],
-                           byse = se[final_ix,1],
-                           bxse = se[final_ix,-1],
+      fit <- MRBEE.IMRP.UV(by = as.matrix(beta_hat)[final_ix,1],bx = as.matrix(beta_hat)[final_ix,-1],
+                           byse = as.matrix(se)[final_ix,1],
+                           bxse = as.matrix(se)[final_ix,-1],
                            Rxy=R_matrix,
                            pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = nms[-1],
