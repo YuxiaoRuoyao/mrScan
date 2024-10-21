@@ -62,9 +62,9 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
     if(i>2){
-      fit <- MRBEE.IMRP(by=beta_hat[final_ix,1],bX=as.matrix(beta_hat[final_ix,-1]),
-                        byse=se[final_ix,1],
-                        bXse=as.matrix(se[final_ix,-1]),
+      fit <- MRBEE.IMRP(by=as.matrix(beta_hat)[final_ix,1],bX=as.matrix(beta_hat)[final_ix,-1],
+                        byse=as.matrix(se)[final_ix,1],
+                        bXse=as.matrix(se)[final_ix,-1],
                         Rxy=R_matrix,
                         pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = names(fit$theta),
