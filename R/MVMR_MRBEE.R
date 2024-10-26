@@ -43,6 +43,7 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     o <- match(colnames(R_matrix), nms)
     beta_hat <- beta_hat[,o]
     se <- se[,o]
+    z <- z[,o]
     z.norm <- z.norm[,o]
     i <- ncol(beta_hat)
     pmin <- apply(p[,-1, drop = F], 1, min)
@@ -62,18 +63,18 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     # Make the last one be outcome for R matrix
     R_matrix <- R_matrix[c(nms[-1],nms[1]),c(nms[-1],nms[1])]
     if(i>2){
-      fit <- MRBEE.IMRP(by=as.matrix(beta_hat)[final_ix,1],bX=as.matrix(beta_hat)[final_ix,-1],
-                        byse=as.matrix(se)[final_ix,1],
-                        bXse=as.matrix(se)[final_ix,-1],
+      fit <- MRBEE.IMRP(by=as.matrix(z)[final_ix,1],bX=as.matrix(z)[final_ix,-1],
+                        byse=rep(1,length(final_ix)),
+                        bXse=matrix(1,length(final_ix),i-1),
                         Rxy=R_matrix,
                         pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = names(fit$theta),
                                 b = fit$theta,
                                 se = sqrt(diag(fit$covtheta)))
     }else{
-      fit <- MRBEE.IMRP.UV(by = as.matrix(beta_hat)[final_ix,1],bx = as.matrix(beta_hat)[final_ix,-1],
-                           byse = as.matrix(se)[final_ix,1],
-                           bxse = as.matrix(se)[final_ix,-1],
+      fit <- MRBEE.IMRP.UV(by = as.matrix(z)[final_ix,1],bx = as.matrix(z)[final_ix,-1],
+                           byse = rep(1,length(final_ix)),
+                           bxse = matrix(1,length(final_ix),i-1),
                            Rxy=R_matrix,
                            pv.thres = pleio_threshold)
       res.summary <- data.frame(exposure = nms[-1],
