@@ -12,7 +12,7 @@ extract_traits(
   batch = c("ieu-a", "ieu-b", "ukb-b"),
   r2 = 0.001,
   kb = 10000,
-  access_token = ieugwasr::check_access_token(),
+  opengwas_jwt = ieugwasr::get_opengwas_jwt(),
   min_snps = 5,
   type_exposure = "IEU",
   type_candidate_traits = "IEU",
@@ -41,7 +41,8 @@ extract_traits(
 
 \item{kb}{clumping kb window. Default=10000}
 
-\item{access_token}{Google OAuth2 access token. Default=check_access_token()}
+\item{opengwas_jwt}{Used to authenticate protected endpoints. Login to https://api.opengwas.io to obtain a jwt. Provide the jwt string here, or store in .Renviron under the keyname OPENGWAS_JWT.
+Default = get_opengwas_jwt()}
 
 \item{min_snps}{the number of minimum shared SNPs with IV of X. Default=5}
 

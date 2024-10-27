@@ -10,27 +10,27 @@
 #' @importFrom purrr map_dfr map2 map
 #' @export
 get_inst_IEU <- function(id_x,pval_x = 5e-8,r2 = 0.001, kb = 10000, pop = "EUR",
-                         access_token = ieugwasr::check_access_token()){
+                         opengwas_jwt = ieugwasr::get_opengwas_jwt()){
   top_hits <- tophits(id = id_x, pval = pval_x, r2 = r2, kb = kb,
-                      pop = pop, access_token = access_token)
+                      pop = pop, opengwas_jwt = opengwas_jwt)
   cat("Retrieved", nrow(top_hits), "instruments for", id_x,
       "\n")
   return(top_hits)
 }
-# EBI function is not correct now.
-get_inst_EBI <- function(id_x, pval_x = 5e-8){
-  df_associations <- gwasrapidd::get_associations(study_id = id_x,warnings = FALSE)
-  tbl01 <- dplyr::select(df_associations@risk_alleles, association_id, variant_id, risk_allele)
-  tbl02 <- dplyr::select(df_associations@associations, association_id, pvalue, beta_number, beta_unit, beta_direction)
-  df_variants <- dplyr::left_join(tbl01, tbl02, by = 'association_id') %>%
-    tidyr::drop_na() %>%
-    dplyr::arrange(variant_id, risk_allele) %>%
-    dplyr::filter(pvalue < pval_x) %>%
-    dplyr::rename(rsid = variant_id)
-  cat("Retrieved", nrow(df_variants), "instruments for", id_x,
-      "\n")
-  return(df_variants)
-}
+# # EBI function is not correct now.
+# get_inst_EBI <- function(id_x, pval_x = 5e-8){
+#   df_associations <- gwasrapidd::get_associations(study_id = id_x,warnings = FALSE)
+#   tbl01 <- dplyr::select(df_associations@risk_alleles, association_id, variant_id, risk_allele)
+#   tbl02 <- dplyr::select(df_associations@associations, association_id, pvalue, beta_number, beta_unit, beta_direction)
+#   df_variants <- dplyr::left_join(tbl01, tbl02, by = 'association_id') %>%
+#     tidyr::drop_na() %>%
+#     dplyr::arrange(variant_id, risk_allele) %>%
+#     dplyr::filter(pvalue < pval_x) %>%
+#     dplyr::rename(rsid = variant_id)
+#   cat("Retrieved", nrow(df_variants), "instruments for", id_x,
+#       "\n")
+#   return(df_variants)
+# }
 #' @export
 get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x=5e-8,
                            snp_name = NA, pos_name = NA, chrom_name = NA, A1_name = NA,
@@ -98,11 +98,11 @@ get_inst_local <- function(file_path,id_x,r2 = 0.001, kb = 10000,ref_path,pval_x
 #' @export
 get_exposure_inst <- function(id_x,type,file_path = NA,pval_x = 5e-8,r2 = 0.001,
                               kb = 10000, pop = "EUR",
-                              access_token = ieugwasr::check_access_token(),
+                              opengwas_jwt = ieugwasr::get_opengwas_jwt(),
                               ref_path = NA){
   if(type == "IEU"){
     df_inst <- get_inst_IEU(id_x = id_x,pval_x = pval_x,r2 = r2,kb = kb,pop = pop,
-                 access_token = access_token)
+                            opengwas_jwt = opengwas_jwt)
   }else if(type == "local"){
     if(is.na(file_path)){
       print("Please provide local file path!")
@@ -116,7 +116,7 @@ get_exposure_inst <- function(id_x,type,file_path = NA,pval_x = 5e-8,r2 = 0.001,
 }
 #' @export
 get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
-                                access_token = ieugwasr::check_access_token()){
+                                opengwas_jwt = ieugwasr::get_opengwas_jwt()){
   counter <- 0
   progress_message <- function() {
     counter <<- counter + 1
@@ -127,7 +127,7 @@ get_association_IEU <- function(df_inst,pval_z = 1e-5,batch = c("ieu-a", "ieu-b"
   results <- purrr::map(df_inst$rsid, function(rsid) {
     progress_message()
     ieugwasr::phewas(variants = rsid, pval = pval_z, batch = batch,
-                     access_token = access_token)
+                     opengwas_jwt = opengwas_jwt)
   })
   phe <- dplyr::bind_rows(results)
   cat("Retrieved", nrow(phe), "associations with", length(unique(phe$id)),
@@ -204,13 +204,13 @@ get_association_local <- function(file_path,trait_id,df_inst,pval_z,snp_name=NA,
 }
 #' @export
 get_association_inst <- function(df_inst,type,pval_z = 1e-5,batch = c("ieu-a", "ieu-b","ukb-b"),
-                                 access_token = ieugwasr::check_access_token(),
+                                 opengwas_jwt = ieugwasr::get_opengwas_jwt(),
                                  file_list = NA, trait_list = NA,
                                  snp_name_list=NA,beta_hat_name_list = NA,
                                  se_name_list = NA,p_value_name_list = NA){
   if(type == "IEU"){
     df_association <- get_association_IEU(df_inst = df_inst,pval_z = pval_z,batch = batch,
-                                          access_token = access_token)
+                                          opengwas_jwt = opengwas_jwt)
   }else if(type == "local"){
     df_association <- purrr::map_dfr(seq(length(file_list)),function(i){
       get_association_local(file_path = file_list[i],trait_id = trait_list[i],

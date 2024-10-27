@@ -6,7 +6,8 @@
 #' @param batch GWAS database sub-batches, a vector. Default = c("ieu-a", "ieu-b","ukb-b")
 #' @param r2 clumping r2 threshold. Default=0.001
 #' @param kb clumping kb window. Default=10000
-#' @param access_token Google OAuth2 access token. Default=check_access_token()
+#' @param opengwas_jwt Used to authenticate protected endpoints. Login to https://api.opengwas.io to obtain a jwt. Provide the jwt string here, or store in .Renviron under the keyname OPENGWAS_JWT.
+#' Default = get_opengwas_jwt()
 #' @param min_snps the number of minimum shared SNPs with IV of X. Default=5
 #' @param type_exposure Exposure data type. Either could be "IEU" or "local". Default = "IEU"
 #' @param type_candidate_traits Candidate traits data type. Either could be "IEU" or "local". Default = "IEU"
@@ -26,7 +27,7 @@
 extract_traits <- function (id_exposure, pval_x = 5e-8, pval_z = 1e-5,
                              pop = "EUR", batch = c("ieu-a", "ieu-b","ukb-b"),
                              r2 = 0.001, kb = 10000,
-                             access_token = ieugwasr::check_access_token(),
+                             opengwas_jwt = ieugwasr::get_opengwas_jwt(),
                              min_snps = 5,
                              type_exposure = "IEU",
                              type_candidate_traits = "IEU",
@@ -37,10 +38,10 @@ extract_traits <- function (id_exposure, pval_x = 5e-8, pval_z = 1e-5,
   df_inst <- get_exposure_inst(id_x = id_exposure,type = type_exposure,
                                file_path = file_path,
                                pval_x = 5e-8,r2 = r2,kb = kb, pop = pop,
-                               access_token = access_token,ref_path = ref_path)
+                               opengwas_jwt = opengwas_jwt,ref_path = ref_path)
   df_association <- get_association_inst(df_inst = df_inst,type = type_candidate_traits,
                                          pval_z = pval_z,batch = batch,
-                                         access_token = access_token,file_list = file_list,
+                                         opengwas_jwt = opengwas_jwt,file_list = file_list,
                                          trait_list = trait_list,snp_name_list= snp_name_list,
                                          beta_hat_name_list = beta_hat_name_list,
                                          se_name_list = se_name_list,
@@ -49,9 +50,9 @@ extract_traits <- function (id_exposure, pval_x = 5e-8, pval_z = 1e-5,
   cat(sum(x$n >= min_snps), "traits have at least", min_snps,
       "shared variants with", id_exposure, "\n")
   ids <- x$id[x$n >= min_snps]
-  df_trait <- gwasinfo(ids)
-  df_trait <- df_trait[,c("id","trait","sex","consortium","nsnp","note","sample_size",
-                          "population","year")]
+  df_trait <- data.frame(gwasinfo(ids))
+  df_trait <- df_trait[, (names(df_trait) %in% c("id","trait","sex","consortium","nsnp","note","sample_size",
+                                                 "population","year"))]
   df_trait['status'] <- 'Initial List'
   # Delete X
   id.list.initial <- ids[!ids %in% id_exposure]
