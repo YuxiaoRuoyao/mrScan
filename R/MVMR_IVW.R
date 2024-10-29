@@ -65,13 +65,13 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
                     outname = data.frame(id.outcome = nms[1], outcome = nms[1]))
       res_F <- mv_multiple(hdat)$result
       res_T <- data.frame(exposure = colnames(beta_hat)[-1],
-                          b = NA, se = NA, pvalue = NA,
+                          b = NA, se = NA, pval = NA,
                           method = paste0("IVW_T_", pval_threshold))
       tryCatch({
         fit_result <- mv_multiple(hdat, instrument_specific = TRUE)$result
         res_T$b <- fit_result$b
         res_T$se <- fit_result$se
-        res_T$pvalue <- fit_result$pval
+        res_T$pval <- fit_result$pval
       }, error = function(e) {
         message("Error in IVW Instrument Specific: ", e$message)
       })

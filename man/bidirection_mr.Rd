@@ -21,7 +21,7 @@ bidirection_mr(
 
 \item{min_instruments}{minimum number of instruments for candidate traits. Default = 3}
 
-\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.05}
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
 
 \item{R2_cutoff}{R2 cutoff for duplicated traits with X or Y. Default = 0.85}
 
@@ -30,7 +30,8 @@ with `ID1`, `ID2`. ID1 is the exposure of ex_dat1 and ID2 is the exposure of ex_
 eg. c("binary","continuous") means that ID1 is a binary trait.}
 
 \item{prevalence_list}{A list for prevalence of traits. The order should
-be exactly matched with `ID1`, `ID2`. For continuous trait, just write NULL. eg. list(0.1, NULL)}
+be exactly matched with `ID1`, `ID2`. eg. list(0.1, NULL) means the prevalence of
+ID1 is 0.1. For continuous trait, just write NULL.}
 }
 \value{
 A list contain bidirection estimates and traits correlation

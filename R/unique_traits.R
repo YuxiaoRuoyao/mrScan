@@ -3,7 +3,7 @@
 #' @param df_info Dataframe of trait info from previous steps
 #' @param R_matrix Pairwise genetic correlation matrix. Colnames are trait names
 #' @param df_pairs A dataframe contain string correlation for each pair
-#' @param R2_cutoff high correlation cutoff to assign as duplicated traits. Default=.9
+#' @param R2_cutoff high correlation cutoff to assign as duplicated traits. Default=0.8
 #' @param method Filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"
 #' @param cluster_selection_method Trait selection method in each cluster: n_inst (select traits with
 #' the largest number of instruments), pvalue (-log10(p) mean for X and Y). Default = "n_inst"
@@ -15,7 +15,7 @@
 #' @import dplyr
 #' @importFrom dplyr left_join group_by slice_max pull arrange ungroup select
 #' @export
-unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.9,
+unique_traits <- function(id.list,df_info,R_matrix,df_pairs,R2_cutoff=0.8,
                           method = "cluster",cluster_selection_method = "n_inst",
                           extra_traits = "None",df_bidirection = NULL){
   if(method=="cluster"){

@@ -9,7 +9,7 @@ unique_traits(
   df_info,
   R_matrix,
   df_pairs,
-  R2_cutoff = 0.9,
+  R2_cutoff = 0.8,
   method = "cluster",
   cluster_selection_method = "n_inst",
   extra_traits = "None",
@@ -25,7 +25,7 @@ unique_traits(
 
 \item{df_pairs}{A dataframe contain string correlation for each pair}
 
-\item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=.9}
+\item{R2_cutoff}{high correlation cutoff to assign as duplicated traits. Default=0.8}
 
 \item{method}{Filtering duplicate method: sample_size, nsnp, cluster. Default = "cluster"}
 

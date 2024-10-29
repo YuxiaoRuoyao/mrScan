@@ -4,16 +4,51 @@
 \alias{stepwise}
 \title{Use stepwise selection to do confounder selection}
 \usage{
-stepwise(id_exposure, id.list, df_info, mvdat_y, method = "forward")
+stepwise(
+  dat,
+  type,
+  id_exposure,
+  df_info,
+  pval_threshold = 5e-08,
+  ss.exposure = NULL,
+  effect_size_cutoff = 0.1,
+  type_outcome = "continuous",
+  prevalence_outcome = NULL,
+  type_exposure = NULL,
+  prevalence_exposure = NULL,
+  method = "forward"
+)
 }
 \arguments{
-\item{id_exposure}{GWAS ID of the main exposure}
+\item{dat}{If type == "local", it's a data frame of combined GWAS summary data after LD pruning.
+The required columns include `SNP` for rsID, `trait_ID.beta` for beta hats,
+`trait_ID.se` for standard errors, `trait_ID.z` for zvalues, `trait_ID.p` for pvalues,
+`trait_ID.ss` for sample sizes
+If type == "IEU", it should be the output from TwoSampleMR::mv_harmonise_data().}
 
-\item{id.list}{GWAS ID list of traits based on previous steps}
+\item{type}{Input data type. It could be either "local" for local GWAS summary data
+after LD pruning or "IEU" for output from TwoSampleMR::mv_harmonise_data().}
+
+\item{id_exposure}{GWAS ID of the main exposure}
 
 \item{df_info}{Dataframe of trait info from previous steps}
 
-\item{mvdat_y}{Harmonized data for the outcome produced by select_instruments step}
+\item{pval_threshold}{pvalue cutoff for selecting instruments. Default = 5e-8}
+
+\item{ss.exposure}{A vector of sample size for exposures. You can provide it when type = "IEU".
+The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
+
+\item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
+
+\item{type_outcome}{It could be either "continuous" or "binary". Default = "continuous"}
+
+\item{prevalence_outcome}{Outcome prevalence. It should be input if the outcome is a binary trait. Default = NULL}
+
+\item{type_exposure}{A vector for the type of exposures. The order should be exactly matched
+with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait}
+
+\item{prevalence_exposure}{A vector for prevalence of exposures. The order should
+be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
 
 \item{method}{either forward, backward or both. Default = "forward"}
 }
