@@ -1,0 +1,6 @@
+"trait_ID","path","snp","beta_hat","se","p_value"
+"ieu-b-111","../GWAS_summary_data/ieu-b-111.vcf.gz",NA,NA,NA,NA
+"ieu-b-4808","../GWAS_summary_data/ieu-b-4808.vcf.gz",NA,NA,NA,NA
+"ieu-b-110","../GWAS_summary_data/ieu-b-110.vcf.gz",NA,NA,NA,NA
+"ebi-a-GCST90093038","../GWAS_summary_data/35213538-GCST90093038-EFO_0004530.h.tsv.gz","hm_rsid",NA,NA,NA
+"ebi-a-GCST90018944","../GWAS_summary_data/34594039-GCST90018944-EFO_0004736.h.tsv.gz","hm_rsid",NA,NA,NA
