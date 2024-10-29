@@ -32,7 +32,7 @@ devtools::install_github("qingyuanzhao/mr.raps")
 devtools::install_github("noahlorinczcomi/MRBEE")
 devtools::install_github("jean997/GFA")
 devtools::install_github("jingshuw/grapple")
-devtools::install_github("jean997/esmr")
+devtools::install_github("jean997/esmr", ref = "tau_nesmr2")
 ```
 
 Please note the vignette only provides a simple example of function
