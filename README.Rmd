@@ -38,11 +38,12 @@ install.packages("remotes")
 install.packages("stringr")
 remotes::install_github("MRCIEU/TwoSampleMR")
 devtools::install_github("mrcieu/ieugwasr")
-devtools::install_github("qingyuanzhao/mr.raps")
 devtools::install_github("noahlorinczcomi/MRBEE")
 devtools::install_github("jean997/GFA")
 devtools::install_github("jingshuw/grapple")
-devtools::install_github("jean997/esmr")
+devtools::install_github("jean997/esmr", ref = "tau_nesmr2")
+# If you want to use corrected Lasso method, you can install this
+# devtools::install_github("osorensen/hdme", build_vignettes = TRUE)
 ```
 
 Please note the vignette only provides a simple example of function usage. If you 
@@ -74,7 +75,7 @@ remotes::install_github("privefl/bigsnpr")
 
 You need to download the whole pipeline directory to your local space. There are 
 multiple ways to that. You can quickly use [Download Directory](https://download-directory.github.io/). 
-Just copy address link https://github.com/YuxiaoRuoyao/mrScan/tree/master/pipeline and download.  
+Just copy address link https://github.com/YuxiaoRuoyao/mrScan/tree/master/vignettes_Snakemake_pipeline and download.  
 
 ### Edit the config file based on your need
 

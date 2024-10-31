@@ -22,6 +22,7 @@ library(mrScan)
 library(dplyr)
 library(TwoSampleMR)
 library(ieugwasr)
+#library(hdme)
 ```
 
 We'll use C-reactive protein (CRP) level (ieu-b-35) as the exposure and
@@ -303,8 +304,8 @@ res_mr_filter <- complete_res_mr[which(!names(complete_res_mr) %in% high_corr_id
 names(res_mr_filter) <- NULL
 all_mr <- do.call(Map, c(f = rbind, res_mr_filter))
 res_step3 <- downstream_filter(id_exposure = x_id,id.list = res_step2$id.list,
-                                    df_info = res_step2$trait.info, res = all_mr,
-                                    MR_method = "MR_GRAPPLE")
+                               df_info = res_step2$trait.info, res = all_mr,
+                               MR_method = "MR_GRAPPLE")
 length(res_step3$id.list)
 data.frame(res_step3$df_bidirection)
 ```
