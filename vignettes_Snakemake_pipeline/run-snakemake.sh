@@ -5,8 +5,8 @@ mkdir -p results
 snakemake \
    --keep-going \
    --rerun-triggers mtime \
-   --jobs 96 \
-   --max-jobs-per-second 22 \
+   --jobs 20 \
+   --max-jobs-per-second 20 \
    --latency-wait 60 \
    --cluster-config cluster.yaml  \
    --cluster "sbatch \

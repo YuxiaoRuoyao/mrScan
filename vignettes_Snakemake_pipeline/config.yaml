@@ -1,7 +1,7 @@
 input:
     label: "Stroke" # Label for the outcome
     exposure_label: "CRP"
-    id_exposure: "ieu-b-35"
+    id_exposure: "ebi-a-GCST90029070"
     id_outcome: "ebi-a-GCST005838"
     type_outcome: "binary" # "binary" or "continuous"
     prevalence_outcome: 0.01 # If your outcome is a binary disease, please set prevalence here. Otherwise, write NA
@@ -13,7 +13,7 @@ analysis:
     pop: "EUR"
     pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
     extract_traits:
-        batch: ["ieu-a","ieu-b"] # Data batch to search candidate traits
+        batch: ["ieu-a","ieu-b","ukb-b"] # Data batch to search candidate traits
         pval_traits: 1e-5 # pvalue threshold to retrieve traits
         min_snps: 5 # The number of minimum shared SNPs with IV of the main exposure
         type_exposure: "IEU" # exposure data type. IEU or local
@@ -77,7 +77,7 @@ analysis:
         type: ["ldsc"] # ldsc or pval
         p_thresh: 0.05
         l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/" # reference LD score files location path, change to your own path
-    
+
     MVMR_analysis:
         method: ["IVW","GRAPPLE","MRBEE","ESMR"] # MVMR method
         p_thresh_IVW: [5e-8]
