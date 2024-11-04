@@ -3,8 +3,6 @@ library(TwoSampleMR)
 library(dplyr)
 library(mrScan)
 
-Sys.setenv(OPENGWAS_JWT = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFwaS1qd3QiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhcGkub3Blbmd3YXMuaW8iLCJhdWQiOiJhcGkub3Blbmd3YXMuaW8iLCJzdWIiOiJ5dXhpYW93QHVtaWNoLmVkdSIsImlhdCI6MTcyOTY0MDQ5NSwiZXhwIjoxNzMwODUwMDk1fQ.YZA2h58w7WgJjxWzNnKKnYRz84c7Gf40FVTP4aKMdYpa84DkcPk-IoHFeJgjMEeIhwGEC7gXnrtb6MTW0pp24jEESZFVX7_hIg5k0UnX3q6Y4o9GhjppNo5dZFof9ZRZmMzu43WCrUj_nYNcWL-k7vGaXhpGaS2AC1sAk24RLDHY23HYyPEQ76O0Cs4hBDjF2veNj8XAbV_6ThSLX8NA2g4ygd3FiZjlXk8cEPeEF49thNfNQWOJD3rcfI52V5AIn1VJk5gIN4PD-fm1GLWHou02EDdlVt_-sewZlPjmkpu7jVMjP9OZnppwIYj4w6Bi6uf4uYeFzMyiIrP6bKYPng")
-
 id_exposure <- snakemake@params[["id_exposure"]]
 batch <- as.vector(snakemake@params[["batch"]])
 pop <- snakemake@params[["population"]]
@@ -37,7 +35,6 @@ if(type_candidate_traits == "local" & (!is.na(df_candidate_traits))){
   se_name_list <- df_info$se
   p_value_name_list <- df_info$p_value
 }
-print(batch)
 res <- extract_traits(id_exposure = id_exposure, pval_x = pval_x, pval_z = pval_z,
                       pop = pop, batch = batch,
                       r2 = r2, kb = kb,

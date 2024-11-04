@@ -9,7 +9,6 @@ library(ieugwasr)
 library(mrScan)
 library(GFA)
 
-
 id_list <- read.csv(snakemake@input[["id_list"]])$id
 df_info <- read.csv(snakemake@input[["trait_info"]])
 df_download <- read.csv(snakemake@input[["download"]],header=F)

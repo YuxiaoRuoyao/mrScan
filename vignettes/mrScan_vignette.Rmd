@@ -175,8 +175,12 @@ high to make sure we have a stringent filtering to avoid deleting important trai
 You can omit this step if your confounder list is not quite long, since we'll do 
 more accurate duplicate filtering in the following steps.
 
-```{r warning=FALSE}
+```{r eval=FALSE}
 all_inst <- extract_instruments(c(x_id,y_id,res_step2$id.list))
+```
+
+```{r}
+load("data/all_inst.rda")
 df_inst_counts <- data.frame(id = res_step2$id.list, n_inst = NA)
 for (i in df_inst_counts$id) {
   inst <- all_inst %>% filter(id.exposure == i)
@@ -582,7 +586,16 @@ for all traits can lead to the loss of instruments when combining data. In that 
 we recommend using a stepwise filtering strategy: begin by removing traits with 
 the lowest F-statistics, then re-combine and re-format the remaining traits to 
 recalculate the F-statistics. Repeat this process until all traits have sufficient 
-instrument strength.
+instrument strength.  
+
+You need to generate local data again with selected confounders after strength filtering. 
+The steps are similar as described above. Here we just load them for the following steps.
+
+```{r}
+load("data/dat_unique_filter.rda")
+R_ldsc_unique_filter <- readRDS("data/R_ldsc_unique_filter.RDS")
+```
+
 
 ## (Option step) Use other methods to do confounder selection
 
@@ -618,16 +631,14 @@ if(sum(!literature_traits %in% res_step5$trait.info$id) != 0){
 
 3. Classic Lasso method. It will not penalize the main exposure. You can choose 
 `lambda_type` in either `1se` or `min`, and you may set seed to make the results 
-consistent. Here we input local data after strength_filter to make sure traits with 
-enough instrument strength.
+consistent.
 
-```{r}
-load("data/dat_unique_filter.rda")
-res_Lasso_min <- classic_Lasso(dat = dat_unique_filter, type = "local",id_exposure = x_id, 
+```{r eval=FALSE}
+res_Lasso_min <- classic_Lasso(dat = dat_unique_filter, type = "local",
+                               id_exposure = x_id, 
                                df_info = res_step5$trait.info,
                                type_outcome = "binary", prevalence_outcome = 0.01,
                                lambda_type = "min")
-res_Lasso_min$id.list
 ```
 
 If you want to use data from API (results from `TwoSampleMR::mv_harmonise_data()`),
@@ -645,7 +656,7 @@ We conduct this method in the genetic data since GWAS summary statistics have
 measurement error inside.
 ```{r eval=FALSE}
 res_corrected_Lasso <- corrected_Lasso(dat = dat_unique_filter, type = "local", 
-                                       id_exposure = x_id,df_info = res_step5$trait.info,
+                                       id_exposure = x_id, df_info = res_step5$trait.info,
                                        type_outcome = "binary", prevalence_outcome = 0.01,
                                        radius_type="min")
 ```
@@ -676,8 +687,7 @@ use GRAPPLE since it cannot converge and give you biased estimates. You may also
 need to check the p-value thresholds of instrument selection for every method. 
 If you try to run ESMR, use `R_ldsc_unique$Re_esmr` matrix as the `R_matrix`.
 
-```{r error=FALSE, message=FALSE, warning=FALSE, results='hide'}
-R_ldsc_unique_filter <- readRDS("data/R_ldsc_unique_filter.RDS")
+```{r eval=FALSE}
 res_IVW <- MVMR_IVW(dat = dat_unique_filter, type = "local", 
                     type_outcome = "binary",prevalence_outcome = 0.01)
 res_GRAPPLE <- MVMR_GRAPPLE(dat = dat_unique_filter, type = "local", 
@@ -690,14 +700,16 @@ res_MRBEE <- MVMR_MRBEE(dat = dat_unique_filter, type = "local",
 res_ESMR <- MVMR_ESMR(dat = dat_unique_filter, 
                       type_outcome = "binary",prevalence_outcome = 0.01,
                       R_matrix = as.matrix(R_ldsc_unique_filter$Re_esmr))
-```
-
-You can combine results and plot them out:
-```{r fig.width=10, fig.height=10}
+# Make the result summary table
 df_summary <- bind_rows(res_IVW$res.summary,res_GRAPPLE$res.summary,
                         res_MRBEE$res.summary,res_ESMR$res.summary) %>% 
   mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.975)*se) %>%
   mutate(odds=exp(b),CI_lower=exp(CI_lower),CI_higher=exp(CI_higher))
+```
+
+Visualize the causal estimates:
+```{r fig.width=8, fig.height=8}
+load("data/df_summary.rda")
 selection_method <- "Unique traits filter"
 df_summary %>% filter(exposure==x_id) %>%
   ggplot() + 
@@ -708,14 +720,14 @@ df_summary %>% filter(exposure==x_id) %>%
                 position=position_dodge(width = 0.9)) +
   xlab("Odds Ratio (95% CI)") + coord_flip() +
   theme_bw() + ggtitle(paste0("Direct causal effect of ",x_id,"  on ",y_id))+
-  theme(axis.text.y = element_text(size = 20),
-        axis.text.x = element_text(size = 20, angle = 0),
-        strip.text = element_text(size = 20),
-        legend.text = element_text(size = 20),
-        plot.title = element_text(size= 20),
+  theme(axis.text.y = element_text(size = 15),
+        axis.text.x = element_text(size = 15, angle = 0),
+        strip.text = element_text(size = 15),
+        legend.text = element_text(size = 15),
+        plot.title = element_text(size= 15),
         legend.title = element_blank(),
         axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 20),
+        axis.title.y = element_text(size = 15),
         legend.position = "bottom")
 ```
 
@@ -726,19 +738,20 @@ df_strength_filter <- strength_filter(dat = dat_unique_filter, dat_type = "local
                                       df_info = res_step5$trait.info,
                                       type_outcome = "binary",prevalence_outcome = 0.01,
                                       Filter = FALSE)
+df_strength_filter$trait[1] <- gwasinfo(x_id)$trait
 df_strength_filter %>% mutate(F_stats = round(F.statistic,2)) %>% 
   select(id,trait,F_stats) %>% 
   kbl(caption = "Selected confounders with F-statistics") %>%
-  kable_classic(full_width = T, html_font = "Cambria")
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 
 You can check estimate results and trait information table:
 ```{r}
 df_summary %>%
   kbl(caption = "Result Summary Table") %>%
-  kable_classic(full_width = T, html_font = "Cambria")
+  kable_classic(full_width = F, html_font = "Cambria")
 res_step5$trait.info %>% head() %>%
   kbl(caption = "Partial Trait Information Table") %>%
-  kable_classic(full_width = T, html_font = "Cambria")
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 

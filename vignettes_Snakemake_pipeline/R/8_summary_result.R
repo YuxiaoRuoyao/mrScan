@@ -25,13 +25,13 @@ extract_fdr <- function(filename) {
   }
 }
 if(grepl("MVMR",downstream_method)){
-  type <- res %>% 
+  type <- res %>%
     strsplit(paste0("results/",prefix)) %>% sapply(tail, 1) %>%
     strsplit("_MVMR_") %>% sapply(head, 1) %>%
     gsub('selection_', '', .) %>% strsplit("_seed") %>%
     sapply(head, 1) %>% sub("^_", "", .) %>% unique()
 }else{
-  type <- res %>% 
+  type <- res %>%
     strsplit(paste0("results/",prefix)) %>% sapply(tail, 1) %>%
     strsplit("_MVMR_") %>% sapply(head, 1) %>% strsplit("_MR_") %>% sapply(head, 1) %>%
     gsub('selection_', '', .) %>% strsplit("_seed") %>%
@@ -70,7 +70,6 @@ for (m in MVMR_methods) {
 }
 all_res <- all_res %>% mutate(CI_lower=b-qnorm(0.975)*se, CI_higher=b + qnorm(0.975)*se) %>%
            mutate(odds=exp(b),CI_lower=exp(CI_lower),CI_higher=exp(CI_higher))
-#all_res[all_res$type == "unique_traits","type"] <- "All"
 all_res[all_res$type == "final","type"] <- "Stepwise"
 plt<- all_res %>% filter(exposure==id_exposure) %>%
        filter(converge == TRUE | is.na(converge)) %>%
