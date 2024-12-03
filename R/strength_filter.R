@@ -46,8 +46,8 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
     names(beta_hat)<-names(se)<-names(z)<-names(p)<-names(ss)<-names(af)<-nms
     z.norm <- z/sqrt(ss)
     o <- match(colnames(R_matrix), nms)
-    beta_hat <- data.frame(beta_hat[, o],check.names = F)
-    se <- data.frame(se[, o],check.names = F)
+    beta_hat <- beta_hat[,o]
+    se <- se[,o]
     z.norm <- z.norm[,o]
     i <- ncol(beta_hat)
     pmin <- apply(p[,-1, drop = F], 1, min)
@@ -82,10 +82,10 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
         sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
       }
     }else{
-      MRInputObject <- MendelianRandomization::mr_input(bx = beta_hat[final_ix, 2:i],
-                                                        by = beta_hat[final_ix,1],
-                                                        bxse = se[final_ix,2:i],
-                                                        byse = se[final_ix,1])
+      MRInputObject <- MendelianRandomization::mr_input(bx = as.matrix(beta_hat)[final_ix, 2:i],
+                                                        by = as.matrix(beta_hat)[final_ix,1],
+                                                        bxse = as.matrix(se)[final_ix,2:i],
+                                                        byse = as.matrix(se)[final_ix,1])
       IVWObject <- MendelianRandomization::mr_ivw(MRInputObject)
       sres <- data.frame(F.statistic = IVWObject@Fstat)
     }
