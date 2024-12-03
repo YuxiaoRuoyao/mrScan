@@ -64,21 +64,30 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                                               snp_info = info[new_ix,],proxies = 0)
     final_ix <- which(snp %in% filtered_SNP)
     exp_se <- as.matrix(se[final_ix,2:i])
-    F.data<- format_mvmr(BXGs = as.matrix(beta_hat[final_ix, 2:i]),
-                         BYG = beta_hat[final_ix,1],
-                         seBXGs = exp_se,
-                         seBYG = se[final_ix,1],
-                         RSID = snp[final_ix])
-    sigmalist <- vector("list", length(final_ix))
-    if(!is.null(R_matrix)){
-      omega <- R_matrix[2:i,2:i]
-      for (j in 1:length(final_ix)) {
-        se_matrix <- diag(exp_se[j,],nrow = i-1)
-        sigmalist[[j]] <- se_matrix %*% omega %*% se_matrix
+    if(i > 2){
+      F.data<- format_mvmr(BXGs = as.matrix(beta_hat[final_ix, 2:i]),
+                           BYG = beta_hat[final_ix,1],
+                           seBXGs = exp_se,
+                           seBYG = se[final_ix,1],
+                           RSID = snp[final_ix])
+      sigmalist <- vector("list", length(final_ix))
+      if(!is.null(R_matrix)){
+        omega <- R_matrix[2:i,2:i]
+        for (j in 1:length(final_ix)) {
+          se_matrix <- diag(exp_se[j,],nrow = i-1)
+          sigmalist[[j]] <- se_matrix %*% omega %*% se_matrix
+        }
+        sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = sigmalist)))
+      }else{
+        sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
       }
-      sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = sigmalist)))
     }else{
-      sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
+      MRInputObject <- MendelianRandomization::mr_input(bx = beta_hat[final_ix, 2:i],
+                                                        by = beta_hat[final_ix,1],
+                                                        bxse = se[final_ix,2:i],
+                                                        byse = se[final_ix,1])
+      IVWObject <- MendelianRandomization::mr_ivw(MRInputObject)
+      sres <- data.frame(F.statistic = IVWObject@Fstat)
     }
     sres$id<-colnames(beta_hat[-1])
   }
