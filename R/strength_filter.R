@@ -104,7 +104,7 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
     names(ss.exposure) <- id.exposure
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
-    info_outcoome <- ieugwasr::gwasinfo(id.outcome)
+    info_outcome <- ieugwasr::gwasinfo(id.outcome)
     if (nrow(info_outcome) == 0) {
       outcome_af <- data.frame(df_af[filtered_idx, "eaf.outcome"])
       ncase_outcome <- unique(df_af$ncase.outcome)
