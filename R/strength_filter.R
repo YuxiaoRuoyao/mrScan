@@ -19,6 +19,8 @@
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
 #' @param ss.exposure A vector of sample size for exposures. You can provide it when dat_type = "IEU".
 #' The order of it should be the same with beta hat matrix and se matrix. Default = NULL
+#' @param df_af Outcome from TwoSampleMR::extract_outcome_data, and it contains `eaf.outcome`.
+#' This needs to be input when using local outcome data. Default = NULL
 #' @returns A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info
 #'
 #' @import dplyr
@@ -32,7 +34,7 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                             Filter = FALSE, extra_traits = "None",
                             type_outcome = "continuous", prevalence_outcome = NULL,
                             type_exposure = NULL, prevalence_exposure = NULL,
-                            ss.exposure = NULL){
+                            ss.exposure = NULL, df_af = NULL){
   if(dat_type == "local"){
     snp <- dat$snp
     info <- dat %>% select(snp,REF,ALT)
@@ -102,6 +104,18 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
     names(ss.exposure) <- id.exposure
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
+    info_outcoome <- ieugwasr::gwasinfo(id.outcome)
+    if (nrow(info_outcome) == 0) {
+      outcome_af <- data.frame(df_af[filtered_idx, "eaf.outcome"])
+      ncase_outcome <- unique(df_af$ncase.outcome)
+      ncontrol_outcome <- unique(df_af$ncontrol.outcome)
+      samplesize_outcome <- unique(df_af$samplesize.outcome)
+    } else {
+      outcome_af <- NULL
+      ncase_outcome <- NULL
+      ncontrol_outcome <- NULL
+      samplesize_outcome <- NULL
+    }
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
                                               id.exposure = id.exposure,
                                               id.outcome = id.outcome,
@@ -111,17 +125,21 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                                               outcome_beta = dat$outcome_beta[filtered_idx],
                                               outcome_pval = dat$outcome_pval[filtered_idx],
                                               outcome_se = dat$outcome_se[filtered_idx],
+                                              outcome_af = outcome_af,
                                               type_outcome = type_outcome,
                                               prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure,
                                               prevalence_exposure = prevalence_exposure,
-                                              proxies = 1)
+                                              proxies = 1,
+                                              ncase_outcome = ncase_outcome,
+                                              ncontrol_outcome = ncontrol_outcome,
+                                              samplesize_outcome = samplesize_outcome)
     final_ix <- which(snp %in% filtered_SNP)
     F.data <- format_mvmr(BXGs = as.matrix(dat$exposure_beta[final_ix,]),
-                         BYG = dat$outcome_beta[final_ix],
-                         seBXGs = as.matrix(dat$exposure_se[final_ix,]),
-                         seBYG = dat$outcome_se[final_ix],
-                         RSID = rownames(dat$exposure_beta)[final_ix])
+                          BYG = dat$outcome_beta[final_ix],
+                          seBXGs = as.matrix(dat$exposure_se[final_ix,]),
+                          seBYG = dat$outcome_se[final_ix],
+                          RSID = rownames(dat$exposure_beta)[final_ix])
     sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
     sres$id<-colnames(dat$exposure_beta)
   }

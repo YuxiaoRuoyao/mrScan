@@ -444,8 +444,23 @@ MR_MRBEE <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
   return(res_summary)
 }
 #' @export
-get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0){
-  association_data <- ieugwasr::associations(SNP_set, id, proxies = proxies)
+get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0, splitsize = 50){
+  if(length(SNP_set) > splitsize){
+    splits <- split(SNP_set, ceiling(seq_along(SNP_set) / splitsize))
+    results <- list()
+    for (chunk_index in seq_along(splits)) {
+      message("Processing chunk ", chunk_index, " of ", length(splits))
+      snp_chunk <- splits[[chunk_index]]
+      chunk_result <- ieugwasr::associations(snp_chunk, id, proxies = proxies)
+      if (!is.data.frame(chunk_result)) {
+        chunk_result <- data.frame()
+      }
+      results[[chunk_index]] <- chunk_result
+    }
+    association_data <- plyr::rbind.fill(results)
+  }else{
+    association_data <- ieugwasr::associations(SNP_set, id, proxies = proxies)
+  }
   if (!is.null(snp_info)) {
     association_data <- merge(association_data, snp_info, by.x = "rsid", by.y = "snp", all.x = TRUE)
   }
@@ -477,11 +492,21 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                       exposure_af = NULL, outcome_af = NULL,
                                       type_outcome = "continuous", type_exposure = NULL,
                                       prevalence_outcome = NULL, prevalence_exposure = NULL,
-                                      snp_info = NULL,proxies = 0) {
+                                      snp_info = NULL,proxies = 0,
+                                      ncase_outcome = NULL, ncontrol_outcome = NULL,
+                                      samplesize_outcome = NULL) {
   dat_outcome <- data.frame(SNP = SNP, beta.outcome = outcome_beta, pval.outcome = outcome_pval,
                             se.outcome = outcome_se,id.outcome = id.outcome,outcome = id.outcome)
   colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
-  dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
+  info_outcome <- ieugwasr::gwasinfo(id.outcome)
+  if(nrow(info_outcome) != 0){
+    dat_outcome <- dat_outcome %>% TwoSampleMR::add_metadata()
+  }else{
+    dat_outcome$units.outcome <- NA
+    dat_outcome$ncase.outcome <- ncase_outcome
+    dat_outcome$ncontrol.outcome <- ncontrol_outcome
+    dat_outcome$samplesize.outcome <- samplesize_outcome
+  }
   if(all(grepl("SD", dat_outcome$units.outcome))){
     if(!is.null(outcome_af)) {
       dat_outcome <- cbind(dat_outcome,data.frame(eaf.outcome = outcome_af[[1]]))
@@ -515,7 +540,15 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                id.exposure = id.exposure[i], exposure = id.exposure[i])
     colnames(dat_exposure) <- c("SNP", "beta.exposure", "pval.exposure", "se.exposure",
                                 "id.exposure", "exposure")
-    dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
+    info_exposure <- ieugwasr::gwasinfo(id.exposure[i])
+    if (nrow(info_exposure) != 0) {
+      dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
+    } else {
+      dat_exposure$units.exposure <- NA
+      dat_exposure$ncase.exposure <- ncase_exposure
+      dat_exposure$ncontrol.exposure <- ncontrol_exposure
+      dat_exposure$samplesize.exposure <- samplesize_exposure
+    }
     if(all(grepl("SD", dat_exposure$units.exposure))){
       if(!is.null(exposure_af)) {
         dat_exposure <- cbind(dat_exposure,data.frame(eaf.exposure = exposure_af[[i]]))

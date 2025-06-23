@@ -18,7 +18,8 @@ strength_filter(
   prevalence_outcome = NULL,
   type_exposure = NULL,
   prevalence_exposure = NULL,
-  ss.exposure = NULL
+  ss.exposure = NULL,
+  df_af = NULL
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA
 
 \item{ss.exposure}{A vector of sample size for exposures. You can provide it when dat_type = "IEU".
 The order of it should be the same with beta hat matrix and se matrix. Default = NULL}
+
+\item{df_af}{Outcome from TwoSampleMR::extract_outcome_data, and it contains `eaf.outcome`.
+This needs to be input when using local outcome data. Default = NULL}
 }
 \value{
 A list of selected traits, a dataframe of conditional instrument strength and a dataframe of trait info
