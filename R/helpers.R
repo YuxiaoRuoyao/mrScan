@@ -444,7 +444,7 @@ MR_MRBEE <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
   return(res_summary)
 }
 #' @export
-get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0, splitsize = 50){
+get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0, splitsize = 20){
   if(length(SNP_set) > splitsize){
     splits <- split(SNP_set, ceiling(seq_along(SNP_set) / splitsize))
     results <- list()
