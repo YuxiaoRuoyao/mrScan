@@ -494,7 +494,9 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                       prevalence_outcome = NULL, prevalence_exposure = NULL,
                                       snp_info = NULL,proxies = 0,
                                       ncase_outcome = NULL, ncontrol_outcome = NULL,
-                                      samplesize_outcome = NULL) {
+                                      samplesize_outcome = NULL,
+                                      ncase_exposure = NULL, ncontrol_exposure = NULL,
+                                      samplesize_exposure = NULL) {
   dat_outcome <- data.frame(SNP = SNP, beta.outcome = outcome_beta, pval.outcome = outcome_pval,
                             se.outcome = outcome_se,id.outcome = id.outcome,outcome = id.outcome)
   colnames(dat_outcome) <- c("SNP","beta.outcome","pval.outcome","se.outcome","id.outcome","outcome")
@@ -545,9 +547,9 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
       dat_exposure <- dat_exposure %>% TwoSampleMR::add_metadata()
     } else {
       dat_exposure$units.exposure <- NA
-      dat_exposure$ncase.exposure <- ncase_exposure
-      dat_exposure$ncontrol.exposure <- ncontrol_exposure
-      dat_exposure$samplesize.exposure <- samplesize_exposure
+      dat_exposure$ncase.exposure <- ncase_exposure[i]
+      dat_exposure$ncontrol.exposure <- ncontrol_exposure[i]
+      dat_exposure$samplesize.exposure <- samplesize_exposure[i]
     }
     if(all(grepl("SD", dat_exposure$units.exposure))){
       if(!is.null(exposure_af)) {
@@ -604,4 +606,28 @@ WarningAndGrappleEst <- function(data, cor.mat = NULL) {
     invokeRestart("muffleWarning")
   })
   return(result)
+}
+#' @export
+generate_df_af_exp <- function(ex_dat,mv_dat){
+  id_exposure_list <- unique(ex_dat$id.exposure)
+  df_af_exp <- vector("list", length(id_exposure_list))
+  names(df_af_exp) <- id_exposure_list
+  for (id in id_exposure_list) {
+    indices <- which(ex_dat$id.exposure == id)
+    df_ID <- data.frame(
+      SNP = ex_dat$SNP[indices],
+      eaf.exposure = ex_dat$eaf.exposure[indices],
+      exposure = ex_dat$exposure[indices],
+      beta.exposure = ex_dat$beta.exposure[indices],
+      id.exposure = ex_dat$id.exposure[indices],
+      se.exposure = ex_dat$se.exposure[indices],
+      pval.exposure = ex_dat$pval.exposure[indices],
+      effect_allele.exposure = ex_dat$effect_allele.exposure[indices],
+      other_allele.exposure = ex_dat$other_allele.exposure[indices]
+    )
+    df_af_exp_sub <- data.frame(SNP = rownames(mv_dat$exposure_beta)) %>%
+      left_join(df_ID)
+    df_af_exp[[id]] <- df_af_exp_sub
+  }
+  return(df_af_exp)
 }

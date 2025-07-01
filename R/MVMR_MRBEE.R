@@ -17,6 +17,11 @@
 #' with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait
 #' @param prevalence_exposure A vector for prevalence of exposures. The order should
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
+#' @param df_af_exp A list for allele frequency matrix for each exposure.
+#' Each dataframe contains columns `SNP`,`eaf.exposure`,`beta.exposure`,`id.exposure`.
+#' Each element in the list is the dataframe for each exposure. Default = NULL
+#' @param df_af_out A dataframe of allele frequency of the outcome.
+#' It contains columns `SNP`,`eaf.outcome`,`beta.outcome`,`id.outcome`. Default = NULL
 #' @returns A dataframe of result summary
 #'
 #' @import MRBEE
@@ -27,7 +32,8 @@
 MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,type,
                        ss.exposure = NULL, effect_size_cutoff=0.1,
                        type_outcome = "continuous", prevalence_outcome = NULL,
-                       type_exposure = NULL, prevalence_exposure = NULL){
+                       type_exposure = NULL, prevalence_exposure = NULL,
+                       df_af_exp = NULL, df_af_out = NULL){
   if(type == "local"){
     snp <- dat$snp
     info <- dat %>% select(snp,REF,ALT)
@@ -95,20 +101,59 @@ MVMR_MRBEE <- function(dat,R_matrix,pval_threshold = 5e-8,pleio_threshold = 0,ty
     filtered_idx <- which(rowSums(abs(z.norm.exposure) < effect_size_cutoff) == ncol(z.norm.exposure))
     snp <- rownames(dat$exposure_beta)
     outlier_snp <- snp[-filtered_idx]
+    info_outcome <- ieugwasr::gwasinfo(id.outcome)
+    if (nrow(info_outcome) == 0) {
+      outcome_af <- data.frame(df_af_out[filtered_idx, "eaf.outcome"])
+      ncase_outcome <- unique(df_af_out$ncase.outcome)
+      ncontrol_outcome <- unique(df_af_out$ncontrol.outcome)
+      samplesize_outcome <- unique(df_af_out$samplesize.outcome)
+    } else {
+      outcome_af <- NULL
+      ncase_outcome <- NULL
+      ncontrol_outcome <- NULL
+      samplesize_outcome <- NULL
+    }
+    exposure_af <- data.frame(do.call(cbind, lapply(df_af_exp, function(df) {
+      df$eaf.exposure[filtered_idx]
+    })))
+    colnames(exposure_af) <- names(df_af_exp)
+    ncase_exposure <- c()
+    ncontrol_exposure <- c()
+    samplesize_exposure <- c()
+    for (i in seq_along(id.exposure)) {
+      info_exposure <- ieugwasr::gwasinfo(id.exposure[i])
+      if (nrow(info_exposure) == 0) {
+        ncase_exposure[i] <- unique(df_af_exp[[i]]$ncase.exposure)
+        ncontrol_exposure[i] <- unique(df_af_exp[[i]]$ncontrol.exposure)
+        samplesize_exposure[i] <- unique(df_af_exp[[i]]$samplesize.exposure)
+      } else {
+        ncase_exposure[i] <- NA
+        ncontrol_exposure[i] <- NA
+        samplesize_exposure[i] <- NA
+      }
+    }
     filtered_SNP <- general_steiger_filtering(SNP = snp[filtered_idx],
                                               id.exposure = id.exposure,
                                               id.outcome = id.outcome,
                                               exposure_beta = dat$exposure_beta[filtered_idx,],
                                               exposure_pval = dat$exposure_pval[filtered_idx,],
                                               exposure_se = dat$exposure_se[filtered_idx,],
+                                              exposure_af = exposure_af,
                                               outcome_beta = dat$outcome_beta[filtered_idx],
                                               outcome_pval = dat$outcome_pval[filtered_idx],
                                               outcome_se = dat$outcome_se[filtered_idx],
+                                              outcome_af = outcome_af,
                                               type_outcome = type_outcome,
                                               prevalence_outcome = prevalence_outcome,
                                               type_exposure = type_exposure,
                                               prevalence_exposure = prevalence_exposure,
-                                              proxies = 1)
+                                              proxies = 1,
+                                              ncase_outcome = ncase_outcome,
+                                              ncontrol_outcome = ncontrol_outcome,
+                                              samplesize_outcome = samplesize_outcome,
+                                              ncase_exposure = ncase_exposure,
+                                              ncontrol_exposure = ncontrol_exposure,
+                                              samplesize_exposure = samplesize_exposure)
     final_ix <- which(snp %in% filtered_SNP)
     fit <- MRBEE.IMRP(by = dat$outcome_beta[final_ix],
                       bX = dat$exposure_beta[final_ix, ],

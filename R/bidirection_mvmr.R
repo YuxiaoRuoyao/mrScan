@@ -29,8 +29,20 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
   }else if(!is.null(ex_dat2) & nrow(ex_dat2) < min_instruments){
     return(NULL)
   }else{
-    out_dat1 <- extract_outcome_data(snps = ex_dat4$SNP,outcomes = ID2)
-    out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1)
+    out_dat1 <- extract_outcome_data(snps = ex_dat4$SNP,outcomes = ID2,splitsize = 100,proxy_splitsize = 20)
+    info_ID1 <- ieugwasr::gwasinfo(ID1)
+    if(nrow(info_ID1) != 0){
+      out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1,splitsize = 100,proxy_splitsize = 20)
+    }else{
+      out_dat2 <- format_data(as.data.frame(df), type = "outcome",
+                              snps = ex_dat2$SNP, snp_col = "hm_rsid",
+                              beta_col = "hm_beta", se_col = "standard_error",
+                              eaf_col = "hm_effect_allele_frequency",
+                              effect_allele_col = "hm_effect_allele", other_allele_col = "hm_other_allele",
+                              pval_col = "p_value", ncase_col = "num_cases",
+                              ncontrol_col = "num_controls", samplesize_col = "sample_size",
+                              chr_col = "hm_chrom", pos_col = "hm_pos")
+    }
     dat_1_2 <- harmonise_data(ex_dat4, out_dat1)
     dat_2_1 <- harmonise_data(ex_dat2, out_dat2)
     X_1_2 <- dat_1_2 %>%
@@ -44,19 +56,45 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
     if(abs(cor_vals$cor) > R2_cutoff){
       return(list(mr12 = NULL, mr21 = NULL, cor = cor_vals))
     }else{
-      out_1_2 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2)
-      out_3_4 <- extract_outcome_data(snps = ex_dat3$SNP,outcomes = ID1)
+      out_1_2 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2,splitsize = 100,proxy_splitsize = 20)
+      if(nrow(info_ID1) != 0){
+        out_3_4 <- extract_outcome_data(snps = ex_dat3$SNP,outcomes = ID1,splitsize = 100,proxy_splitsize = 20)
+      }else{
+        out_3_4 <- format_data(as.data.frame(df), type = "outcome",
+                               snps = ex_dat3$SNP, snp_col = "hm_rsid",
+                               beta_col = "hm_beta", se_col = "standard_error",
+                               eaf_col = "hm_effect_allele_frequency",
+                               effect_allele_col = "hm_effect_allele",
+                               other_allele_col = "hm_other_allele",
+                               pval_col = "p_value", ncase_col = "num_cases",
+                               ncontrol_col = "num_controls", samplesize_col = "sample_size",
+                               chr_col = "hm_chrom", pos_col = "hm_pos")
+      }
       mvdat_1 <- mv_harmonise_data(ex_dat1,out_1_2) # ID1 + ID3 to ID2
       mvdat_2 <- mv_harmonise_data(ex_dat3,out_3_4) # ID2 + ID3 to ID1
+      df_af_exp_1 <- generate_df_af_exp(ex_dat = ex_dat1,mv_dat = mvdat_1)
+      df_af_exp_2 <- generate_df_af_exp(ex_dat = ex_dat3,mv_dat = mvdat_2)
+      df_af_out_1 <- data.frame(SNP = rownames(mvdat_1$exposure_beta)) %>%
+        left_join(out_1_2)
+      df_af_out_2 <- data.frame(SNP = rownames(mvdat_2$exposure_beta)) %>%
+        left_join(out_3_4)
+      if(nrow(info_ID1) == 0){
+        df_af_exp_1[[ID1]] <- df_af_exp_1[[ID1]] %>%
+          mutate(ncase.exposure = unique(out_3_4$ncase.outcome),
+                 ncontrol.exposure = unique(out_3_4$ncontrol.outcome),
+                 samplesize.exposure = unique(out_3_4$samplesize.outcome))
+      }
       if(!is.null(df_info) & sum(c(ID1, ID2, ID3) %in% df_info$id) == 3){
         ss <- df_info %>% filter(id %in% c(ID1, ID2, ID3)) %>%
           arrange(match(id, c(ID1, ID2, ID3))) %>% pull(sample_size)
         params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2],
                         effect_size_cutoff = effect_size_cutoff,
-                        type_exposure = type_list, prevalence_exposure = prevalence_list)
+                        type_exposure = type_list, prevalence_exposure = prevalence_list,
+                        df_af_exp = df_af_exp_1, df_af_out = df_af_out_2)
         params2 <- list(dat = mvdat_2, type = "IEU", ss.exposure = ss[-1],
                         effect_size_cutoff = effect_size_cutoff,
-                        type_outcome = type_list[1], prevalence_outcome = prevalence_list[1])
+                        type_outcome = type_list[1], prevalence_outcome = prevalence_list[1],
+                        df_af_exp = df_af_exp_2, df_af_out = df_af_out_2)
       }else{
         params1 <- list(dat = mvdat_1, type = "IEU",effect_size_cutoff = effect_size_cutoff,
                         type_exposure = type_list, prevalence_exposure = prevalence_list)

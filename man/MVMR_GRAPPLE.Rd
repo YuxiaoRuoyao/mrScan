@@ -14,7 +14,9 @@ MVMR_GRAPPLE(
   type_outcome = "continuous",
   prevalence_outcome = NULL,
   type_exposure = NULL,
-  prevalence_exposure = NULL
+  prevalence_exposure = NULL,
+  df_af_exp = NULL,
+  df_af_out = NULL
 )
 }
 \arguments{
@@ -45,6 +47,13 @@ with exposures. eg. c("continuous","binary","continuous") for the second exposur
 
 \item{prevalence_exposure}{A vector for prevalence of exposures. The order should
 be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
+
+\item{df_af_exp}{A list for allele frequency matrix for each exposure.
+Each dataframe contains columns `SNP`,`eaf.exposure`,`beta.exposure`,`id.exposure`.
+Each element in the list is the dataframe for each exposure. Default = NULL}
+
+\item{df_af_out}{A dataframe of allele frequency of the outcome.
+It contains columns `SNP`,`eaf.outcome`,`beta.outcome`,`id.outcome`. Default = NULL}
 }
 \value{
 A dataframe of result summary
