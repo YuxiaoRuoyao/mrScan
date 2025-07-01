@@ -12,6 +12,7 @@
 #' with traits. eg. c("binary","continuous") for the first exposure is a binary trait
 #' @param prevalence_list A vector for prevalence of traits (X/Y + M). The order should
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(0.1, NA)
+#' @param df Optional local file. Default = NULL
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
@@ -20,7 +21,8 @@
 #' @export
 bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3,
                              effect_size_cutoff = 0.1,R2_cutoff=0.85,df_info = NULL,
-                             type_list = c("continuous","continuous"), prevalence_list = NULL){
+                             type_list = c("continuous","continuous"), prevalence_list = NULL,
+                             df = NULL){
   ID1 <- unique(ex_dat4$id.exposure) # X/Y
   ID2 <- unique(ex_dat2$id.exposure) # Z
   ID3 <- unique(ex_dat1$id.exposure)[-1] # M

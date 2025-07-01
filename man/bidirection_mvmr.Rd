@@ -14,7 +14,8 @@ bidirection_mvmr(
   R2_cutoff = 0.85,
   df_info = NULL,
   type_list = c("continuous", "continuous"),
-  prevalence_list = NULL
+  prevalence_list = NULL,
+  df = NULL
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ with traits. eg. c("binary","continuous") for the first exposure is a binary tra
 
 \item{prevalence_list}{A vector for prevalence of traits (X/Y + M). The order should
 be exactly matched with exposures. For continuous trait, just write NA. eg. c(0.1, NA)}
+
+\item{df}{Optional local file. Default = NULL}
 }
 \value{
 A list contain bidirection estimates and traits correlation
