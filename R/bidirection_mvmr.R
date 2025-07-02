@@ -92,7 +92,7 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
         params1 <- list(dat = mvdat_1, type = "IEU", ss.exposure = ss[-2],
                         effect_size_cutoff = effect_size_cutoff,
                         type_exposure = type_list, prevalence_exposure = prevalence_list,
-                        df_af_exp = df_af_exp_1, df_af_out = df_af_out_2)
+                        df_af_exp = df_af_exp_1, df_af_out = df_af_out_1)
         params2 <- list(dat = mvdat_2, type = "IEU", ss.exposure = ss[-1],
                         effect_size_cutoff = effect_size_cutoff,
                         type_outcome = type_list[1], prevalence_outcome = prevalence_list[1],

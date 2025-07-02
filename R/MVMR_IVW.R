@@ -112,13 +112,12 @@ MVMR_IVW <- function(dat,pval_threshold=5e-8,type,
     snp <- rownames(dat$exposure_beta)
     outlier_snp <- snp[-filtered_idx]
     info_outcome <- ieugwasr::gwasinfo(id.outcome)
+    outcome_af <- data.frame(df_af_out[filtered_idx, "eaf.outcome"])
     if (nrow(info_outcome) == 0) {
-      outcome_af <- data.frame(df_af_out[filtered_idx, "eaf.outcome"])
       ncase_outcome <- unique(df_af_out$ncase.outcome)
       ncontrol_outcome <- unique(df_af_out$ncontrol.outcome)
       samplesize_outcome <- unique(df_af_out$samplesize.outcome)
     } else {
-      outcome_af <- NULL
       ncase_outcome <- NULL
       ncontrol_outcome <- NULL
       samplesize_outcome <- NULL
