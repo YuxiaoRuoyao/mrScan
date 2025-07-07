@@ -299,7 +299,15 @@ download_gwas <- function(id_list,df_harmonise = NULL,data_path = NULL,
     stop("Please provide the path of harmonised_list.txt")
   }else if(length(ebi_list)>0 & !is.null(df_harmonise)){
     GCST_list <- ebi_list %>% strsplit("-") %>% sapply(tail,1)
-    df_harmonise$V2 <- df_harmonise$V1 %>% strsplit("-") %>% sapply( "[", 3)
+    df_harmonise$V2 <- sapply(basename(df_harmonise$V1), function(x) {
+      if (str_detect(x, "-")) {
+        parts <- strsplit(x, "-")[[1]]
+        gcst <- parts[grep("^GCST", parts)][1]
+        if (is.na(gcst)) NA else gcst
+      } else {
+        str_extract(x, "^GCST[0-9]+")
+      }
+    })
     GCST_file <- df_harmonise %>% filter(str_detect(V2,paste0(GCST_list,collapse = '|'))) %>%
       pull(V1) %>% str_split("/",n=2) %>% sapply(tail,1)
     nf_list <- ebi_list[!GCST_list %in% df_harmonise$V2]
