@@ -76,10 +76,12 @@ bidirection_mvmr <- function(ex_dat1,ex_dat2,ex_dat3,ex_dat4,min_instruments = 3
       mvdat_2 <- mv_harmonise_data(ex_dat3,out_3_4) # ID2 + ID3 to ID1
       df_af_exp_1 <- generate_df_af_exp(ex_dat = ex_dat1,mv_dat = mvdat_1)
       df_af_exp_2 <- generate_df_af_exp(ex_dat = ex_dat3,mv_dat = mvdat_2)
-      df_af_out_1 <- data.frame(SNP = rownames(mvdat_1$exposure_beta)) %>%
-        left_join(out_1_2)
-      df_af_out_2 <- data.frame(SNP = rownames(mvdat_2$exposure_beta)) %>%
-        left_join(out_3_4)
+      df_af_out_1 <- data.frame(SNP = rownames(mvdat_1$exposure_beta), beta = mvdat_1$outcome_beta) %>%
+        left_join(out_1_2, by = "SNP") %>%
+        mutate(eaf.outcome = ifelse(abs(beta - beta.outcome) < 1e-8, eaf.outcome, 1 - eaf.outcome))
+      df_af_out_2 <- data.frame(SNP = rownames(mvdat_2$exposure_beta), beta = mvdat_2$outcome_beta) %>%
+        left_join(out_3_4, by = "SNP") %>%
+        mutate(eaf.outcome = ifelse(abs(beta - beta.outcome) < 1e-8, eaf.outcome, 1 - eaf.outcome))
       if(nrow(info_ID1) == 0){
         df_af_exp_1[[ID1]] <- df_af_exp_1[[ID1]] %>%
           mutate(ncase.exposure = unique(out_3_4$ncase.outcome),

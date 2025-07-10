@@ -633,8 +633,10 @@ generate_df_af_exp <- function(ex_dat,mv_dat){
       effect_allele.exposure = ex_dat$effect_allele.exposure[indices],
       other_allele.exposure = ex_dat$other_allele.exposure[indices]
     )
-    df_af_exp_sub <- data.frame(SNP = rownames(mv_dat$exposure_beta)) %>%
-      left_join(df_ID)
+    df_af_exp_sub <- data.frame(SNP = rownames(mv_dat$exposure_beta),
+                                beta = mv_dat$exposure_beta[,id]) %>%
+      left_join(df_ID, by = "SNP") %>%
+      mutate(eaf.exposure = ifelse(abs(beta - beta.exposure) < 1e-8, eaf.exposure, 1 - eaf.exposure))
     df_af_exp[[id]] <- df_af_exp_sub
   }
   return(df_af_exp)
