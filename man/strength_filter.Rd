@@ -12,6 +12,7 @@ strength_filter(
   pval_threshold = 5e-08,
   F_threshold = 5,
   effect_size_cutoff = 0.1,
+  min_instruments = 3,
   Filter = FALSE,
   extra_traits = "None",
   type_outcome = "continuous",
@@ -40,6 +41,8 @@ For IEU data, it should be output from TwoSampleMR::mv_harmonise_data().}
 \item{F_threshold}{F-statistic cutoff. Default = 5}
 
 \item{effect_size_cutoff}{Standardized effect size threshold. Default = 0.1}
+
+\item{min_instruments}{minimum number of instruments. Default = 3}
 
 \item{Filter}{Whether perform trait filtering based on F-stats and F_threshold. Default = FALSE}
 

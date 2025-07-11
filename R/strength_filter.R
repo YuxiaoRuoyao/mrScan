@@ -9,6 +9,7 @@
 #' @param pval_threshold pvalue cutoff for selecting instruments. Default = 5e-8
 #' @param F_threshold F-statistic cutoff. Default = 5
 #' @param effect_size_cutoff Standardized effect size threshold. Default = 0.1
+#' @param min_instruments minimum number of instruments. Default = 3
 #' @param Filter Whether perform trait filtering based on F-stats and F_threshold. Default = FALSE
 #' @param extra_traits trait ID you want to include no matter the instrument strength. Default = "None"
 #' @param type_outcome It could be either "continuous" or "binary". Default = "continuous"
@@ -34,6 +35,7 @@
 strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                             pval_threshold = 5e-8,F_threshold = 5,
                             effect_size_cutoff = 0.1,
+                            min_instruments = 3,
                             Filter = FALSE, extra_traits = "None",
                             type_outcome = "continuous", prevalence_outcome = NULL,
                             type_exposure = NULL, prevalence_exposure = NULL,
@@ -161,13 +163,19 @@ strength_filter <- function(dat,dat_type = "local",R_matrix = NULL,df_info,
                                               ncontrol_exposure = ncontrol_exposure,
                                               samplesize_exposure = samplesize_exposure)
     final_ix <- which(snp %in% filtered_SNP)
-    F.data <- format_mvmr(BXGs = as.matrix(dat$exposure_beta[final_ix,]),
-                          BYG = dat$outcome_beta[final_ix],
-                          seBXGs = as.matrix(dat$exposure_se[final_ix,]),
-                          seBYG = dat$outcome_se[final_ix],
-                          RSID = rownames(dat$exposure_beta)[final_ix])
-    sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
-    sres$id<-colnames(dat$exposure_beta)
+    if(length(final_ix) > min_instruments){
+      F.data <- format_mvmr(BXGs = as.matrix(dat$exposure_beta[final_ix,]),
+                            BYG = dat$outcome_beta[final_ix],
+                            seBXGs = as.matrix(dat$exposure_se[final_ix,]),
+                            seBYG = dat$outcome_se[final_ix],
+                            RSID = rownames(dat$exposure_beta)[final_ix])
+      sres <- data.frame(t(strength_mvmr(r_input = F.data, gencov = 0)))
+    }
+    else{
+      sres <- data.frame(F.statistic = rep(NA, ncol(dat$exposure_beta)))
+      print("Not enough instruments!")
+    }
+    sres$id <- colnames(dat$exposure_beta)
   }
   if(Filter == TRUE){
     select.id <- sres %>% filter(F.statistic > F_threshold) %>% pull(id)
