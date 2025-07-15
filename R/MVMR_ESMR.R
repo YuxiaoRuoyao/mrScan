@@ -42,6 +42,8 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
   filtered_idx <- which(rowSums(abs(data.frame(z.norm[,-1])) < effect_size_cutoff) == ncol(z.norm)-1)
   outlier_snp <- snp[-filtered_idx]
   new_ix <- intersect(ix,filtered_idx)
+  samplesize_exposure <- as.matrix(ss)[,-1] %>% unique()
+  samplesize_outcome <- as.matrix(ss)[,1] %>% unique()
   filtered_SNP <- general_steiger_filtering(SNP = snp[new_ix],id.exposure = nms[-1],id.outcome = nms[1],
                                             exposure_beta = beta_hat[new_ix,-1],exposure_pval = p[new_ix,-1],
                                             exposure_se = se[new_ix,-1],outcome_beta = beta_hat[new_ix,1],
@@ -49,7 +51,11 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                                             exposure_af = af[new_ix,-1],outcome_af = af[new_ix,1],
                                             type_outcome = type_outcome, prevalence_outcome = prevalence_outcome,
                                             type_exposure = type_exposure, prevalence_exposure = prevalence_exposure,
-                                            snp_info = info[new_ix,],proxies = 0)
+                                            snp_info = info[new_ix,],proxies = 0,
+                                            ncase_outcome = ncase_outcome, ncontrol_outcome = ncontrol_outcome,
+                                            samplesize_outcome = samplesize_outcome,
+                                            ncase_exposure = ncase_exposure, ncontrol_exposure = ncontrol_exposure,
+                                            samplesize_exposure = samplesize_exposure)
   final_ix <- which(snp %in% filtered_SNP)
   res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
                             b = NA, se = NA, pvalue = NA,
