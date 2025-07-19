@@ -11,7 +11,8 @@ bidirection_mr(
   effect_size_cutoff = 0.1,
   R2_cutoff = 0.85,
   type_list = c("continuous", "continuous"),
-  prevalence_list = NULL
+  prevalence_list = NULL,
+  df = NULL
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ eg. c("binary","continuous") means that ID1 is a binary trait.}
 \item{prevalence_list}{A list for prevalence of traits. The order should
 be exactly matched with `ID1`, `ID2`. eg. list(0.1, NULL) means the prevalence of
 ID1 is 0.1. For continuous trait, just write NULL.}
+
+\item{df}{Optional local file. Default = NULL}
 }
 \value{
 A list contain bidirection estimates and traits correlation

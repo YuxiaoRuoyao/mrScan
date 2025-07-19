@@ -10,6 +10,7 @@
 #' @param prevalence_list A list for prevalence of traits. The order should
 #' be exactly matched with `ID1`, `ID2`. eg. list(0.1, NULL) means the prevalence of
 #' ID1 is 0.1. For continuous trait, just write NULL.
+#' @param df Optional local file. Default = NULL
 #' @returns A list contain bidirection estimates and traits correlation
 #'
 #' @import TwoSampleMR
@@ -17,7 +18,8 @@
 #' @import ieugwasr
 #' @export
 bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=0.1,R2_cutoff=0.85,
-                           type_list = c("continuous","continuous"), prevalence_list = NULL){
+                           type_list = c("continuous","continuous"), prevalence_list = NULL,
+                           df = NULL){
   ID1 <- unique(ex_dat1$id.exposure)
   ID2 <- unique(ex_dat2$id.exposure)
   if(is.null(ex_dat2)){
@@ -25,8 +27,20 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
   }else if(!is.null(ex_dat2) & nrow(ex_dat2) < min_instruments){
     return(NULL)
   }else{
-    out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2)
-    out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1)
+    out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2,splitsize = 100,proxy_splitsize = 20)
+    info_ID1 <- ieugwasr::gwasinfo(ID1)
+    if(nrow(info_ID1) != 0){
+      out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1,splitsize = 100,proxy_splitsize = 20)
+    }else{
+      out_dat2 <- format_data(as.data.frame(df), type = "outcome",
+                              snps = ex_dat2$SNP, snp_col = "hm_rsid",
+                              beta_col = "hm_beta", se_col = "standard_error",
+                              eaf_col = "hm_effect_allele_frequency",
+                              effect_allele_col = "hm_effect_allele", other_allele_col = "hm_other_allele",
+                              pval_col = "p_value", ncase_col = "num_cases",
+                              ncontrol_col = "num_controls", samplesize_col = "sample_size",
+                              chr_col = "hm_chrom", pos_col = "hm_pos")
+    }
     dat_1_2 <- harmonise_data(ex_dat1, out_dat1) %>% filter(mr_keep == TRUE)
     dat_2_1 <- harmonise_data(ex_dat2, out_dat2) %>% filter(mr_keep == TRUE)
     if(sum(is.na(dat_1_2$samplesize.exposure)) != 0){
@@ -69,6 +83,12 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                                                     prevalence_outcome = prevalence_list[[2]],
                                                     type_exposure = type_list[1],
                                                     prevalence_exposure = prevalence_list[[1]],
+                                                    ncase_exposure = unique(dat_1_2$ncase.exposure),
+                                                    ncontrol_exposure = unique(dat_1_2$ncontrol.exposure),
+                                                    samplesize_exposure = unique(dat_1_2$samplesize.exposure),
+                                                    ncase_outcome = unique(dat_1_2$ncase.outcome),
+                                                    ncontrol_outcome = unique(dat_1_2$ncontrol.outcome),
+                                                    samplesize_outcome = unique(dat_1_2$samplesize.outcome),
                                                     proxies = 1)
       filtered_SNP_2_1 <- general_steiger_filtering(SNP = dat_2_1$SNP[filtered_idx_2_1],
                                                     id.exposure = ID2,id.outcome = ID1,
@@ -84,6 +104,12 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
                                                     prevalence_outcome = prevalence_list[[1]],
                                                     type_exposure = type_list[2],
                                                     prevalence_exposure = prevalence_list[[2]],
+                                                    ncase_exposure = unique(dat_2_1$ncase.exposure),
+                                                    ncontrol_exposure = unique(dat_2_1$ncontrol.exposure),
+                                                    samplesize_exposure = unique(dat_2_1$samplesize.exposure),
+                                                    ncase_outcome = unique(dat_2_1$ncase.outcome),
+                                                    ncontrol_outcome = unique(dat_2_1$ncontrol.outcome),
+                                                    samplesize_outcome = unique(dat_2_1$samplesize.outcome),
                                                     proxies = 1)
       final_ix_1_2 <- which(dat_1_2$SNP %in% filtered_SNP_1_2)
       final_ix_2_1 <- which(dat_2_1$SNP %in% filtered_SNP_2_1)
