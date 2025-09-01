@@ -27,10 +27,10 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
   }else if(!is.null(ex_dat2) & nrow(ex_dat2) < min_instruments){
     return(NULL)
   }else{
-    out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2,splitsize = 32,proxy_splitsize = 32)
+    out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2)
     info_ID1 <- ieugwasr::gwasinfo(ID1)
     if(nrow(info_ID1) != 0){
-      out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1,splitsize = 32,proxy_splitsize = 32)
+      out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1)
     }else{
       out_dat2 <- format_data(as.data.frame(df), type = "outcome",
                               snps = ex_dat2$SNP, snp_col = "hm_rsid",
