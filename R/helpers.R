@@ -452,8 +452,23 @@ MR_MRBEE <- function(id.exposure,id.outcome,beta.exposure,beta.outcome,
   return(res_summary)
 }
 #' @export
-get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0){
-  association_data <- ieugwasr::associations(SNP_set, id, proxies = proxies)
+get_eaf <- function(SNP_set, id, snp_info = NULL,dat = NULL, proxies = 0, splitsize = 20){
+  if(length(SNP_set) > splitsize){
+    splits <- split(SNP_set, ceiling(seq_along(SNP_set) / splitsize))
+    results <- list()
+    for (chunk_index in seq_along(splits)) {
+      message("Processing chunk ", chunk_index, " of ", length(splits))
+      snp_chunk <- splits[[chunk_index]]
+      chunk_result <- ieugwasr::associations(snp_chunk, id, proxies = proxies)
+      if (!is.data.frame(chunk_result)) {
+        chunk_result <- data.frame()
+      }
+      results[[chunk_index]] <- chunk_result
+    }
+    association_data <- plyr::rbind.fill(results)
+  }else{
+    association_data <- ieugwasr::associations(SNP_set, id, proxies = proxies)
+  }
   if (!is.null(snp_info)) {
     association_data <- merge(association_data, snp_info, by.x = "rsid", by.y = "snp", all.x = TRUE)
   }
