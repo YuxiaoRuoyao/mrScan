@@ -45,7 +45,8 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
     dat_2_1 <- harmonise_data(ex_dat2, out_dat2) %>% filter(mr_keep == TRUE)
     if(sum(is.na(dat_1_2$samplesize.exposure)) != 0){
       dat_1_2$samplesize.exposure <- gwasinfo(ID1)$sample_size
-    }else if(sum(is.na(dat_2_1$samplesize.exposure)) != 0){
+    }
+    if(sum(is.na(dat_2_1$samplesize.exposure)) != 0){
       dat_2_1$samplesize.exposure <- gwasinfo(ID2)$sample_size
     }
     X_1_2 <- dat_1_2 %>%
