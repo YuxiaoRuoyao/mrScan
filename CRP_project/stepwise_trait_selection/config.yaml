@@ -1,0 +1,46 @@
+input:
+    label: "SCZ"
+    exposure_label: "CRP"
+    id_exposure: "ebi-a-GCST90029070"
+    id_outcome: "ieu-b-5102"
+    type_outcome: "binary"
+    prevalence_outcome: 0.0045
+
+analysis:
+    pval_instruments: 5e-8 # pvalue threshold for extracting instruments of the main exposure
+    downstream_filter:
+        p: [0.05] # significant level for selecting upstream or downstream traits
+        # which method to use for bidirection MR in downstream filtering step. If you use UVMR, choose either "MR_IVW","MR_GRAPPLE" or "MR_MRBEE"
+        # If you use MVMR, choose either "MVMR_IVW","MVMR_GRAPPLE" or "MVMR_MRBEE"
+        #method: "MVMR_GRAPPLE"
+        method: "MR_GRAPPLE"
+    strength_filter:
+        pval_threshold: 5e-8
+        F_threshold: 5
+        #extra_traits: ["ukb-b-19953"]
+        extra_traits: "None"
+        effect_size_cutoff: 0.1
+    ldprune:
+        r2_thresh: 0.001 # threshold for pairwise r^2 between variants
+        clump_kb: [10000] # Maximum distance for pruning.
+        ld_prioritization: "pvalue" # "pvalue" or "rank"
+        ref_path: "/nfs/turbo/sph-jvmorr/ld_reference_files/1kg_plink/EUR" # Path to plink format reference data
+        pthresh: 1
+    estimate_R:
+        type: ["ldsc","pval"] # ldsc or pval
+        p_thresh: 0.05
+        l2_dir: "/nfs/turbo/sph-jvmorr/ld_reference_files/ldsc_reference_files/eur_w_ld_chr/"
+
+out:
+    # Output data options:
+    # data_dir: Directory to store results in the middle steps
+    # previous_data_dir: where the previous data
+    # gwas_dir: Where to store original gwas data
+    # output_dir: Where the previous steps' results
+    # result_dir: Where to store results
+    data_dir: "data/"
+    previous_data_dir: "/nfs/turbo/sph-jvmorr/CRP_project/pipeline/data/"
+    gwas_dir: "/nfs/turbo/sph-jvmorr/CRP_project/GWAS_summary_data/"
+    output_dir: "../results/"
+    result_dir: results/
+
