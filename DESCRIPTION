@@ -22,7 +22,7 @@ Imports:
     glmnet,
     hdme,
     stringr,
-    sumstatFactors
+    GFA
 RoxygenNote: 7.2.3
 Suggests: 
     esmr,
