@@ -27,10 +27,28 @@ bidirection_mr <- function(ex_dat1,ex_dat2,min_instruments=3,effect_size_cutoff=
   }else if(!is.null(ex_dat2) & nrow(ex_dat2) < min_instruments){
     return(NULL)
   }else{
-    out_dat1 <- extract_outcome_data(snps = ex_dat1$SNP,outcomes = ID2,proxy_splitsize = 10)
+    snp_chunks1 <- split(
+      unique(ex_dat1$SNP),ceiling(seq_along(unique(ex_dat1$SNP)) / 32))
+    out_list1 <- vector("list", length(snp_chunks1))
+    for (i in seq_along(snp_chunks1)) {
+      cat("out_dat1: chunk", i, "of", length(snp_chunks1),
+          "- n SNP =", length(snp_chunks1[[i]]), "\n")
+      out_list1[[i]] <- extract_outcome_data(
+        snps = snp_chunks1[[i]],outcomes = ID2,proxy_splitsize = 10)
+    }
+    out_dat1 <- bind_rows(out_list1)
     info_ID1 <- ieugwasr::gwasinfo(ID1)
     if(nrow(info_ID1) != 0){
-      out_dat2 <- extract_outcome_data(snps = ex_dat2$SNP,outcomes = ID1,proxy_splitsize = 10)
+      snp_chunks2 <- split(
+        unique(ex_dat2$SNP),ceiling(seq_along(unique(ex_dat2$SNP)) / 32))
+      out_list2 <- vector("list", length(snp_chunks2))
+      for (i in seq_along(snp_chunks2)) {
+        cat("out_dat2: chunk", i, "of", length(snp_chunks2),
+            "- n SNP =", length(snp_chunks2[[i]]), "\n")
+        out_list2[[i]] <- extract_outcome_data(
+          snps = snp_chunks2[[i]],outcomes = ID1,proxy_splitsize = 10)
+      }
+      out_dat2 <- bind_rows(out_list2)
     }else{
       out_dat2 <- format_data(as.data.frame(df), type = "outcome",
                               snps = ex_dat2$SNP, snp_col = "hm_rsid",
