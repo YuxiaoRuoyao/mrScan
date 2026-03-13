@@ -18,6 +18,10 @@ format_combine_gwas <- function(df_file,c,df_info){
     if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
       dat <- format_ieu_chrom(f, c)
     }else if(str_ends(f, ".h.tsv.gz")){
+      header <- names(data.table::fread(f, nrows = 0))
+      if (all(c("hm_rsid", "hm_pos", "hm_chrom", "hm_effect_allele",
+                "hm_other_allele", "hm_beta", "standard_error",
+                "p_value", "hm_effect_allele_frequency") %in% header)) {
       dat <- format_flat_chrom(f, c,
                                snp_name = "hm_rsid",
                                pos_name = "hm_pos",
@@ -30,6 +34,24 @@ format_combine_gwas <- function(df_file,c,df_info){
                                af_name = "hm_effect_allele_frequency",
                                sample_size_name = NA,
                                effect_is_or = FALSE)
+      } else if (all(c("base_pair_location", "chromosome", "effect_allele",
+                       "other_allele", "beta", "standard_error",
+                       "p_value", "effect_allele_frequency") %in% header)) {
+        dat <- format_flat_chrom(f, c,
+                                 snp_name = "rsid",
+                                 pos_name = "base_pair_location",
+                                 chrom_name = "chromosome",
+                                 A1_name = "effect_allele",
+                                 A2_name = "other_allele",
+                                 beta_hat_name = "beta",
+                                 se_name = "standard_error",
+                                 p_value_name = "p_value",
+                                 af_name = "effect_allele_frequency",
+                                 sample_size_name = NA,
+                                 effect_is_or = FALSE)
+      }else {
+        stop(paste("Unrecognized column names in file:", f))
+      }
       if(all(is.na(dat$sample_size))){
         if(df_file$id[i] %in% df_info$id){
           dat$sample_size <- df_info %>% filter(id == df_file$id[i]) %>% pull(sample_size)
