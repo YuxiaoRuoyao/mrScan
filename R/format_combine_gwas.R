@@ -18,7 +18,7 @@ format_combine_gwas <- function(df_file,c,df_info){
     if(str_ends(f, "vcf.gz") | str_ends(f, "vcf.bgz")){
       dat <- format_ieu_chrom(f, c)
     }else if(str_ends(f, ".h.tsv.gz")){
-      header <- names(data.table::fread(f, nrows = 0))
+      header <- names(read_table(pipe(paste0("gzip -cd ", f, " | head -2"))))
       if (all(c("hm_rsid", "hm_pos", "hm_chrom", "hm_effect_allele",
                 "hm_other_allele", "hm_beta", "standard_error",
                 "p_value", "hm_effect_allele_frequency") %in% header)) {
