@@ -528,6 +528,9 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                          proxies = proxies)
     }
   }
+  if(!is.null(type_outcome) && all(grepl("log odds", dat_outcome$units.outcome)) && type_outcome == "continuous"){
+    dat_outcome$units.outcome <- NA
+  }
   if(all(grepl("log odds", dat_outcome$units.outcome)) | type_outcome == "binary"){
     dat_outcome$units.outcome <- "log odds"
     if(!is.null(prevalence_outcome)){
@@ -569,6 +572,9 @@ general_steiger_filtering <- function(SNP, id.exposure, id.outcome,
                                              snp_info = snp_info,dat = dat_input_exp,
                                              proxies = proxies)
       }
+    }
+    if(!is.null(type_exposure) && all(grepl("log odds", dat_exposure$units.exposure)) && type_exposure[i] == "continuous"){
+      dat_exposure$units.exposure <- NA
     }
     if(!is.null(type_exposure) && type_exposure[i] == "binary" | all(grepl("log odds", dat_exposure$units.exposure))){
       dat_exposure$units.exposure <- "log odds"
