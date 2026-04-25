@@ -12,7 +12,8 @@ MVMR_ESMR(
   type_outcome = "continuous",
   prevalence_outcome = NULL,
   type_exposure = NULL,
-  prevalence_exposure = NULL
+  prevalence_exposure = NULL,
+  optimize = FALSE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ with exposures. eg. c("continuous","binary","continuous") for the second exposur
 
 \item{prevalence_exposure}{A vector for prevalence of exposures. The order should
 be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
+
+\item{optimize}{Run one-step optimization or not. Default is FALSE.}
 }
 \value{
 A dataframe of result summary

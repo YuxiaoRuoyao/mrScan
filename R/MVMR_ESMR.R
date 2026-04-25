@@ -11,6 +11,7 @@
 #' with exposures. eg. c("continuous","binary","continuous") for the second exposure is a binary trait
 #' @param prevalence_exposure A vector for prevalence of exposures. The order should
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
+#' @param optimize Run one-step optimization or not. Default is FALSE.
 #' @returns A dataframe of result summary
 #'
 #' @import dplyr
@@ -20,7 +21,8 @@
 MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                       effect_size_cutoff=0.1,
                       type_outcome = "continuous", prevalence_outcome = NULL,
-                      type_exposure = NULL, prevalence_exposure = NULL){
+                      type_exposure = NULL, prevalence_exposure = NULL,
+                      optimize = FALSE){
   snp <- dat$snp
   info <- dat %>% select(snp,REF,ALT)
   beta_hat <- dat %>% select(ends_with(".beta"))
@@ -71,7 +73,7 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                               b = fit$beta$beta_m, se = fit$beta$beta_s) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)),
              method = paste0("ESMR_",pval_threshold))
-    if(i <= 18){
+    if(i <= 18 & optimize == TRUE){
       esmr_res <- esmr:::optimize_lpy2(fit)
       res.summary.opt <- data.frame(exposure = colnames(beta_hat)[-1],
                                     b = esmr_res$beta$beta_m, se = esmr_res$beta$beta_s) %>%
