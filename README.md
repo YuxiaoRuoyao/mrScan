@@ -16,7 +16,7 @@ You can install the development version of mrScan from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("YuxiaoRuoyao/mrScan",build_vignettes = TRUE)
+devtools::install_github("ruoyao-shi/mrScan",build_vignettes = TRUE)
 browseVignettes("mrScan")
 ```
 
@@ -31,7 +31,7 @@ devtools::install_github("mrcieu/ieugwasr")
 devtools::install_github("noahlorinczcomi/MRBEE")
 devtools::install_github("jean997/GFA")
 devtools::install_github("jingshuw/grapple")
-devtools::install_github("jean997/esmr", ref = "tau_nesmr2")
+devtools::install_github("jean997/esmr")
 devtools::install_github("osorensen/hdme", build_vignettes = TRUE)
 ```
 
