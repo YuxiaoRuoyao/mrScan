@@ -12,6 +12,7 @@
 #' @param prevalence_exposure A vector for prevalence of exposures. The order should
 #' be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)
 #' @param optimize Run one-step optimization or not. Default is FALSE.
+#' @param max_iter Maximum iteration numbers. Default = 100
 #' @returns A dataframe of result summary
 #'
 #' @import dplyr
@@ -22,7 +23,7 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                       effect_size_cutoff=0.1,
                       type_outcome = "continuous", prevalence_outcome = NULL,
                       type_exposure = NULL, prevalence_exposure = NULL,
-                      optimize = FALSE){
+                      optimize = FALSE, max_iter = 100){
   snp <- dat$snp
   info <- dat %>% select(snp,REF,ALT)
   beta_hat <- dat %>% select(ends_with(".beta"))
@@ -68,7 +69,8 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
                 beta_hat_X = beta_hat[,2:i],
                 se_X = se[, 2:i],
                 R = R_matrix,
-                variant_ix= final_ix)
+                variant_ix= final_ix,
+                max_iter = max_iter)
     res.summary <- data.frame(exposure = colnames(beta_hat)[-1],
                               b = fit$beta$beta_m, se = fit$beta$beta_s) %>%
       mutate(pvalue = 2*pnorm(-abs(b/se)),
@@ -84,5 +86,5 @@ MVMR_ESMR <- function(dat,R_matrix,pval_threshold = 5e-8,
   }, error = function(e){
     message("Error in MVMR_ESMR: ", e$message)
   })
-  return(list(res.summary = res.summary, outlier_SNP = outlier_snp))
+  return(list(res.summary = res.summary, out = fit, outlier_SNP = outlier_snp))
 }

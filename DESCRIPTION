@@ -23,7 +23,6 @@ Imports:
     hdme,
     stringr,
     GFA
-RoxygenNote: 7.2.3
 Suggests: 
     esmr,
     GRAPPLE,
@@ -38,3 +37,4 @@ Suggests:
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Config/roxygen2/version: 8.0.0

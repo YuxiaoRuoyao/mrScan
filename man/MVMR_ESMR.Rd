@@ -13,7 +13,8 @@ MVMR_ESMR(
   prevalence_outcome = NULL,
   type_exposure = NULL,
   prevalence_exposure = NULL,
-  optimize = FALSE
+  optimize = FALSE,
+  max_iter = 100
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ with exposures. eg. c("continuous","binary","continuous") for the second exposur
 be exactly matched with exposures. For continuous trait, just write NA. eg. c(NA, 0.1, NA)}
 
 \item{optimize}{Run one-step optimization or not. Default is FALSE.}
+
+\item{max_iter}{Maximum iteration numbers. Default = 100}
 }
 \value{
 A dataframe of result summary
